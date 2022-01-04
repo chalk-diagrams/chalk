@@ -1,4 +1,3 @@
-#
 # Design goals:
 # - Add an abstraction layer over PyCairo
 # - Replace the imperative API with a more declarative design (maybe similar to the `diagrams` library from Haskell)
@@ -6,19 +5,14 @@
 # TODO
 # - [ ] Update width and height of image to fit all the contents
 # - [ ] Allow change of backend for the `render` function
-#
 
 import math
-import random
 
 from dataclasses import dataclass
 from typing import List, Tuple
 
 import cairo
-import streamlit as st
 
-
-PATH = "test.png"
 
 Matrix = cairo.Matrix
 
@@ -77,7 +71,8 @@ class Compose(Transform):
 
 
 class Color:
-    pass
+    def to_float(self):
+        raise NotImplemented
 
 
 @dataclass
@@ -192,7 +187,7 @@ class Diagram:
     def fmap(self, f) -> "Diagram":
         return Diagram([f(shape) for shape in self.shapes])
 
-    def render(self):
+    def render(self, path):
         WIDTH, HEIGHT = 512, 512
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 
@@ -202,31 +197,4 @@ class Diagram:
         for shape in self.shapes:
             shape.render(ctx)
 
-        surface.write_to_png(PATH)
-
-
-def make_square():
-    colors = [
-        RGB(38, 70, 83), # charcoal
-        RGB(233, 196, 106), # orange yellow crayola
-    ]
-    # generate uniformly a value in [-max_angle, max_angle]
-    max_angle = math.pi / 24.0
-    θ = 2 * max_angle * random.random() - max_angle
-    # pick a random color
-    i = random.random() > 0.75
-    color = colors[i]
-    return Rectangle(0.15, 0.15).set_stroke_color(color).rotate(θ)
-
-
-def make_group(num_squares=4):
-    return Diagram([make_square() for _ in range(4)])
-
-
-disps = [0.2, 0.4, 0.6, 0.8]
-centers = [(x, y) for x in disps for y in disps]
-diagram = Diagram.concat(make_group().translate(x, y) for x, y in centers)
-diagram = diagram.fmap(lambda s: s.set_stroke_width(0.005))
-diagram.render()
-
-st.image(PATH)
+        surface.write_to_png(path)
