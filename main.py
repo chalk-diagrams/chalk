@@ -86,7 +86,7 @@ class RGB(Color):
     g: int
     b: int
 
-    def to_float(self):
+    def to_float(self) -> Tuple[float, float, float]:
         return self.r / 255, self.g / 255, self.b / 255
 
 
@@ -95,7 +95,7 @@ class Primitive:
         self.transform = Identity()
         # style
         self.fill_color = None
-        self.stroke_color = (0, 0, 0)
+        self.stroke_color = (0.0, 0.0, 0.0)
         self.stroke_width = 0.01
 
     def rotate(self, θ) -> "Primitive":
@@ -106,12 +106,12 @@ class Primitive:
         self.transform = Compose(Translate(dx, dy), self.transform)
         return self
 
-    def set_fill_color(self, r: float, g: float, b: float) -> "Primitive":
-        self.fill_color = r, g, b
+    def set_fill_color(self, color: Color) -> "Primitive":
+        self.fill_color = color.to_float()
         return self
 
-    def set_stroke_color(self, r: float, g: float, b: float) -> "Primitive":
-        self.stroke_color = r, g, b
+    def set_stroke_color(self, color: Color) -> "Primitive":
+        self.stroke_color = color.to_float()
         return self
 
     def set_stroke_width(self, width: float) -> "Primitive":
@@ -215,8 +215,8 @@ def make_square():
     θ = 2 * max_angle * random.random() - max_angle
     # pick a random color
     i = random.random() > 0.75
-    color = colors[i].to_float()
-    return Rectangle(0.15, 0.15).set_stroke_color(*color).rotate(θ)
+    color = colors[i]
+    return Rectangle(0.15, 0.15).set_stroke_color(color).rotate(θ)
 
 
 def make_group(num_squares=4):
