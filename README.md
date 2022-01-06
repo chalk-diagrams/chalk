@@ -13,6 +13,8 @@ streamlit run examples/squares.py
 streamlit run examples/escher_square_limit.py
 ```
 
+![escher](https://github.com/danoneata/pydiagrams/blob/master/examples/escher_square_limit.png)
+
 ## TODO
 
 - [ ] Update width and height of image to fit all the contents
