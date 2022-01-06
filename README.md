@@ -7,7 +7,7 @@ The design draws inspiration from the [diagrams](https://diagrams.github.io/) li
 streamlit run examples/squares.py
 ```
 
-![squares](https://github.com/danoneata/pydiagrams/examples/squares.png)
+![squares](https://github.com/danoneata/pydiagrams/blob/master/examples/squares.png)
 
 ```python
 streamlit run examples/escher_square_limit.py
