@@ -127,10 +127,6 @@ class RGB(Color):
         return self.r / 255, self.g / 255, self.b / 255
 
 
-CX = 0
-CY = 0
-
-
 class Primitive:
     def __init__(self):
         self.transform: Transform = Identity()
@@ -208,6 +204,8 @@ class Primitive:
 
 
 class Trail(Primitive):
+    """WARN This implementation is different from what is found in `diagrams`"""
+
     def __init__(self, vertices, extent=None):
         super().__init__()
         self.vertices = vertices
@@ -253,9 +251,10 @@ class Circle(Primitive):
     def __init__(self, radius: float):
         super().__init__()
         self.radius = radius
+        self.origin = Point(0, 0)
 
     def render_shape(self, ctx):
-        ctx.arc(CX, CY, self.radius, 0, 2 * math.pi)
+        ctx.arc(self.origin.x, self.origin.y, self.radius, 0, 2 * math.pi)
 
     def get_extent(self):
         tl = Point(-self.radius, -self.radius)
@@ -268,16 +267,28 @@ class Rectangle(Primitive):
         super().__init__()
         self.width = width
         self.height = height
+        self.origin = Point(0, 0)
 
     def render_shape(self, ctx):
-        left = CX - self.width / 2
-        top = CY - self.height / 2
+        left = self.origin.x - self.width / 2
+        top = self.origin.y - self.height / 2
         ctx.rectangle(left, top, self.width, self.height)
+
+    def get_extent(self):
+        left = self.origin.x - self.width / 2
+        top = self.origin.y - self.height / 2
+        tl = Point(left, top)
+        br = Point(left + self.width, top + self.height)
+        return Extent(tl, br).apply(self.transform)
 
 
 class Diagram:
-    def __init__(self, shapes: List[Primitive]):
+    def __init__(self, shapes):
         self.shapes = shapes
+
+    @classmethod
+    def from_primitive(cls, primitive):
+        return cls([primitive])
 
     @classmethod
     def empty(cls):
@@ -286,6 +297,18 @@ class Diagram:
     @classmethod
     def concat(cls, iterable):
         return sum(iterable, cls.empty())
+
+    @staticmethod
+    def beside_static(d1, d2):
+        e1 = d1.get_extent()
+        e2 = d2.get_extent()
+        dx1 = e1.br.x
+        dx2 = e2.tl.x
+        return Diagram(d1.translate(dx2, 0).shapes + d2.translate(dx1, 0).shapes)
+
+    @staticmethod
+    def hcat(iterable):
+        return reduce(Diagram.beside_static, iterable)
 
     def get_extent(self):
         return Extent.union_iter(shape.get_extent() for shape in self.shapes)
@@ -296,11 +319,7 @@ class Diagram:
     __add__ = atop
 
     def beside(self, other: "Diagram") -> "Diagram":
-        e1 = self.get_extent()
-        e2 = other.get_extent()
-        dx1 = e1.br.x
-        dx2 = e2.tl.x
-        return Diagram(self.translate(dx2, 0).shapes + other.translate(dx1, 0).shapes)
+        return Diagram.beside_static(self, other)
 
     __or__ = beside
 
@@ -312,6 +331,10 @@ class Diagram:
         return Diagram(self.translate(0, dy2).shapes + other.translate(0, dy1).shapes)
 
     __truediv__ = above
+
+    def show_origin(self):
+        o = Circle(0.005).set_stroke_color(RGB(255, 0, 0))
+        return self + Diagram.from_primitive(o)
 
     def translate(self, dx, dy):
         return self.fmap(lambda shape: shape.translate(dx, dy))
@@ -331,18 +354,39 @@ class Diagram:
     def set_stroke_width(self, w):
         return self.fmap(lambda shape: shape.set_stroke_width(w))
 
+    def set_stroke_color(self, color):
+        return self.fmap(lambda shape: shape.set_stroke_color(color))
+
+    def set_fill_color(self, color):
+        return self.fmap(lambda shape: shape.set_fill_color(color))
+
     def fmap(self, f) -> "Diagram":
         return Diagram([f(shape) for shape in self.shapes])
 
     def render(self, path):
         WIDTH, HEIGHT = 512, 512
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 
+        pad = 1.05
+        extent = self.get_extent()
+
+        width = extent.br.x - extent.tl.x
+        height = extent.br.y - extent.tl.y
+        size = max(width, height)
+
+        α = WIDTH / (pad * size)
+
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
         ctx = cairo.Context(surface)
-        ctx.scale(WIDTH, HEIGHT)
-        # ctx.move_to(CX, CY)
+
+        ctx.scale(α, α)
+        ctx.translate(-pad * extent.tl.x, -pad * extent.tl.y)
 
         for shape in self.shapes:
             shape.render(ctx)
 
         surface.write_to_png(path)
+
+
+circle = lambda size: Diagram.from_primitive(Circle(size))
+rectangle = lambda height, width: Diagram.from_primitive(Rectangle(height, width))
+square = lambda size: rectangle(size, size)

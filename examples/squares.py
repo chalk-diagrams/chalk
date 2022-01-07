@@ -3,7 +3,7 @@ import random
 
 import streamlit as st  # type: ignore
 
-from diagrams import Rectangle, Diagram, RGB
+from diagrams import Diagram, RGB, rectangle
 
 
 def make_square():
@@ -17,11 +17,11 @@ def make_square():
     # pick a random color
     i = random.random() > 0.75
     color = colors[i]
-    return Rectangle(0.15, 0.15).set_stroke_color(color).rotate(θ)
+    return rectangle(0.15, 0.15).set_stroke_color(color).rotate(θ)
 
 
 def make_group(num_squares=4):
-    return Diagram([make_square() for _ in range(4)])
+    return Diagram.concat(make_square() for _ in range(4))
 
 
 disps = [0.2, 0.4, 0.6, 0.8]
