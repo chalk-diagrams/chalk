@@ -23,7 +23,7 @@ circle(1) + square(1).set_fill_color(aqua)
 Combining diagrams, horizontal composition:
 
 ```python
-hcat(circle(0.1 * i) for i in range(1, 6))
+Diagram.hcat(circle(0.1 * i) for i in range(1, 6))
 ```
 ![hcat](https://github.com/danoneata/pydiagrams/blob/master/examples/hcat.png)
 
