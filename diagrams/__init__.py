@@ -379,19 +379,14 @@ class Diagram:
     def fmap(self, f) -> "Diagram":
         return Diagram([f(shape) for shape in self.shapes])
 
-    def render(self, path):
-        WIDTH, HEIGHT = 512, 512
-
+    def render(self, path, width=512, height=512):
         pad = 1.05
         extent = self.get_extent()
 
-        width = extent.br.x - extent.tl.x
-        height = extent.br.y - extent.tl.y
-        size = max(width, height)
+        size = max(extent.br.x - extent.tl.x, extent.br.y - extent.tl.y)
+        α = width // (pad * size)
 
-        α = WIDTH / (pad * size)
-
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(surface)
 
         ctx.scale(α, α)
