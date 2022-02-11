@@ -247,6 +247,22 @@ class Blank(Primitive):
         return self.extent.apply(self.transform)
 
 
+class HRule(Primitive):
+    def __init__(self, length: float):
+        super().__init__()
+        self.length = length
+        self.origin = Point(0, 0)
+
+    def render_shape(self, ctx):
+        ctx.move_to(self.origin.x - self.length / 2, 0)
+        ctx.line_to(self.origin.x + self.length / 2, 0)
+
+    def get_extent(self):
+        tl = Point(-self.origin.x - self.length / 2, -self.stroke_width)
+        br = Point(+self.origin.x + self.length / 2, +self.stroke_width)
+        return Extent(tl, br).apply(self.transform)
+
+
 class Circle(Primitive):
     def __init__(self, radius: float):
         super().__init__()
@@ -389,4 +405,5 @@ class Diagram:
 
 circle = lambda size: Diagram.from_primitive(Circle(size))
 rectangle = lambda height, width: Diagram.from_primitive(Rectangle(height, width))
+hrule = lambda length: Diagram.from_primitive(HRule(length))
 square = lambda size: rectangle(size, size)
