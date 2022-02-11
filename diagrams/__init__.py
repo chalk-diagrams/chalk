@@ -279,7 +279,7 @@ class Circle(Primitive):
 
 
 class Rectangle(Primitive):
-    def __init__(self, height: float, width: float):
+    def __init__(self, width: float, height: float):
         super().__init__()
         self.width = width
         self.height = height
@@ -404,6 +404,7 @@ class Diagram:
 
 
 circle = lambda size: Diagram.from_primitive(Circle(size))
-rectangle = lambda height, width: Diagram.from_primitive(Rectangle(height, width))
+rectangle = lambda width, height: Diagram.from_primitive(Rectangle(width, height))
 hrule = lambda length: Diagram.from_primitive(HRule(length))
 square = lambda size: rectangle(size, size)
+blank = lambda x, y, w, h: Diagram.from_primitive(Blank(Extent(Point(x, y), Point(x + w, y + h))))
