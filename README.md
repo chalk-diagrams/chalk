@@ -43,6 +43,8 @@ streamlit run examples/escher_square_limit.py
 
 ## TODO
 
+- [ ] Finish refactoring
+    - [ ] Transform bounding boxes
 - [ ] Using bounding boxes as extents is not composable (rotate 45); for the moment restrict rotations to 90?
 - [ ] Composing transformations is not efficient.
 - [ ] Draw horizontal and vertical lines
