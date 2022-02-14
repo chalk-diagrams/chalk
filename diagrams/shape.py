@@ -1,7 +1,7 @@
 import math
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
@@ -48,3 +48,20 @@ class Rectangle(Shape):
         left = ORIGIN.x - self.width / 2
         top = ORIGIN.y - self.height / 2
         ctx.rectangle(left, top, self.width, self.height)
+
+
+@dataclass
+class Path(Shape):
+    points: List[Point]
+
+    def get_bounding_box(self) -> BoundingBox:
+        box = BoundingBox.empty()
+        for p in self.points:
+            box = box.enclose(p)
+        return box
+
+    def render(self, ctx: PyCairoContext) -> None:
+        p, *rest = self.points
+        ctx.move_to(p.x, p.y)
+        for p in rest:
+            ctx.line_to(p.x, p.y)

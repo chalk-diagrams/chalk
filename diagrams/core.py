@@ -80,6 +80,22 @@ class Diagram:
 
     __or__ = beside
 
+    def above(self, other):
+        box1 = self.get_bounding_box()
+        box2 = other.get_bounding_box()
+        dy = box1.bottom + box2.bottom
+        t = tx.Translate(0, dy)
+        new_box = box1.union(box2.apply_transform(t))
+        return Compose(new_box, self, ApplyTransform(t, other))
+
+    __div__ = above
+
+    def center_xy(self):
+        box = self.get_bounding_box()
+        c = box.center
+        t = tx.Translate(-c.x, -c.y)
+        return ApplyTransform(t, self)
+
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
 

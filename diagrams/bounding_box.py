@@ -45,6 +45,12 @@ class BoundingBox:
     def bottom(self) -> float:
         return self.br.y
 
+    @property
+    def center(self) -> Point:
+        x = (self.left + self.right) / 2
+        y = (self.top + self.bottom) / 2
+        return Point(x, y)
+
     def enclose(self, point: Point) -> "BoundingBox":
         return BoundingBox.from_limits(
             min(self.left, point.x),
