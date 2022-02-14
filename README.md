@@ -3,29 +3,45 @@ The design draws inspiration from the [diagrams](https://diagrams.github.io/) li
 
 ## Overview
 
-Shapes and attributes.
+This section gives an overview of the main functionality of the library.
+These examples are also available in the file `examples/intro.py`.
+
+We start by importing the color module and the diagrams functions:
 
 ```python
-yellow = RGB(233, 196, 106)
-charcoal = RGB(38, 70, 83)
-circle(1).set_fill_color(yellow).set_stroke_color(charcoal)
+from colour import Color
+from diagrams import *
 ```
-![circle](https://github.com/danoneata/pydiagrams/blob/master/examples/circle.png)
 
-Combining diagrams.
+Shapes and attributes:
 
 ```python
-aqua = RGB(0, 255, 255)
-circle(1) + square(1).set_fill_color(aqua)
+papaya = Color("#ff9700")
+d = circle(1).fill_color(papaya)
 ```
-![atop](https://github.com/danoneata/pydiagrams/blob/master/examples/atop.png)
+![circle](https://github.com/danoneata/pydiagrams/blob/master/examples/output/intro-01.png)
+
+Combining diagrams:
+
+```python
+blue = Color("#005FDB")
+circle(2).fill_color(papaya) | square(1).fill_color(blue)
+```
+
+which is equivalent to
+
+```python
+circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
+```
+
+![atop](https://github.com/danoneata/pydiagrams/blob/master/examples/output/intro-02.png)
 
 Combining diagrams, horizontal composition:
 
 ```python
-Diagram.hcat(circle(0.1 * i) for i in range(1, 6))
+hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 ```
-![hcat](https://github.com/danoneata/pydiagrams/blob/master/examples/hcat.png)
+![hcat](https://github.com/danoneata/pydiagrams/blob/master/examples/output/intro-03.png)
 
 ## More examples
 
@@ -33,20 +49,16 @@ Diagram.hcat(circle(0.1 * i) for i in range(1, 6))
 streamlit run examples/squares.py
 ```
 
-![squares](https://github.com/danoneata/pydiagrams/blob/master/examples/squares.png)
+![squares](https://github.com/danoneata/pydiagrams/blob/master/examples/output/squares.png)
 
 ```python
 streamlit run examples/escher_square_limit.py
 ```
 
-![escher](https://github.com/danoneata/pydiagrams/blob/master/examples/escher_square_limit.png)
+![escher](https://github.com/danoneata/pydiagrams/blob/master/examples/output/escher_square_limit.png)
 
 ## TODO
 
-- [ ] Finish refactoring
-    - [ ] Transform bounding boxes
-- [ ] Using bounding boxes as extents is not composable (rotate 45); for the moment restrict rotations to 90?
-- [ ] Composing transformations is not efficient.
 - [ ] Draw horizontal and vertical lines
 - [ ] Rename blank to phantom?
 - [ ] Allow change of file type for the `render` function
@@ -55,6 +67,8 @@ streamlit run examples/escher_square_limit.py
 - [ ] Allow for HSV colors
 - [ ] Add more examples: e.g., Vera Molnár's drawings, Hilbert curve, Escher's Square Limit
 - [ ] How to allow the context?
+- [x] Composing transformations is not efficient.
+- [x] Transform bounding boxes
 - [x] Add `Scale` transformation
 - [x] Show origin helper function
 - [x] Update width and height of image to fit all the contents

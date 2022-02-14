@@ -1,15 +1,13 @@
-import pdb
-import pprint
-
 from dataclasses import dataclass
-from functools import reduce
 from typing import Any, List, Optional, Tuple
 
 import cairo
+from colour import Color
+
 
 from diagrams.bounding_box import BoundingBox
-from diagrams.shape import Shape, Circle, Rectangle
 from diagrams.point import Point, ORIGIN
+from diagrams.shape import Shape
 from diagrams import transform as tx
 
 
@@ -19,12 +17,19 @@ I = tx.Identity()
 
 @dataclass
 class Style:
-    line_color: Tuple[float, float, float]
+    def __init__(self, line_color: Optional[Color] = None, fill_color: Optional[Color] = None):
+        self.line_color = line_color
+        self.fill_color = fill_color
 
     def render(self, ctx: PyCairoContext) -> None:
-        ctx.set_source_rgb(*self.line_color)
+        if self.fill_color:
+            ctx.set_source_rgb(*self.fill_color.rgb)
+            ctx.fill_preserve()
+
+        ctx.set_source_rgb(*self.line_color.rgb)
         ctx.set_line_width(0.01)
         ctx.stroke()
+
 
 @dataclass
 class Diagram:
@@ -46,8 +51,7 @@ class Diagram:
         ctx.scale(α, α)
         ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
 
-        prims = self.to_list(tx.Identity())
-        pprint.pprint(prims)
+        prims = self.to_list()
 
         for prim in prims:
             # apply transformation
@@ -87,6 +91,9 @@ class Diagram:
     def rotate(self, θ: float) -> "Diagram":
         return ApplyTransform(tx.Rotate(θ), self)
 
+    def fill_color(self, color: Color) -> "Diagram":
+        return ApplyStyle(Style(fill_color=color), self)
+
 
 @dataclass
 class Primitive(Diagram):
@@ -96,12 +103,17 @@ class Primitive(Diagram):
 
     @classmethod
     def from_shape(cls, shape: Shape) -> "Primitive":
-        return cls(shape, Style(line_color=(0, 0, 0)), tx.Identity())
+        return cls(shape, Style(line_color=Color("black")), I)
 
     def apply_transform(self, other_transform: tx.Transform) -> "Primitive":
-        return Primitive(
-            self.shape, self.style, tx.Compose(self.transform, other_transform)
-        )
+        new_transform = tx.Compose(self.transform, other_transform)
+        return Primitive(self.shape, self.style, new_transform)
+
+    def apply_style(self, other_style: Style) -> "Primitive":
+        line_color = other_style.line_color or self.style.line_color
+        fill_color = other_style.fill_color or self.style.fill_color
+        new_style = Style(line_color=line_color, fill_color=fill_color)
+        return Primitive(self.shape, new_style, self.transform)
 
     def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
         return self.shape.get_bounding_box().apply_transform(t)
@@ -157,51 +169,4 @@ class ApplyStyle(Diagram):
         return self.diagram.get_bounding_box(t)
 
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
-        return self.diagram.to_list(t)
-
-
-def circle(size: float) -> Diagram:
-    return Primitive.from_shape(Circle(size))
-
-
-def square(size: float) -> Diagram:
-    return Primitive.from_shape(Rectangle(size, size))
-
-
-def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
-    return diagram1.beside(diagram2)
-
-
-def hcat(diagrams: List[Diagram]) -> Diagram:
-    return reduce(beside, diagrams)
-
-
-if __name__ == "__main__":
-    import math
-    import streamlit as st  # type: ignore
-
-    path = "/tmp/o.png"
-    # example 1
-    # d = circle(1) + square(1)
-    # d.render(path)
-    # st.code("circle(1) + square(1)")
-    # st.image(path)
-    # example 2
-    # d = circle(1) | square(1)
-    # st.code("circle(1) | square(1)")
-    # st.code(repr(d))
-    # d.render(path)
-    # st.image(path)
-    # example 3
-    d = hcat([circle(1) for _ in range(3)])
-    d = circle(1).beside(circle(1)).beside(circle(1))
-    pprint.pprint(d)
-    d.render(path)
-    st.image(path)
-    st.code(repr(d))
-    st.markdown("---")
-    # example 4
-    d = square(1).rotate(math.pi / 4).rotate(math.pi / 4).rotate(math.pi / 4).rotate(math.pi / 4) | circle(1)
-    d.render(path)
-    st.image(path)
-    st.code(d.get_bounding_box(tx.Identity()))
+        return [prim.apply_style(self.style) for prim in self.diagram.to_list(t)]
