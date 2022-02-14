@@ -1,34 +1,39 @@
 import math
 import random
 
+from itertools import product
+
 import streamlit as st  # type: ignore
 
-from diagrams import Diagram, RGB, rectangle
+from colour import Color
+from diagrams import square, concat
 
 
 def make_square():
     colors = [
-        RGB(38, 70, 83),  # charcoal
-        RGB(233, 196, 106),  # orange yellow crayola
+        Color("#ff9700"),  # papaya
+        Color("#005FDB"),  # blue
     ]
+
     # generate uniformly a value in [-max_angle, max_angle]
     max_angle = math.pi / 24.0
     θ = 2 * max_angle * random.random() - max_angle
+
     # pick a random color
     i = random.random() > 0.75
     color = colors[i]
-    return rectangle(0.15, 0.15).set_stroke_color(color).rotate(θ)
+
+    return square(0.75).line_color(color).rotate(θ)
 
 
 def make_group(num_squares=4):
-    return Diagram.concat(make_square() for _ in range(4))
+    return concat(make_square() for _ in range(num_squares))
 
 
-disps = [0.2, 0.4, 0.6, 0.8]
-centers = [(x, y) for x in disps for y in disps]
-diagram = Diagram.concat(make_group().translate(x, y) for x, y in centers)
-diagram = diagram.fmap(lambda s: s.set_stroke_width(0.005))
+disps = range(4)
+diagram = concat(make_group().translate(x, y) for x, y in product(disps, disps))
+diagram = diagram.line_width(0.02)
 
-path = "test.png"
-diagram.render(path)
+path = "examples/output/squares.png"
+diagram.render(path, height=512)
 st.image(path)

@@ -59,14 +59,13 @@ streamlit run examples/escher_square_limit.py
 
 ## TODO
 
-- [ ] Draw horizontal and vertical lines
-- [ ] Rename blank to phantom?
+- [ ] Draw paths
 - [ ] Allow change of file type for the `render` function
 - [ ] Add `rotate_by` transformation (rotates by a fraction of the circle)
 - [ ] Define color names
-- [ ] Allow for HSV colors
 - [ ] Add more examples: e.g., Vera Molnár's drawings, Hilbert curve, Escher's Square Limit
 - [ ] How to allow the context?
+- [x] Allow for HSV colors
 - [x] Composing transformations is not efficient.
 - [x] Transform bounding boxes
 - [x] Add `Scale` transformation

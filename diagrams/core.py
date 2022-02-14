@@ -4,7 +4,6 @@ from typing import Any, List, Optional, Tuple
 import cairo
 from colour import Color
 
-
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
 from diagrams.shape import Shape
@@ -18,10 +17,18 @@ I = tx.Identity()
 @dataclass
 class Style:
     def __init__(
-        self, line_color: Optional[Color] = None, fill_color: Optional[Color] = None
+        self,
+        line_width: Optional[float] = None,
+        line_color: Optional[Color] = None,
+        fill_color: Optional[Color] = None,
     ):
+        self.line_width = line_width
         self.line_color = line_color
         self.fill_color = fill_color
+
+    @classmethod
+    def default(cls):
+        return cls(line_width=0.01, line_color=Color("black"))
 
     def render(self, ctx: PyCairoContext) -> None:
         if self.fill_color:
@@ -29,7 +36,7 @@ class Style:
             ctx.fill_preserve()
 
         ctx.set_source_rgb(*self.line_color.rgb)
-        ctx.set_line_width(0.01)
+        ctx.set_line_width(self.line_width)
         ctx.stroke()
 
 
@@ -97,8 +104,17 @@ class Diagram:
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
 
+    def translate(self, dx: float, dy: float) -> "Diagram":
+        return ApplyTransform(tx.Translate(dx, dy), self)
+
     def rotate(self, θ: float) -> "Diagram":
         return ApplyTransform(tx.Rotate(θ), self)
+
+    def line_width(self, width: float) -> "Diagram":
+        return ApplyStyle(Style(line_width=width), self)
+
+    def line_color(self, color: Color) -> "Diagram":
+        return ApplyStyle(Style(line_color=color), self)
 
     def fill_color(self, color: Color) -> "Diagram":
         return ApplyStyle(Style(fill_color=color), self)
@@ -112,16 +128,19 @@ class Primitive(Diagram):
 
     @classmethod
     def from_shape(cls, shape: Shape) -> "Primitive":
-        return cls(shape, Style(line_color=Color("black")), I)
+        return cls(shape, Style.default(), I)
 
     def apply_transform(self, other_transform: tx.Transform) -> "Primitive":
-        new_transform = tx.Compose(self.transform, other_transform)
+        new_transform = tx.Compose(other_transform, self.transform)
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":
+        line_width = other_style.line_width or self.style.line_width
         line_color = other_style.line_color or self.style.line_color
         fill_color = other_style.fill_color or self.style.fill_color
-        new_style = Style(line_color=line_color, fill_color=fill_color)
+        new_style = Style(
+            line_width=line_width, line_color=line_color, fill_color=fill_color
+        )
         return Primitive(self.shape, new_style, self.transform)
 
     def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
@@ -147,10 +166,7 @@ class Compose(Diagram):
     diagram2: Diagram
 
     def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
-        return self.box
-        # box1 = self.diagram1.get_bounding_box(t)
-        # box2 = self.diagram2.get_bounding_box(t)
-        # return box1.union(box2)
+        return self.box.apply_transform(t)
 
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
@@ -162,14 +178,12 @@ class ApplyTransform(Diagram):
     diagram: Diagram
 
     def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
-        t_new = tx.Compose(self.transform, t)
+        t_new = tx.Compose(t, self.transform)
         return self.diagram.get_bounding_box(t_new)
 
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
-        return [
-            prim.apply_transform(tx.Compose(self.transform, t))
-            for prim in self.diagram.to_list(t)
-        ]
+        t_new = tx.Compose(t, self.transform)
+        return [prim.apply_transform(t_new) for prim in self.diagram.to_list(t)]
 
 
 @dataclass
