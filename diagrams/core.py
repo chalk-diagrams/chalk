@@ -1,20 +1,20 @@
 import pdb
 import pprint
 
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import reduce
 from typing import Any, List, Optional, Tuple
 
 import cairo
 
-from diagrams.bounding_box import BoundingBox, EMPTY_BOUNDING_BOX
+from diagrams.bounding_box import BoundingBox
 from diagrams.shape import Shape, Circle, Rectangle
 from diagrams.point import Point, ORIGIN
 from diagrams import transform as tx
 
 
 PyCairoContext = Any
+I = tx.Identity()
 
 
 @dataclass
@@ -26,16 +26,13 @@ class Style:
         ctx.set_line_width(0.01)
         ctx.stroke()
 
-
 @dataclass
-class Diagram(ABCMeta):
-    @abstractmethod
-    def get_bounding_box(self) -> BoundingBox:
-        pass
+class Diagram:
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        raise NotImplemented
 
-    @abstractmethod
-    def to_list(self) -> List["Primitive"]:
-        pass
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        raise NotImplemented
 
     def render(self, path: str, width: int=128, height: int=128, pad: float=0.05) -> None:
         box = self.get_bounding_box()
@@ -49,7 +46,7 @@ class Diagram(ABCMeta):
         ctx.scale(α, α)
         ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
 
-        prims = self.to_list()
+        prims = self.to_list(tx.Identity())
         pprint.pprint(prims)
 
         for prim in prims:
@@ -67,25 +64,28 @@ class Diagram(ABCMeta):
         surface.write_to_png(path)
 
     def atop(self, other: "Diagram") -> "Diagram":
-        box = self.get_bounding_box().union(other.get_bounding_box())
-        return Compose(box, self, other)
+        box1 = self.get_bounding_box()
+        box2 = other.get_bounding_box()
+        new_box = box1.union(box2)
+        return Compose(new_box, self, other)
 
     __add__ = atop
 
     def beside(self, other: "Diagram") -> "Diagram":
-        # TODO? Transform bounding boxes?!
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dx = box1.right + box2.right
-        top = min(box1.top, box2.top)
-        bot = max(box1.bottom, box2.bottom)
-        new_box = BoundingBox.from_limits(box1.left, top, box2.right + dx, bot)
-        return Compose(new_box, self, ApplyTransform(tx.Translate(dx, 0), other))
+        t = tx.Translate(dx, 0)
+        new_box = box1.union(box2.apply_transform(t))
+        return Compose(new_box, self, ApplyTransform(t, other))
 
     __or__ = beside
 
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
+
+    def rotate(self, θ: float) -> "Diagram":
+        return ApplyTransform(tx.Rotate(θ), self)
 
 
 @dataclass
@@ -103,19 +103,19 @@ class Primitive(Diagram):
             self.shape, self.style, tx.Compose(self.transform, other_transform)
         )
 
-    def get_bounding_box(self) -> BoundingBox:
-        return self.shape.get_bounding_box()
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        return self.shape.get_bounding_box().apply_transform(t)
 
-    def to_list(self) -> List["Primitive"]:
-        return [self]
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return [self.apply_transform(t)]
 
 
 @dataclass
 class Empty(Diagram):
-    def get_bounding_box(self) -> BoundingBox:
-        return EMPTY_BOUNDING_BOX
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        return BoundingBox.empty()
 
-    def to_list(self) -> List["Primitive"]:
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
         return []
 
 
@@ -125,11 +125,14 @@ class Compose(Diagram):
     diagram1: Diagram
     diagram2: Diagram
 
-    def get_bounding_box(self) -> BoundingBox:
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
         return self.box
+        # box1 = self.diagram1.get_bounding_box(t)
+        # box2 = self.diagram2.get_bounding_box(t)
+        # return box1.union(box2)
 
-    def to_list(self) -> List["Primitive"]:
-        return self.diagram1.to_list() + self.diagram2.to_list()
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return self.diagram1.to_list(t) + self.diagram2.to_list(t)
 
 
 @dataclass
@@ -137,11 +140,12 @@ class ApplyTransform(Diagram):
     transform: tx.Transform
     diagram: Diagram
 
-    def get_bounding_box(self) -> BoundingBox:
-        return self.diagram.get_bounding_box().apply_transform(self.transform)
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        t_new = tx.Compose(self.transform, t)
+        return self.diagram.get_bounding_box(t_new)
 
-    def to_list(self) -> List["Primitive"]:
-        return [prim.apply_transform(self.transform) for prim in self.diagram.to_list()]
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return [prim.apply_transform(tx.Compose(self.transform, t)) for prim in self.diagram.to_list(t)]
 
 
 @dataclass
@@ -149,11 +153,11 @@ class ApplyStyle(Diagram):
     style: Style
     diagram: Diagram
 
-    def get_bounding_box(self) -> BoundingBox:
-        return self.diagram.get_bounding_box()
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        return self.diagram.get_bounding_box(t)
 
-    def to_list(self) -> List["Primitive"]:
-        return self.diagram.to_list()
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return self.diagram.to_list(t)
 
 
 def circle(size: float) -> Diagram:
@@ -173,6 +177,7 @@ def hcat(diagrams: List[Diagram]) -> Diagram:
 
 
 if __name__ == "__main__":
+    import math
     import streamlit as st  # type: ignore
 
     path = "/tmp/o.png"
@@ -188,7 +193,15 @@ if __name__ == "__main__":
     # d.render(path)
     # st.image(path)
     # example 3
-    d = hcat([circle(1) for _ in range(6)])
-    st.code(repr(d))
+    d = hcat([circle(1) for _ in range(3)])
+    d = circle(1).beside(circle(1)).beside(circle(1))
+    pprint.pprint(d)
     d.render(path)
     st.image(path)
+    st.code(repr(d))
+    st.markdown("---")
+    # example 4
+    d = square(1).rotate(math.pi / 4).rotate(math.pi / 4).rotate(math.pi / 4).rotate(math.pi / 4) | circle(1)
+    d.render(path)
+    st.image(path)
+    st.code(d.get_bounding_box(tx.Identity()))
