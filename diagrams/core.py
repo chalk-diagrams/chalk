@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 import cairo
-from colour import Color
+from colour import Color  # type: ignore
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
 from diagrams.shape import Shape
+from diagrams.style import Style
 from diagrams import transform as tx
 
 
@@ -15,37 +16,15 @@ I = tx.Identity()
 
 
 @dataclass
-class Style:
-    def __init__(
-        self,
-        line_width: Optional[float] = None,
-        line_color: Optional[Color] = None,
-        fill_color: Optional[Color] = None,
-    ):
-        self.line_width = line_width
-        self.line_color = line_color
-        self.fill_color = fill_color
-
-    @classmethod
-    def default(cls):
-        return cls(line_width=0.01, line_color=Color("black"))
-
-    def render(self, ctx: PyCairoContext) -> None:
-        if self.fill_color:
-            ctx.set_source_rgb(*self.fill_color.rgb)
-            ctx.fill_preserve()
-
-        ctx.set_source_rgb(*self.line_color.rgb)
-        ctx.set_line_width(self.line_width)
-        ctx.stroke()
-
-
-@dataclass
 class Diagram:
     def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
         raise NotImplemented
 
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
+        is accumulated upwards, from the tree's leaves.
+
+        """
         raise NotImplemented
 
     def render(self, path: str, height: int = 128, width: Optional[int] = None) -> None:
