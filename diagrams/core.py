@@ -17,7 +17,9 @@ I = tx.Identity()
 
 @dataclass
 class Style:
-    def __init__(self, line_color: Optional[Color] = None, fill_color: Optional[Color] = None):
+    def __init__(
+        self, line_color: Optional[Color] = None, fill_color: Optional[Color] = None
+    ):
         self.line_color = line_color
         self.fill_color = fill_color
 
@@ -39,11 +41,18 @@ class Diagram:
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
         raise NotImplemented
 
-    def render(self, path: str, width: int=128, height: int=128, pad: float=0.05) -> None:
+    def render(self, path: str, height: int = 128, width: Optional[int] = None) -> None:
+        pad = 0.05
         box = self.get_bounding_box()
 
-        size = max(box.width, box.height)
-        α = width // ((1 + pad) * size)
+        # infer width to preserve aspect ratio
+        width = width or int(height * box.width / box.height)
+
+        # determine scale to fit the largest axis in the target frame size
+        if box.width - width <= box.height - height:
+            α = height // ((1 + pad) * box.height)
+        else:
+            α = width // ((1 + pad) * box.width)
 
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(surface)
@@ -157,7 +166,10 @@ class ApplyTransform(Diagram):
         return self.diagram.get_bounding_box(t_new)
 
     def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
-        return [prim.apply_transform(tx.Compose(self.transform, t)) for prim in self.diagram.to_list(t)]
+        return [
+            prim.apply_transform(tx.Compose(self.transform, t))
+            for prim in self.diagram.to_list(t)
+        ]
 
 
 @dataclass
