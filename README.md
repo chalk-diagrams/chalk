@@ -1,5 +1,8 @@
 Pydiagrams is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
-The API draws heavy inspiration from Haskell's [diagrams](https://diagrams.github.io/) and Scala's [doodle](https://github.com/creativescala/doodle/).
+The API draws heavy inspiration from
+Haskell's [diagrams](https://diagrams.github.io/),
+Scala's [doodle](https://github.com/creativescala/doodle/) and
+Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific Languages](http://www.cs.ox.ac.uk/publications/publication7583-abstract.html).
 
 ⚠️ The library is still very much work in progress and subject to change.
 
@@ -91,4 +94,8 @@ streamlit run examples/squares.py
 streamlit run examples/escher_square_limit.py
 ```
 
-![escher](examples/output/escher_square_limit.png)
+![escher](examples/output/escher-square-limit.png)
+
+## Acknowledgements
+
+Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing his useful insights and comments!
