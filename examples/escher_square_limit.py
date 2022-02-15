@@ -9,7 +9,6 @@ import streamlit as st  # type: ignore
 
 from toolz import take, iterate  # type: ignore
 
-from colour import Color
 from diagrams import concat, make_path, square
 
 
@@ -87,7 +86,7 @@ markings = {
 
 output_path = "examples/output/escher-square-limit.png"
 names = "pqrs"
-blank = square(1).line_color(Color("white"))
+blank = square(1).line_width(0)
 θ = -math.pi / 2
 
 
@@ -99,7 +98,6 @@ def normalize(coords):
 
 
 def make_tile(name):
-    blank = square(16)
     return concat(make_path(normalize(coords)) for coords in markings[name])
 
 

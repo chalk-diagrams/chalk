@@ -133,9 +133,9 @@ class Primitive(Diagram):
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":
-        line_width = other_style.line_width or self.style.line_width
-        line_color = other_style.line_color or self.style.line_color
-        fill_color = other_style.fill_color or self.style.fill_color
+        line_width = other_style.line_width if other_style.line_width is not None else self.style.line_width
+        line_color = other_style.line_color if other_style.line_color is not None else self.style.line_color
+        fill_color = other_style.fill_color if other_style.fill_color is not None else self.style.fill_color
         new_style = Style(
             line_width=line_width, line_color=line_color, fill_color=fill_color
         )

@@ -33,8 +33,15 @@ class Style:
             ctx.fill_preserve()
 
         # set default values if they are not provided
-        lc = self.line_color or self.LC
-        lw = self.line_width or self.LW
+        if self.line_color is None:
+            lc = self.LC
+        else:
+            lc = self.line_color
+
+        if self.line_color is None:
+            lw = self.LW
+        else:
+            lw = self.line_width
 
         ctx.set_source_rgb(*lc.rgb)
         ctx.set_line_width(lw)
