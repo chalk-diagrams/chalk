@@ -88,7 +88,7 @@ class Diagram:
         new_box = box1.union(box2.apply_transform(t))
         return Compose(new_box, self, ApplyTransform(t, other))
 
-    __div__ = above
+    __truediv__ = above
 
     def center_xy(self):
         box = self.get_bounding_box()
@@ -98,6 +98,9 @@ class Diagram:
 
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
+
+    def scale(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(α), self)
 
     def translate(self, dx: float, dy: float) -> "Diagram":
         return ApplyTransform(tx.Translate(dx, dy), self)

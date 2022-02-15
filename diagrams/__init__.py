@@ -8,6 +8,11 @@ from diagrams.shape import Shape, Circle, Rectangle, Path
 from diagrams.point import Point
 
 
+def make_path(coords: List[Tuple[float, float]]) -> Diagram:
+    points = [Point(x, y) for x, y in coords]
+    return Primitive.from_shape(Path(points))
+
+
 def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
@@ -19,8 +24,7 @@ def triangle(width: float) -> Diagram:
         (- width / 2.0, width / math.sqrt(3) * 0.5),
         (0, - width / math.sqrt(3)),
     ]
-    points = [Point(x, y) for x, y in coords]
-    return Primitive.from_shape(Path(points))
+    return make_path(coords)
 
 
 def rectangle(width: float, height: float) -> Diagram:

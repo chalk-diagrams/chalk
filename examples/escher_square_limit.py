@@ -1,10 +1,16 @@
+# This example is based on a corresponding example from Lisp by Frank Buss:
+# https://frank-buss.de/lisp/functional.html
+# A more general implementation is provided by Jeremy Gibbons using diagrams in Haskell:
+# https://archives.haskell.org/projects.haskell.org/diagrams/gallery/SquareLimit.html
+
 import math
 
 import streamlit as st  # type: ignore
 
 from toolz import take, iterate  # type: ignore
 
-from diagrams import Blank, Diagram, Extent, Point, Rectangle, RGB, Trail
+from colour import Color
+from diagrams import concat, make_path, square
 
 
 # fmt: off
@@ -79,36 +85,41 @@ markings = {
 }
 # fmt: on
 
+output_path = "examples/output/escher-square-limit.png"
+names = "pqrs"
+blank = square(1).line_color(Color("white"))
+θ = -math.pi / 2
 
-def normalize(points):
-    def center(val):
-        return val - 8
 
-    return [(center(x), center(y)) for x, y in points]
+def normalize(coords):
+    def center(val: float) -> float:
+        return (val - 8) / 16
+
+    return [(center(x), -center(y)) for x, y in coords]
+
+
+def make_tile(name):
+    blank = square(16)
+    return concat(make_path(normalize(coords)) for coords in markings[name])
 
 
 def quartet(tl, tr, bl, br):
     diagram = (tl | tr) / (bl | br)
-    return diagram.scale(0.5)
+    return diagram.center_xy().scale(0.5)
 
 
-def cycle(diagram: Diagram) -> Diagram:
-    θ = math.pi / 2
-    tl, bl, br, tr = take(4, iterate(lambda d: d.rotate(θ), diagram))
+def cycle(diagram):
+    tl = diagram
+    tr = diagram.rotate(θ).rotate(θ).rotate(θ)
+    bl = diagram.rotate(θ)
+    br = diagram.rotate(θ).rotate(θ)
     return quartet(tl, tr, bl, br)
 
 
-names = "pqrs"
-tile_extent = Extent(Point(-8, -8), Point(8, 8))
-diagrams = {
-    name: Diagram([Trail(normalize(t), tile_extent) for t in markings[name]])
-    for name in names
-}
-blank = Diagram([Blank(tile_extent)])
+fish = {name: make_tile(name) for name in names}
 
-θ = math.pi / 2
-fish_t = quartet(diagrams["p"], diagrams["q"], diagrams["r"], diagrams["s"])
-fish_u = cycle(diagrams["q"].rotate(θ))
+fish_t = quartet(fish["p"], fish["q"], fish["r"], fish["s"])
+fish_u = cycle(fish["q"].rotate(θ))
 side_1 = quartet(blank, blank, fish_t.rotate(θ), fish_t)
 side_2 = quartet(side_1, side_1, fish_t.rotate(θ), fish_t)
 corner_1 = quartet(blank, blank, blank, fish_u)
@@ -116,6 +127,5 @@ corner_2 = quartet(corner_1, side_1, side_1.rotate(θ), fish_u)
 pseudocorner = quartet(corner_2, side_2, side_2.rotate(θ), fish_t.rotate(θ))
 pseudolimit = cycle(pseudocorner)
 
-path = "test.png"
-pseudolimit.set_stroke_width(0.001).scale(1 / 16).reflect_y().translate(0.5, 0.5).render(path)
-st.image(path)
+pseudolimit.render(output_path, height=512)
+st.image(output_path)
