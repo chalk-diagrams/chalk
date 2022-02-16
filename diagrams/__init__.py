@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Any, List, Optional, Tuple
 
 from diagrams.core import Diagram, Primitive
-from diagrams.shape import Shape, Circle, Rectangle, Path
+from diagrams.shape import Shape, Circle, Rectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -33,6 +33,10 @@ def rectangle(width: float, height: float) -> Diagram:
 
 def square(side: float) -> Diagram:
     return Primitive.from_shape(Rectangle(side, side))
+
+
+def text(t: str) -> Diagram:
+    return Primitive.from_shape(Text(t))
 
 
 def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:

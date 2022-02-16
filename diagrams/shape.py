@@ -65,3 +65,15 @@ class Path(Shape):
         ctx.move_to(p.x, p.y)
         for p in rest:
             ctx.line_to(p.x, p.y)
+
+
+@dataclass
+class Text(Shape):
+    text: str
+
+    def get_bounding_box(self) -> BoundingBox:
+        return BoundingBox.empty()
+
+    def render(self, ctx: PyCairoContext) -> None:
+        ctx.select_font_face("sans-serif")
+        ctx.show_text(self.text)
