@@ -22,6 +22,14 @@ class BoundingBox:
         return cls(ORIGIN, ORIGIN)
 
     @property
+    def tr(self) -> Point:
+        return Point(self.right, self.top)
+
+    @property
+    def bl(self) -> Point:
+        return Point(self.left, self.bottom)
+
+    @property
     def width(self) -> float:
         return self.br.x - self.tl.x
 
@@ -60,12 +68,12 @@ class BoundingBox:
         )
 
     def apply_transform(self, t: Transform) -> "BoundingBox":
+        tl = self.tl.apply_transform(t)
         return (
-            BoundingBox.empty()
-            .enclose(Point(self.left, self.top).apply_transform(t))
-            .enclose(Point(self.right, self.top).apply_transform(t))
-            .enclose(Point(self.left, self.bottom).apply_transform(t))
-            .enclose(Point(self.right, self.bottom).apply_transform(t))
+            BoundingBox(tl, tl)
+            .enclose(self.tr.apply_transform(t))
+            .enclose(self.bl.apply_transform(t))
+            .enclose(self.br.apply_transform(t))
         )
 
     def union(self, other: "BoundingBox") -> "BoundingBox":
