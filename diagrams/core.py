@@ -80,7 +80,7 @@ class Diagram:
 
     __or__ = beside
 
-    def above(self, other):
+    def above(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dy = box1.bottom + box2.bottom
@@ -90,7 +90,7 @@ class Diagram:
 
     __truediv__ = above
 
-    def center_xy(self):
+    def center_xy(self) -> "Diagram":
         box = self.get_bounding_box()
         c = box.center
         t = tx.Translate(-c.x, -c.y)
