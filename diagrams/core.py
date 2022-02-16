@@ -1,3 +1,5 @@
+import math
+
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
@@ -6,7 +8,7 @@ from colour import Color  # type: ignore
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
-from diagrams.shape import Shape
+from diagrams.shape import Shape, Circle
 from diagrams.style import Style
 from diagrams import transform as tx
 
@@ -108,10 +110,19 @@ class Diagram:
     def reflect_y(self) -> "Diagram":
         return ApplyTransform(tx.Scale(+1, -1), self)
 
+    def at(self, x: float, y: float) -> "Diagram":
+        t = tx.Translate(x, y)
+        return ApplyTransform(t, self.center_xy())
+
     def translate(self, dx: float, dy: float) -> "Diagram":
         return ApplyTransform(tx.Translate(dx, dy), self)
 
     def rotate(self, θ: float) -> "Diagram":
+        return ApplyTransform(tx.Rotate(θ), self)
+
+    def rotate_by(self, turns: float) -> "Diagram":
+        """Rotate by fractions of a circle (turn)."""
+        θ = 2 * math.pi * turns
         return ApplyTransform(tx.Rotate(θ), self)
 
     def line_width(self, width: float) -> "Diagram":
@@ -122,6 +133,12 @@ class Diagram:
 
     def fill_color(self, color: Color) -> "Diagram":
         return ApplyStyle(Style(fill_color=color), self)
+
+    def show_origin(self) -> "Diagram":
+        box = self.get_bounding_box()
+        origin_size = min(box.height, box.width) / 50
+        origin = Primitive(Circle(origin_size), Style(fill_color=Color("red")), I)
+        return self + origin
 
 
 @dataclass
