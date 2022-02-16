@@ -17,27 +17,12 @@ class Identity(Transform):
 
 @dataclass
 class Scale(Transform):
-    α: float
+    αx: float
+    αy: float
 
     def __call__(self) -> cairo.Matrix:
         matrix = cairo.Matrix()
-        matrix.scale(self.α, self.α)
-        return matrix
-
-
-@dataclass
-class ReflectX(Transform):
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix()
-        matrix.scale(-1, 1)
-        return matrix
-
-
-@dataclass
-class ReflectY(Transform):
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix()
-        matrix.scale(1, -1)
+        matrix.scale(self.αx, self.αy)
         return matrix
 
 

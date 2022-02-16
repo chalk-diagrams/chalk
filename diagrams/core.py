@@ -100,7 +100,13 @@ class Diagram:
         return ApplyTransform(transform, self)
 
     def scale(self, α: float) -> "Diagram":
-        return ApplyTransform(tx.Scale(α), self)
+        return ApplyTransform(tx.Scale(α, α), self)
+
+    def reflect_x(self) -> "Diagram":
+        return ApplyTransform(tx.Scale(-1, +1), self)
+
+    def reflect_y(self) -> "Diagram":
+        return ApplyTransform(tx.Scale(+1, -1), self)
 
     def translate(self, dx: float, dy: float) -> "Diagram":
         return ApplyTransform(tx.Translate(dx, dy), self)
