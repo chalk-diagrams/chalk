@@ -38,7 +38,7 @@ class Style:
         else:
             lc = self.line_color
 
-        if self.line_color is None:
+        if self.line_width is None:
             lw = self.LW
         else:
             lw = self.line_width
