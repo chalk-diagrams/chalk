@@ -98,4 +98,4 @@ streamlit run examples/escher_square_limit.py
 
 ## Acknowledgements
 
-Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing his useful insights and comments!
+Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
