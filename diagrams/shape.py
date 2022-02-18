@@ -3,6 +3,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, List
 
+import cairo
+
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
 
@@ -71,9 +73,19 @@ class Path(Shape):
 class Text(Shape):
     text: str
 
+    def __post_init__(self):
+        surface = cairo.RecordingSurface(cairo.Content.COLOR, None)
+        self.ctx = cairo.Context(surface)
+
     def get_bounding_box(self) -> BoundingBox:
-        return BoundingBox.empty()
+        extents = self.ctx.text_extents(self.text)
+        return BoundingBox.from_limits(
+            left=extents.x_bearing,
+            top=extents.y_bearing,
+            right=extents.x_bearing + extents.width,
+            bottom=extents.y_bearing + extents.height,
+        )
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.select_font_face("sans-serif")
-        ctx.show_text(self.text)
+        ctx.text_path(self.text)
