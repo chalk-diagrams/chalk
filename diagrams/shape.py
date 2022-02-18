@@ -73,8 +73,8 @@ class Path(Shape):
 class Text(Shape):
     text: str
 
-    def __post_init__(self):
-        surface = cairo.RecordingSurface(cairo.Content.COLOR, None)
+    def __post_init__(self) -> None:
+        surface = cairo.RecordingSurface(cairo.Content.COLOR, None)  # type: ignore
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:

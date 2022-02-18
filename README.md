@@ -96,6 +96,12 @@ streamlit run examples/escher_square_limit.py
 
 ![escher](examples/output/escher-square-limit.png)
 
+```bash
+streamlit run examples/hanoi.py
+```
+
+![hanoi](examples/output/hanoi.png)
+
 ## Acknowledgements
 
 Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!

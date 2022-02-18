@@ -1,11 +1,15 @@
 import math
 
 from functools import reduce
-from typing import Any, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
-from diagrams.core import Diagram, Primitive
+from diagrams.core import Diagram, Empty, Primitive
 from diagrams.shape import Shape, Circle, Rectangle, Path, Text
 from diagrams.point import Point
+
+
+def empty() -> Diagram:
+    return Empty()
 
 
 def make_path(coords: List[Tuple[float, float]]) -> Diagram:
@@ -47,9 +51,17 @@ def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.beside(diagram2)
 
 
-def concat(diagrams: List[Diagram]) -> Diagram:
-    return reduce(atop, diagrams)
+def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+    return diagram1.above(diagram2)
 
 
-def hcat(diagrams: List[Diagram]) -> Diagram:
-    return reduce(beside, diagrams)
+def concat(diagrams: Iterable[Diagram]) -> Diagram:
+    return reduce(atop, diagrams, empty())
+
+
+def hcat(diagrams: Iterable[Diagram]) -> Diagram:
+    return reduce(beside, diagrams, empty())
+
+
+def vcat(diagrams: Iterable[Diagram]) -> Diagram:
+    return reduce(above, diagrams, empty())

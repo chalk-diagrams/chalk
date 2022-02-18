@@ -98,6 +98,16 @@ class Diagram:
         t = tx.Translate(-c.x, -c.y)
         return ApplyTransform(t, self)
 
+    def align_t(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(0, -box.top)
+        return ApplyTransform(t, self)
+
+    def align_b(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(0, -box.bottom)
+        return ApplyTransform(t, self)
+
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
 
