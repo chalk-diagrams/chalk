@@ -105,3 +105,10 @@ streamlit run examples/hanoi.py
 ## Acknowledgements
 
 Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
+
+## TODO
+
+- [ ] Improve positioning (`at`, `above`, `beside`) after translations (currently the behaviour is not very consistent).
+- [ ] Add example: [Brent–Kung parallel prefix circuit](http://www.cs.ox.ac.uk/jeremy.gibbons/publications/embedding.pdf).
+- [ ] Remove dependency on streamlit.
+- [ ] Decide on a more inspired name for the library.
