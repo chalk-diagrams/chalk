@@ -75,7 +75,7 @@ class Diagram:
     def beside(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
-        dx = box1.right + box2.right
+        dx = box1.right - box2.left
         t = tx.Translate(dx, 0)
         new_box = box1.union(box2.apply_transform(t))
         return Compose(new_box, self, ApplyTransform(t, other))
@@ -85,7 +85,7 @@ class Diagram:
     def above(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
-        dy = box1.bottom + box2.bottom
+        dy = box1.bottom - box2.top
         t = tx.Translate(0, dy)
         new_box = box1.union(box2.apply_transform(t))
         return Compose(new_box, self, ApplyTransform(t, other))
@@ -120,9 +120,9 @@ class Diagram:
     def reflect_y(self) -> "Diagram":
         return ApplyTransform(tx.Scale(+1, -1), self)
 
-    def at(self, x: float, y: float) -> "Diagram":
-        t = tx.Translate(x, y)
-        return ApplyTransform(t, self.center_xy())
+    # def at(self, x: float, y: float) -> "Diagram":
+    #     t = tx.Translate(x, y)
+    #     return ApplyTransform(t, self.center_xy())
 
     def translate(self, dx: float, dy: float) -> "Diagram":
         return ApplyTransform(tx.Translate(dx, dy), self)
