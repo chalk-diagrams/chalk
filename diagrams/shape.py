@@ -1,7 +1,7 @@
 import math
 
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, List, Optional
 
 import cairo
 
@@ -51,7 +51,29 @@ class Rectangle(Shape):
         top = ORIGIN.y - self.height / 2
         ctx.rectangle(left, top, self.width, self.height)
 
+@dataclass
+class RoundedRectangle(Shape):
+    width: float
+    height: float
+    radius: float
+    
+    def get_bounding_box(self) -> BoundingBox:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        tl = Point(left, top)
+        br = Point(left + self.width, top + self.height)
+        return BoundingBox(tl, br)
 
+    def render(self, ctx: PyCairoContext) -> None:
+        x = ORIGIN.x - self.width / 2
+        y = ORIGIN.y - self.height / 2
+        r = self.radius
+        ctx.arc(x + r, y + r, r, math.pi, 3*math.pi/2)
+        ctx.arc(x + self.width-r, y+r, r, 3*math.pi/2, 0)
+        ctx.arc(x + self.width-r, y + self.height-r, r, 0, math.pi/2)
+        ctx.arc(x+r, y + self.height-r, r, math.pi/2, math.pi)
+        ctx.close_path()
+        
 @dataclass
 class Path(Shape):
     points: List[Point]
@@ -72,20 +94,30 @@ class Path(Shape):
 @dataclass
 class Text(Shape):
     text: str
+    font_size: Optional[float]
 
     def __post_init__(self) -> None:
         surface = cairo.RecordingSurface(cairo.Content.COLOR, None)  # type: ignore
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:
-        extents = self.ctx.text_extents(self.text)
-        return BoundingBox.from_limits(
-            left=extents.x_bearing,
-            top=extents.y_bearing,
-            right=extents.x_bearing + extents.width,
-            bottom=extents.y_bearing + extents.height,
-        )
+        self.ctx.select_font_face("sans-serif")
+        if self.font_size is not None:
+            self.ctx.set_font_size(self.font_size)
+        extents = self.ctx.text_extents(self.text)        
+        left = extents.x_bearing - (extents.width / 2)
+        top = extents.y_bearing
+        tl = Point(left, top)
+        br = Point(left + extents.width, top + extents.height)
+        self.bb = BoundingBox(tl, br)
+        return self.bb
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.select_font_face("sans-serif")
+        if self.font_size is not None:
+            ctx.set_font_size(self.font_size)
+        extents = ctx.text_extents(self.text)
+        ctx.move_to(-(extents.width / 2),
+                    (extents.height / 2))
         ctx.text_path(self.text)
+

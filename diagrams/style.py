@@ -19,7 +19,6 @@ class Style:
     line_width: Optional[float] = None
     line_color: Optional[Color] = None
     fill_color: Optional[Color] = None
-    font_size: Optional[float] = None
     dashing: Optional[Tuple[List[float], float]] = None
 
     @classmethod
@@ -28,13 +27,7 @@ class Style:
 
     def merge(self, other: "Style"):
         return Style(*(m(getattr(other, dim.name), getattr(self, dim.name))
-                       for dim in fields(self)))
-
-    def prerender(self, ctx: PyCairoContext) -> None:
-        if self.font_size is not None:
-            print("setting", self.font_size)
-            ctx.set_font_size(self.font_size)
-        
+                       for dim in fields(self)))        
         
     def render(self, ctx: PyCairoContext) -> None:
         if self.fill_color:

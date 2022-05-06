@@ -55,7 +55,6 @@ class Diagram:
             matrix = prim.transform()
             ctx.transform(matrix)
 
-            prim.style.prerender(ctx)
             prim.shape.render(ctx)
             prim.style.render(ctx)
 
@@ -144,9 +143,6 @@ class Diagram:
 
     def fill_color(self, color: Color) -> "Diagram":
         return ApplyStyle(Style(fill_color=color), self)
-
-    def font_size(self, size: float) -> "Diagram":
-        return ApplyStyle(Style(font_size=size), self)
 
     def dashing(self, dashing_strokes : List[float], offset: float) -> "Diagram":
         return ApplyStyle(Style(dashing=(dashing_strokes, offset)), self)
