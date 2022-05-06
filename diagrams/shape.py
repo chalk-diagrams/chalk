@@ -109,8 +109,7 @@ class Text(Shape):
         top = extents.y_bearing
         tl = Point(left, top)
         br = Point(left + extents.width, top + extents.height)
-        self.bb = BoundingBox(tl, br)
-        return self.bb
+        return BoundingBox(tl, br)
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.select_font_face("sans-serif")
@@ -120,4 +119,3 @@ class Text(Shape):
         ctx.move_to(-(extents.width / 2),
                     (extents.height / 2))
         ctx.text_path(self.text)
-
