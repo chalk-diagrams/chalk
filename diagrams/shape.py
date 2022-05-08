@@ -33,11 +33,15 @@ class Circle(Shape):
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(ORIGIN.x, ORIGIN.y, self.radius, 0, 2 * math.pi)
 
+    def render_svg(self, dwg):
+        return dwg.circle((ORIGIN.x, ORIGIN.y), self.radius)
+
 
 @dataclass
 class Rectangle(Shape):
     width: float
     height: float
+    radius: Optional[float]
 
     def get_bounding_box(self) -> BoundingBox:
         left = ORIGIN.x - self.width / 2
@@ -50,6 +54,13 @@ class Rectangle(Shape):
         left = ORIGIN.x - self.width / 2
         top = ORIGIN.y - self.height / 2
         ctx.rectangle(left, top, self.width, self.height)
+
+    def render_svg(self, dwg):
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        return dwg.rect(
+            (left, top), (self.width, self.height), rx=self.radius, ry=self.radius
+        )
 
 
 @dataclass
@@ -92,6 +103,9 @@ class Path(Shape):
         for p in rest:
             ctx.line_to(p.x, p.y)
 
+    def render_svg(self, dwg):
+        return dwg.polyline([(p.x, p.y) for p in self.points])
+
 
 @dataclass
 class Text(Shape):
@@ -122,3 +136,6 @@ class Text(Shape):
         extents = ctx.text_extents(self.text)
         ctx.move_to(-(extents.width / 2), (extents.height / 2))
         ctx.text_path(self.text)
+
+    def render_svg(self, dwg):
+        return dwg.text(self.text, style=f"font-size:{self.font_size}")

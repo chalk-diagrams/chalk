@@ -9,6 +9,7 @@ from colour import Color  # type: ignore
 PyCairoContext = Any
 
 
+
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
 
@@ -59,3 +60,15 @@ class Style:
             ctx.set_dash(self.dashing[0], self.dashing[1])
 
         ctx.stroke()
+
+    def to_svg(self) -> str:
+        style = ""
+        if self.fill_color is not None:
+            style += f"fill: {self.fill_color.hex_l};"
+
+        if self.line_color is not None:
+            style += f"stroke: {self.line_color.hex_l};"
+        if self.line_width is not None:
+            style += f"stroke-width: {self.line_width};"
+
+        return style

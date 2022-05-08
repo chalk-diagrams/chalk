@@ -20,7 +20,6 @@ def make_path(coords: List[Tuple[float, float]]) -> Diagram:
 def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
-
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     coords = []
     n = sides + 1
@@ -28,7 +27,6 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
         # Rotate to align with x axis.
         t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
         coords.append((radius * math.cos(t), radius * math.sin(t)))
-    print(coords)
     return make_path(coords)
 
 
@@ -39,13 +37,8 @@ def regular_polygon(sides: int, side_length: float) -> Diagram:
 def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
-
-def rectangle(width: float, height: float) -> Diagram:
-    return Primitive.from_shape(Rectangle(width, height))
-
-
-def rounded_rectangle(width: float, height: float, radius: float) -> Diagram:
-    return Primitive.from_shape(RoundedRectangle(width, height, radius))
+def rectangle(width: float, height: float, radius: Optional[float] = None) -> Diagram:
+    return Primitive.from_shape(Rectangle(width, height, radius))
 
 
 def square(side: float) -> Diagram:
@@ -78,3 +71,16 @@ def hcat(diagrams: Iterable[Diagram]) -> Diagram:
 
 def vcat(diagrams: Iterable[Diagram]) -> Diagram:
     return reduce(above, diagrams, empty())
+
+
+def connect(diagram: Diagram, name1: str, name2: str, curve: int = 0):
+    return connect_outer(diagram, name1, "C", name2, "C", curve)
+
+
+def connect_outer(
+    diagram: Diagram, name1: str, c1: str, name2: str, c2: str, curve: int = 0
+):
+    bb1 = diagram.get_subdiagram_bounding_box(name1)
+    bb2 = diagram.get_subdiagram_bounding_box(name2)
+    points = [bb1.cardinal(c1), bb2.cardinal(c2)]
+    return Primitive.from_shape(Path(points))

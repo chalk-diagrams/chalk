@@ -1,13 +1,14 @@
 import math
 
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 import cairo
 from colour import Color  # type: ignore
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.shape import Shape, Circle
+from diagrams.shape import Shape, Circle, Path
 from diagrams.style import Style
 from diagrams import transform as tx
 
@@ -43,27 +44,39 @@ class Diagram:
         else:
             α = width // ((1 + pad) * box.width)
 
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        ctx = cairo.Context(surface)
+        if False:
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            ctx = cairo.Context(surface)
 
-        ctx.scale(α, α)
-        ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
+            ctx.scale(α, α)
+            ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
 
-        prims = self.to_list()
+            prims = self.to_list()
 
-        for prim in prims:
-            # apply transformation
-            matrix = prim.transform()
-            ctx.transform(matrix)
+            for prim in prims:
+                # apply transformation
+                matrix = prim.transform()
+                ctx.transform(matrix)
 
-            prim.shape.render(ctx)
-            prim.style.render(ctx)
+                prim.shape.render(ctx)
+                prim.style.render(ctx)
 
-            # undo transformation
-            matrix.invert()
-            ctx.transform(matrix)
+                # undo transformation
+                matrix.invert()
+                ctx.transform(matrix)
 
-        surface.write_to_png(path)
+            surface.write_to_png(path)
+        else:
+            import svgwrite
+
+            dwg = svgwrite.Drawing(path)
+            x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+            outer = dwg.g(
+                transform=f"scale({α} {α}) translate({x} {y})", style=f"fill:white"
+            )
+            dwg.add(outer)
+            outer.add(self.to_svg(dwg))
+            dwg.save()
 
     def atop(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
@@ -158,6 +171,12 @@ class Diagram:
         )
         return self + origin
 
+    def named(self, name: str) -> "Diagram":
+        return ApplyName(name, self)
+
+    def get_subdiagram_bounding_box(self, name: str, t: tx.Transform) -> BoundingBox:
+        return None
+
 
 @dataclass
 class Primitive(Diagram):
@@ -184,6 +203,11 @@ class Primitive(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [self.apply_transform(t)]
 
+    def to_svg(self, dwg):
+        g = dwg.g(transform=self.transform.to_svg(), style=self.style.to_svg())
+        g.add(self.shape.render_svg(dwg))
+        return g
+
 
 @dataclass
 class Empty(Diagram):
@@ -192,6 +216,9 @@ class Empty(Diagram):
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return []
+
+    def to_svg(self, dwg):
+        return dwg.g()
 
 
 @dataclass
@@ -203,8 +230,22 @@ class Compose(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         return self.box.apply_transform(t)
 
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = I
+    ) -> BoundingBox:
+        bb = self.diagram1.get_subdiagram_bounding_box(name, t)
+        if bb is None:
+            bb = self.diagram2.get_subdiagram_bounding_box(name, t)
+        return bb
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
+
+    def to_svg(self, dwg):
+        g = dwg.g()
+        g.add(self.diagram1.to_svg(dwg))
+        g.add(self.diagram2.to_svg(dwg))
+        return g
 
 
 @dataclass
@@ -216,11 +257,22 @@ class ApplyTransform(Diagram):
         t_new = tx.Compose(t, self.transform)
         return self.diagram.get_bounding_box(t_new)
 
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> BoundingBox:
+        t_new = tx.Compose(t, self.transform)
+        return self.diagram.get_subdiagram_bounding_box(name, t_new)
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         t_new = tx.Compose(t, self.transform)
         return [
             prim.apply_transform(t_new) for prim in self.diagram.to_list(t)
         ]
+
+    def to_svg(self, dwg):
+        g = dwg.g(transform=self.transform.to_svg())
+        g.add(self.diagram.to_svg(dwg))
+        return g
 
 
 @dataclass
@@ -231,7 +283,40 @@ class ApplyStyle(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         return self.diagram.get_bounding_box(t)
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
-        return [
-            prim.apply_style(self.style) for prim in self.diagram.to_list(t)
-        ]
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = I
+    ) -> BoundingBox:
+        return self.diagram.get_subdiagram_bounding_box(name, t)
+
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return [prim.apply_style(self.style) for prim in self.diagram.to_list(t)]
+
+    def to_svg(self, dwg):
+        g = dwg.g(style=self.style.to_svg())
+        g.add(self.diagram.to_svg(dwg))
+        return g
+
+
+@dataclass
+class ApplyName(Diagram):
+    dname: str
+    diagram: Diagram
+
+    def get_bounding_box(self, t: tx.Transform = I) -> BoundingBox:
+        return self.diagram.get_bounding_box(t)
+
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = I
+    ) -> BoundingBox:
+        if name == self.dname:
+            return self.diagram.get_bounding_box(t)
+        else:
+            return None
+
+    def to_list(self, t: tx.Transform = I) -> List["Primitive"]:
+        return [prim for prim in self.diagram.to_list(t)]
+
+    def to_svg(self, dwg):
+        g = dwg.g()
+        g.add(self.diagram.to_svg(dwg))
+        return g
