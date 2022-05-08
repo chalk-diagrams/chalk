@@ -20,6 +20,7 @@ def make_path(coords: List[Tuple[float, float]]) -> Diagram:
 def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
+
 def polygon(sides: int, radius: float) -> Diagram:
     coords = []
     n = sides + 1
@@ -29,14 +30,18 @@ def polygon(sides: int, radius: float) -> Diagram:
                        radius * math.sin(t)])
     return make_path(coords)
 
+
 def regular_polygon(sides: int, side_length:float) -> Diagram:
     return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))
+
 
 def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
+
 def rectangle(width: float, height: float) -> Diagram:
     return Primitive.from_shape(Rectangle(width, height))
+
 
 def rounded_rectangle(width: float, height: float, radius: float) -> Diagram:
     return Primitive.from_shape(RoundedRectangle(width, height, radius))
