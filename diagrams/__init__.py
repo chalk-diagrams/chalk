@@ -1,10 +1,10 @@
 import math
 
 from functools import reduce
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Iterable, List, Tuple
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Shape, Circle, Rectangle, Path, Text
+from diagrams.shape import Circle, Rectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -23,10 +23,10 @@ def circle(radius: float) -> Diagram:
 
 def triangle(width: float) -> Diagram:
     coords = [
-        (0, - width / math.sqrt(3)),
-        (+ width / 2.0, width / math.sqrt(3) * 0.5),
-        (- width / 2.0, width / math.sqrt(3) * 0.5),
-        (0, - width / math.sqrt(3)),
+        (0, -width / math.sqrt(3)),
+        (+width / 2.0, width / math.sqrt(3) * 0.5),
+        (-width / 2.0, width / math.sqrt(3) * 0.5),
+        (0, -width / math.sqrt(3)),
     ]
     return make_path(coords)
 
