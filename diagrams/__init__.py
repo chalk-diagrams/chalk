@@ -21,12 +21,14 @@ def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
 
-def polygon(sides: int, radius: float) -> Diagram:
+def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     coords = []
     n = sides + 1
     for s in range(n):
-        t = 2.0 * math.pi * s / sides
+        # Rotate to align with x axis.
+        t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
         coords.append((radius * math.cos(t), radius * math.sin(t)))
+    print(coords)
     return make_path(coords)
 
 

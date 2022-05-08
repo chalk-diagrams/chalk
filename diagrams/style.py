@@ -9,7 +9,7 @@ from colour import Color  # type: ignore
 PyCairoContext = Any
 
 
-def m(a : Optional[Any], b : Optional[Any]) -> Optional[Any]:
+def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
 
 

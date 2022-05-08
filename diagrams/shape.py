@@ -100,7 +100,7 @@ class Text(Shape):
 
     def __post_init__(self) -> None:
         surface = cairo.RecordingSurface(
-            cairo.Content.COLOR, None # type: ignore
+            cairo.Content.COLOR, None  # type: ignore
         )
         self.ctx = cairo.Context(surface)
 
