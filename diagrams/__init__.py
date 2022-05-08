@@ -28,7 +28,6 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
         # Rotate to align with x axis.
         t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
         coords.append((radius * math.cos(t), radius * math.sin(t)))
-    print(coords)
     return make_path(coords)
 
 
