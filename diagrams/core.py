@@ -145,6 +145,11 @@ class Diagram:
     def fill_color(self, color: Color) -> "Diagram":
         return ApplyStyle(Style(fill_color=color), self)
 
+    def dashing(
+        self, dashing_strokes: List[float], offset: float
+    ) -> "Diagram":
+        return ApplyStyle(Style(dashing=(dashing_strokes, offset)), self)
+
     def show_origin(self) -> "Diagram":
         box = self.get_bounding_box()
         origin_size = min(box.height, box.width) / 50
@@ -169,25 +174,9 @@ class Primitive(Diagram):
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":
-        line_width = (
-            other_style.line_width
-            if other_style.line_width is not None
-            else self.style.line_width
+        return Primitive(
+            self.shape, self.style.merge(other_style), self.transform
         )
-        line_color = (
-            other_style.line_color
-            if other_style.line_color is not None
-            else self.style.line_color
-        )
-        fill_color = (
-            other_style.fill_color
-            if other_style.fill_color is not None
-            else self.style.fill_color
-        )
-        new_style = Style(
-            line_width=line_width, line_color=line_color, fill_color=fill_color
-        )
-        return Primitive(self.shape, new_style, self.transform)
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         return self.shape.get_bounding_box().apply_transform(t)

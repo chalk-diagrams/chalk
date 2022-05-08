@@ -1,10 +1,10 @@
 import math
 
 from functools import reduce
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, Path, Text
+from diagrams.shape import Circle, Rectangle, RoundedRectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -21,26 +21,37 @@ def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
 
-def triangle(width: float) -> Diagram:
-    coords = [
-        (0, -width / math.sqrt(3)),
-        (+width / 2.0, width / math.sqrt(3) * 0.5),
-        (-width / 2.0, width / math.sqrt(3) * 0.5),
-        (0, -width / math.sqrt(3)),
-    ]
+def polygon(sides: int, radius: float) -> Diagram:
+    coords = []
+    n = sides + 1
+    for s in range(n):
+        t = 2.0 * math.pi * s / sides
+        coords.append((radius * math.cos(t), radius * math.sin(t)))
     return make_path(coords)
+
+
+def regular_polygon(sides: int, side_length: float) -> Diagram:
+    return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))
+
+
+def triangle(width: float) -> Diagram:
+    return regular_polygon(3, width)
 
 
 def rectangle(width: float, height: float) -> Diagram:
     return Primitive.from_shape(Rectangle(width, height))
 
 
+def rounded_rectangle(width: float, height: float, radius: float) -> Diagram:
+    return Primitive.from_shape(RoundedRectangle(width, height, radius))
+
+
 def square(side: float) -> Diagram:
     return Primitive.from_shape(Rectangle(side, side))
 
 
-def text(t: str) -> Diagram:
-    return Primitive.from_shape(Text(t))
+def text(t: str, size: Optional[float]) -> Diagram:
+    return Primitive.from_shape(Text(t, font_size=size))
 
 
 def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
