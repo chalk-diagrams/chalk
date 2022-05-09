@@ -3,9 +3,13 @@ from dataclasses import dataclass
 import cairo
 import math
 
+
 @dataclass
 class Transform:
     def __call__(self) -> cairo.Matrix:
+        raise NotImplementedError
+
+    def to_svg(self) -> str:
         raise NotImplementedError
 
 

@@ -29,7 +29,7 @@ class BoundingBox:
     def bl(self) -> Point:
         return Point(self.left, self.bottom)
 
-    def cardinal(self, dir: str):
+    def cardinal(self, dir: str) -> Point:
         return {
             "N": Point(self.left + self.width / 2, self.top),
             "S": Point(self.left + self.width / 2, self.bottom),

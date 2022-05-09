@@ -3,11 +3,10 @@ from typing import Any, Optional, List, Tuple
 from dataclasses import dataclass, fields
 
 
-from colour import Color  # type: ignore
+from colour import Color
 
 
 PyCairoContext = Any
-
 
 
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:

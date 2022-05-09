@@ -7,7 +7,7 @@ black:
 	black --line-length 79 diagrams/*
 
 type:
-	mypy --strict diagrams/*.py
+	mypy --strict --ignore-missing-imports diagrams/*.py
 
 intro:
 	python examples/intro.py
