@@ -4,4 +4,4 @@ toolz
 colour
 svgwrite
 cairosvg
-PIL
+Pillow
