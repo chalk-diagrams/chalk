@@ -33,32 +33,44 @@ def make_path(coords: List[Tuple[float, float]]) -> Diagram:
 
 
 def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height: float) -> Diagram:
-    # This implementaion is based on the original diagrams' `arcBetween` function:
-    # https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
+    """Makes an arc starting at point1 and ending at point2, with the midpoint
+    at a distance of abs(height) away from the straight line from point1 to
+    point2. A positive value of height results in an arc to the left of the
+    line from point1 to point2; a negative value yields one to the right.
+
+    The implementaion is based on the the function arcBetween from Haskell's
+    diagrams:
+    https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
+
+    """
     p = Point(*point1)
     q = Point(*point2)
 
-    # determine the arc's length and its radius
     h = abs(height)
     v = q - p
     d = v.norm()
-    θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
-    r = d / (2 * math.sin(θ))
 
-    if height > 0:
-        φ = -math.pi / 2
-        dy = r - h
+    if h < 1e-6:
+        # Draw a line if the height is too small
+        elements = [MoveTo(Point(0, 0)), LineTo(Point(v.dx, v.dy))]
+        shape = Primitive.from_shape(Path(elements))
     else:
-        φ = +math.pi / 2
-        dy = h - r
+        # Determine the arc's angle θ and its radius r
+        θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
+        r = d / (2 * math.sin(θ))
 
-    return (
-        Primitive.from_shape(Arc(r, -θ, θ))
-        .rotate(φ)
-        .translate(d / 2, dy)
-        .rotate(v.angle())
-        .translate(p.x, p.y)
-    )
+        if height > 0:
+            # bend left
+            φ = -math.pi / 2
+            dy = r - h
+        else:
+            # bend right
+            φ = +math.pi / 2
+            dy = h - r
+
+        shape = Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
+
+    return shape.rotate(v.angle()).translate(p.x, p.y)
 
 
 def circle(radius: float) -> Diagram:
