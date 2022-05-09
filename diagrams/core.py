@@ -200,8 +200,6 @@ class Diagram:
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         c = box1.center
-        print(box1)
-        print(c)
         t = tx.Translate(c.x, c.y)
         new_box = box1.union(box2.apply_transform(t))
         return Compose(new_box, self, ApplyTransform(t, other))
