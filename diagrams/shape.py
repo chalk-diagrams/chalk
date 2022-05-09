@@ -56,9 +56,17 @@ class Rectangle(Shape):
         return BoundingBox(tl, br)
 
     def render(self, ctx: PyCairoContext) -> None:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        ctx.rectangle(left, top, self.width, self.height)
+        x = left = ORIGIN.x - self.width / 2
+        y = top = ORIGIN.y - self.height / 2
+        if self.radius is None:
+            ctx.rectangle(left, top, self.width, self.height)
+        else:
+            r = self.radius
+            ctx.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+            ctx.arc(x + self.width - r, y + r, r, 3 * math.pi / 2, 0)
+            ctx.arc(x + self.width - r, y + self.height - r, r, 0, math.pi / 2)
+            ctx.arc(x + r, y + self.height - r, r, math.pi / 2, math.pi)
+            ctx.close_path()
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         left = ORIGIN.x - self.width / 2
@@ -101,10 +109,7 @@ class Text(Shape):
     font_size: Optional[float]
 
     def __post_init__(self) -> None:
-        if True:
-            surface = cairo.SVGSurface("undefined.svg", 1280, 200)
-        else:
-            surface = cairo.RecordingSurface(cairo.Content.COLOR, None)
+        surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:
