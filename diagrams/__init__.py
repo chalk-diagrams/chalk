@@ -82,8 +82,7 @@ def connect(diagram: Diagram, name1: str, name2: str, curve: int = 0):
 
 
 def connect_outer(
-    diagram: Diagram, name1: str, c1: str, name2: str, c2: str, curve: int = 0
-):
+    diagram: Diagram, name1: str, c1: str, name2: str, c2: str):
     bb1 = diagram.get_subdiagram_bounding_box(name1)
     bb2 = diagram.get_subdiagram_bounding_box(name2)
     points = [bb1.cardinal(c1), bb2.cardinal(c2)]
