@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from diagrams import transform as tx
 
+
 @dataclass
 class Point:
     x: float

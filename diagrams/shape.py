@@ -51,12 +51,13 @@ class Rectangle(Shape):
         top = ORIGIN.y - self.height / 2
         ctx.rectangle(left, top, self.width, self.height)
 
+
 @dataclass
 class RoundedRectangle(Shape):
     width: float
     height: float
     radius: float
-    
+
     def get_bounding_box(self) -> BoundingBox:
         left = ORIGIN.x - self.width / 2
         top = ORIGIN.y - self.height / 2
@@ -68,12 +69,13 @@ class RoundedRectangle(Shape):
         x = ORIGIN.x - self.width / 2
         y = ORIGIN.y - self.height / 2
         r = self.radius
-        ctx.arc(x + r, y + r, r, math.pi, 3*math.pi/2)
-        ctx.arc(x + self.width-r, y+r, r, 3*math.pi/2, 0)
-        ctx.arc(x + self.width-r, y + self.height-r, r, 0, math.pi/2)
-        ctx.arc(x+r, y + self.height-r, r, math.pi/2, math.pi)
+        ctx.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+        ctx.arc(x + self.width - r, y + r, r, 3 * math.pi / 2, 0)
+        ctx.arc(x + self.width - r, y + self.height - r, r, 0, math.pi / 2)
+        ctx.arc(x + r, y + self.height - r, r, math.pi / 2, math.pi)
         ctx.close_path()
-        
+
+
 @dataclass
 class Path(Shape):
     points: List[Point]
@@ -97,14 +99,16 @@ class Text(Shape):
     font_size: Optional[float]
 
     def __post_init__(self) -> None:
-        surface = cairo.RecordingSurface(cairo.Content.COLOR, None)  # type: ignore
+        surface = cairo.RecordingSurface(
+            cairo.Content.COLOR, None  # type: ignore
+        )
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:
         self.ctx.select_font_face("sans-serif")
         if self.font_size is not None:
             self.ctx.set_font_size(self.font_size)
-        extents = self.ctx.text_extents(self.text)        
+        extents = self.ctx.text_extents(self.text)
         left = extents.x_bearing - (extents.width / 2)
         top = extents.y_bearing
         tl = Point(left, top)
@@ -116,6 +120,5 @@ class Text(Shape):
         if self.font_size is not None:
             ctx.set_font_size(self.font_size)
         extents = ctx.text_extents(self.text)
-        ctx.move_to(-(extents.width / 2),
-                    (extents.height / 2))
+        ctx.move_to(-(extents.width / 2), (extents.height / 2))
         ctx.text_path(self.text)

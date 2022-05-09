@@ -6,7 +6,7 @@ import cairo
 @dataclass
 class Transform:
     def __call__(self) -> cairo.Matrix:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 @dataclass

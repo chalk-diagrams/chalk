@@ -1,10 +1,10 @@
 import math
 
 from functools import reduce
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Shape, Circle, Rectangle, Path, Text, RoundedRectangle
+from diagrams.shape import Circle, Rectangle, RoundedRectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -20,23 +20,28 @@ def make_path(coords: List[Tuple[float, float]]) -> Diagram:
 def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
-def polygon(sides: int, radius: float) -> Diagram:
+
+def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     coords = []
     n = sides + 1
     for s in range(n):
-        t = 2.0 * math.pi * s / sides
-        coords.append([radius * math.cos(t),
-                       radius * math.sin(t)])
+        # Rotate to align with x axis.
+        t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
+        coords.append((radius * math.cos(t), radius * math.sin(t)))
     return make_path(coords)
 
-def regular_polygon(sides: int, side_length:float) -> Diagram:
+
+def regular_polygon(sides: int, side_length: float) -> Diagram:
     return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))
+
 
 def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
+
 def rectangle(width: float, height: float) -> Diagram:
     return Primitive.from_shape(Rectangle(width, height))
+
 
 def rounded_rectangle(width: float, height: float, radius: float) -> Diagram:
     return Primitive.from_shape(RoundedRectangle(width, height, radius))
