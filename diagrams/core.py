@@ -200,6 +200,12 @@ class Diagram:
         α = y / box.width
         return ApplyTransform(tx.Scale(α, α), self)
 
+    def scale_x(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(α, 1), self)
+
+    def scale_y(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(1, α), self)
+
     def reflect_x(self) -> "Diagram":
         return ApplyTransform(tx.Scale(-1, +1), self)
 
