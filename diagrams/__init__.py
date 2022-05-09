@@ -4,8 +4,18 @@ from functools import reduce
 from typing import Any, Iterable, List, Optional, Tuple
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Shape, Circle, Rectangle, Path, Text, RoundedRectangle
 from diagrams.point import Point
+from diagrams.shape import (
+    Arc,
+    Circle,
+    LineTo,
+    MoveTo,
+    Path,
+    Rectangle,
+    RoundedRectangle,
+    Shape,
+    Text,
+)
 
 
 def empty() -> Diagram:
@@ -13,8 +23,42 @@ def empty() -> Diagram:
 
 
 def make_path(coords: List[Tuple[float, float]]) -> Diagram:
-    points = [Point(x, y) for x, y in coords]
-    return Primitive.from_shape(Path(points))
+    if len(coords) < 2:
+        return empty()
+    else:
+        points = [Point(x, y) for x, y in coords]
+        start, *rest = points
+        elements = [MoveTo(start)] + [LineTo(p) for p in rest]
+        return Primitive.from_shape(Path(elements))
+
+
+def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height: float) -> Diagram:
+    # This implementaion is based on the original diagrams' `arcBetween` function:
+    # https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
+    p = Point(*point1)
+    q = Point(*point2)
+
+    # determine the arc's length and its radius
+    h = abs(height)
+    v = q - p
+    d = v.norm()
+    θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
+    r = d / (2 * math.sin(θ))
+
+    if height > 0:
+        φ = -math.pi / 2
+        dy = r - h
+    else:
+        φ = +math.pi / 2
+        dy = h - r
+
+    return (
+        Primitive.from_shape(Arc(r, -θ, θ))
+        .rotate(φ)
+        .translate(d / 2, dy)
+        .rotate(v.angle())
+        .translate(p.x, p.y)
+    )
 
 
 def circle(radius: float) -> Diagram:
