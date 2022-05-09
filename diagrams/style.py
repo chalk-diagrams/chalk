@@ -27,7 +27,7 @@ class Style:
 
     @classmethod
     def default(cls) -> "Style":
-        return cls(line_width=LW, line_color=LC)
+        return cls()
 
     def merge(self, other: "Style") -> "Style":
         return Style(
@@ -65,10 +65,8 @@ class Style:
         style = ""
         if self.fill_color is not None:
             style += f"fill: {self.fill_color.hex_l};"
-
         if self.line_color is not None:
             style += f"stroke: {self.line_color.hex_l};"
         if self.line_width is not None:
             style += f"stroke-width: {self.line_width};"
-
         return style

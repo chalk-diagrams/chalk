@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 import cairo
-
+import math
 
 @dataclass
 class Transform:
@@ -29,7 +29,7 @@ class Scale(Transform):
         return matrix
 
     def to_svg(self) -> str:
-        return f"scale({self.αx} {self.αy}))"
+        return f"scale({self.αx} {self.αy})"
 
 
 @dataclass
@@ -40,7 +40,8 @@ class Rotate(Transform):
         return cairo.Matrix.init_rotate(self.θ)
 
     def to_svg(self) -> str:
-        return f"rotate({self.θ})"
+        t = (self.θ / math.pi) * 180
+        return f"rotate({t})"
 
 
 @dataclass

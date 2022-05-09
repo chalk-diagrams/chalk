@@ -1,3 +1,5 @@
+.PHONY: help check autoformat notebook html clean
+
 flake: 
 	flake8 --show-source diagrams/*
 
@@ -6,3 +8,18 @@ black:
 
 type:
 	mypy --strict diagrams/*.py
+
+intro:
+	python examples/intro.py
+
+squares: 
+	python examples/squares.py
+
+hanoi: 
+	python examples/hanoi.py
+
+escher_square: 
+	python examples/escher_square_limit.py
+
+images: squares hanoi intro escher_square
+

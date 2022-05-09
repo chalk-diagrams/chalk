@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, RoundedRectangle, Path, Text
+from diagrams.shape import Circle, Rectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -29,6 +29,10 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
         coords.append((radius * math.cos(t), radius * math.sin(t)))
     return make_path(coords)
 
+def hrule(length: float):                                                                             
+    return make_path([(-length / 2, 0), (length / 2, 0)])                                           
+def vrule(length: float):                                                                              
+    return make_path([(0, -length / 2), (0, length / 2)]) 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
     return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))

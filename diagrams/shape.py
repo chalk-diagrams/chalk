@@ -41,7 +41,7 @@ class Circle(Shape):
 class Rectangle(Shape):
     width: float
     height: float
-    radius: Optional[float]
+    radius: Optional[float] = None
 
     def get_bounding_box(self) -> BoundingBox:
         left = ORIGIN.x - self.width / 2
@@ -64,35 +64,12 @@ class Rectangle(Shape):
 
 
 @dataclass
-class RoundedRectangle(Shape):
-    width: float
-    height: float
-    radius: float
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
-
-    def render(self, ctx: PyCairoContext) -> None:
-        x = ORIGIN.x - self.width / 2
-        y = ORIGIN.y - self.height / 2
-        r = self.radius
-        ctx.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
-        ctx.arc(x + self.width - r, y + r, r, 3 * math.pi / 2, 0)
-        ctx.arc(x + self.width - r, y + self.height - r, r, 0, math.pi / 2)
-        ctx.arc(x + r, y + self.height - r, r, math.pi / 2, math.pi)
-        ctx.close_path()
-
-
-@dataclass
 class Path(Shape):
     points: List[Point]
-
+    arrow: bool = False
+    
     def get_bounding_box(self) -> BoundingBox:
-        box = BoundingBox.empty()
+        box = BoundingBox(self.points[0], self.points[0])
         for p in self.points:
             box = box.enclose(p)
         return box
@@ -104,7 +81,10 @@ class Path(Shape):
             ctx.line_to(p.x, p.y)
 
     def render_svg(self, dwg):
-        return dwg.polyline([(p.x, p.y) for p in self.points])
+        line = dwg.polyline([(p.x, p.y) for p in self.points])
+        if self.arrow:
+            line.set_markers((None, False, dwg.defs.elements[0]))
+        return line
 
 
 @dataclass
@@ -113,9 +93,12 @@ class Text(Shape):
     font_size: Optional[float]
 
     def __post_init__(self) -> None:
-        surface = cairo.RecordingSurface(
-            cairo.Content.COLOR, None  # type: ignore
-        )
+        if True: 
+            surface = cairo.SVGSurface('undefined.svg', 1280, 200)
+        else:
+            surface = cairo.RecordingSurface(
+                cairo.Content.COLOR, None  # type: ignore
+            )
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:
@@ -126,16 +109,23 @@ class Text(Shape):
         left = extents.x_bearing - (extents.width / 2)
         top = extents.y_bearing
         tl = Point(left, top)
-        br = Point(left + extents.width, top + extents.height)
-        return BoundingBox(tl, br)
+        br = Point(left + extents.x_advance, top + extents.height)
+        self.bb = BoundingBox(tl, br)
+        
+        return self.bb
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.select_font_face("sans-serif")
         if self.font_size is not None:
             ctx.set_font_size(self.font_size)
         extents = ctx.text_extents(self.text)
+        
         ctx.move_to(-(extents.width / 2), (extents.height / 2))
         ctx.text_path(self.text)
 
     def render_svg(self, dwg):
-        return dwg.text(self.text, style=f"font-size:{self.font_size}")
+        dx, dy = -(self.bb.width / 2), (self.bb.height / 2)
+        return dwg.text(self.text,
+                        transform=f"translate({dx}, 0)",
+                        
+                        style=f"text-align:center; dominant-baseline:middle; font-family:sans-serif; font-weight: bold; font-size:{self.font_size}px")
