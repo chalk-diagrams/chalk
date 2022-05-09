@@ -127,3 +127,7 @@ pseudolimit = cycle(pseudocorner)
 
 pseudolimit.render(output_path, height=512)
 st.image(output_path)
+
+# SVG render
+output_path = "examples/output/escher-square-limit.svg"
+pseudolimit.render_svg(output_path, height=512)

@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, RoundedRectangle, Path, Text
+from diagrams.shape import Circle, Rectangle, Path, Text
 from diagrams.point import Point
 
 
@@ -31,6 +31,14 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     return make_path(coords)
 
 
+def hrule(length: float) -> Diagram:
+    return make_path([(-length / 2, 0), (length / 2, 0)])
+
+
+def vrule(length: float) -> Diagram:
+    return make_path([(0, -length / 2), (0, length / 2)])
+
+
 def regular_polygon(sides: int, side_length: float) -> Diagram:
     return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))
 
@@ -39,12 +47,10 @@ def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
 
-def rectangle(width: float, height: float) -> Diagram:
-    return Primitive.from_shape(Rectangle(width, height))
-
-
-def rounded_rectangle(width: float, height: float, radius: float) -> Diagram:
-    return Primitive.from_shape(RoundedRectangle(width, height, radius))
+def rectangle(
+    width: float, height: float, radius: Optional[float] = None
+) -> Diagram:
+    return Primitive.from_shape(Rectangle(width, height, radius))
 
 
 def square(side: float) -> Diagram:
@@ -77,3 +83,18 @@ def hcat(diagrams: Iterable[Diagram]) -> Diagram:
 
 def vcat(diagrams: Iterable[Diagram]) -> Diagram:
     return reduce(above, diagrams, empty())
+
+
+def connect(diagram: Diagram, name1: str, name2: str) -> Diagram:
+    return connect_outer(diagram, name1, "C", name2, "C")
+
+
+def connect_outer(
+    diagram: Diagram, name1: str, c1: str, name2: str, c2: str
+) -> Diagram:
+    bb1 = diagram.get_subdiagram_bounding_box(name1)
+    bb2 = diagram.get_subdiagram_bounding_box(name2)
+    assert bb1 is not None, "Name {name1} not found"
+    assert bb2 is not None, "Name {name2} not found"
+    points = [bb1.cardinal(c1), bb2.cardinal(c2)]
+    return Primitive.from_shape(Path(points))

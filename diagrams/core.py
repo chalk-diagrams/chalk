@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import Any, List, Optional
 
 import cairo
-from colour import Color  # type: ignore
+import svgwrite
+from svgwrite import Drawing
+from svgwrite.base import BaseElement
+from colour import Color
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.shape import Shape, Circle
@@ -65,6 +68,39 @@ class Diagram:
 
         surface.write_to_png(path)
 
+    def render_svg(
+        self, path: str, height: int = 128, width: Optional[int] = None
+    ) -> None:
+
+        pad = 0.05
+        box = self.get_bounding_box()
+
+        # infer width to preserve aspect ratio
+        width = width or int(height * box.width / box.height)
+
+        # determine scale to fit the largest axis in the target frame size
+        if box.width - width <= box.height - height:
+            α = height // ((1 + pad) * box.height)
+        else:
+            α = width // ((1 + pad) * box.width)
+
+        dwg = svgwrite.Drawing(path)
+        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+        outer = dwg.g(
+            transform=f"scale({α} {α}) translate({x} {y})",
+            style="fill:white; stroke: black; stroke-width: 0.01;",
+        )
+        # Arrow marker
+        marker = dwg.marker(
+            id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
+        )
+        marker.add(dwg.polygon([(0, 0), (5, 1.75), (0, 3.5)]))
+        dwg.defs.add(marker)
+
+        dwg.add(outer)
+        outer.add(self.to_svg(dwg))
+        dwg.save()
+
     def atop(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
@@ -109,6 +145,16 @@ class Diagram:
         t = tx.Translate(0, -box.bottom)
         return ApplyTransform(t, self)
 
+    def align_r(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.right, 0)
+        return ApplyTransform(t, self)
+
+    def align_l(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.left, 0)
+        return ApplyTransform(t, self)
+
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
 
@@ -150,6 +196,14 @@ class Diagram:
     ) -> "Diagram":
         return ApplyStyle(Style(dashing=(dashing_strokes, offset)), self)
 
+    def at_center(self, other: "Diagram") -> "Diagram":
+        box1 = self.get_bounding_box()
+        box2 = other.get_bounding_box()
+        c = box1.center
+        t = tx.Translate(c.x, c.y)
+        new_box = box1.union(box2.apply_transform(t))
+        return Compose(new_box, self, ApplyTransform(t, other))
+
     def show_origin(self) -> "Diagram":
         box = self.get_bounding_box()
         origin_size = min(box.height, box.width) / 50
@@ -157,6 +211,17 @@ class Diagram:
             Circle(origin_size), Style(fill_color=Color("red")), Ident
         )
         return self + origin
+
+    def named(self, name: str) -> "Diagram":
+        return ApplyName(name, self)
+
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> Optional[BoundingBox]:
+        return None
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        raise NotImplementedError
 
 
 @dataclass
@@ -184,6 +249,20 @@ class Primitive(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [self.apply_transform(t)]
 
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        style = self.style.to_svg()
+        transform = self.transform.to_svg()
+        inner = self.shape.render_svg(dwg)
+
+        if not style and not transform:
+            return inner
+        else:
+            if not style:
+                style = ";"
+            g = dwg.g(transform=transform, style=style)
+            g.add(inner)
+            return g
+
 
 @dataclass
 class Empty(Diagram):
@@ -192,6 +271,9 @@ class Empty(Diagram):
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return []
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        return dwg.g()
 
 
 @dataclass
@@ -203,8 +285,22 @@ class Compose(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         return self.box.apply_transform(t)
 
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> Optional[BoundingBox]:
+        bb = self.diagram1.get_subdiagram_bounding_box(name, t)
+        if bb is None:
+            bb = self.diagram2.get_subdiagram_bounding_box(name, t)
+        return bb
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        g = dwg.g()
+        g.add(self.diagram1.to_svg(dwg))
+        g.add(self.diagram2.to_svg(dwg))
+        return g
 
 
 @dataclass
@@ -216,11 +312,22 @@ class ApplyTransform(Diagram):
         t_new = tx.Compose(t, self.transform)
         return self.diagram.get_bounding_box(t_new)
 
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> Optional[BoundingBox]:
+        t_new = tx.Compose(t, self.transform)
+        return self.diagram.get_subdiagram_bounding_box(name, t_new)
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         t_new = tx.Compose(t, self.transform)
         return [
             prim.apply_transform(t_new) for prim in self.diagram.to_list(t)
         ]
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        g = dwg.g(transform=self.transform.to_svg())
+        g.add(self.diagram.to_svg(dwg))
+        return g
 
 
 @dataclass
@@ -231,7 +338,47 @@ class ApplyStyle(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         return self.diagram.get_bounding_box(t)
 
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> Optional[BoundingBox]:
+        return self.diagram.get_subdiagram_bounding_box(name, t)
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [
             prim.apply_style(self.style) for prim in self.diagram.to_list(t)
         ]
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        style = self.style.to_svg()
+        inner = self.diagram.to_svg(dwg)
+        if style:
+            g = dwg.g(style=self.style.to_svg())
+            g.add(inner)
+            return g
+        else:
+            return inner
+
+
+@dataclass
+class ApplyName(Diagram):
+    dname: str
+    diagram: Diagram
+
+    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        return self.diagram.get_bounding_box(t)
+
+    def get_subdiagram_bounding_box(
+        self, name: str, t: tx.Transform = Ident
+    ) -> Optional[BoundingBox]:
+        if name == self.dname:
+            return self.diagram.get_bounding_box(t)
+        else:
+            return None
+
+    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        return [prim for prim in self.diagram.to_list(t)]
+
+    def to_svg(self, dwg: Drawing) -> BaseElement:
+        g = dwg.g()
+        g.add(self.diagram.to_svg(dwg))
+        return g

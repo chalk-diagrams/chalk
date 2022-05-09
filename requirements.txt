@@ -2,3 +2,4 @@ pycairo
 streamlit
 toolz
 colour
+svgwrite

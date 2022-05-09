@@ -93,3 +93,6 @@ diagram = draw_state_sequence(state_sequence(3))
 path = "examples/output/hanoi.png"
 diagram.render(path, height=700)
 st.image(path)
+
+path = "examples/output/hanoi.svg"
+diagram.render_svg(path, height=700)
