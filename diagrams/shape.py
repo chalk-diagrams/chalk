@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from typing import Any, List, Optional
 
 import cairo
+import PIL
+from io import BytesIO
+import cairosvg
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
@@ -142,4 +145,57 @@ class Text(Shape):
             style=f"""text-align:center; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
                       font-size:{self.font_size}px""",
+        )
+
+
+def from_pil(
+    im: PIL.Image,
+    alpha: float = 1.0,
+    format: cairo.Format = cairo.FORMAT_ARGB32,
+) -> cairo.Surface:
+    assert format in (cairo.FORMAT_RGB24, cairo.FORMAT_ARGB32), (
+        "Unsupported pixel format: %s" % format
+    )
+    if "A" not in im.getbands():
+        im.putalpha(int(alpha * 256.0))
+    arr = bytearray(im.tobytes("raw", "BGRa"))
+    surface = cairo.ImageSurface.create_for_data(
+        arr, format, im.width, im.height  # type:ignore
+    )
+    return surface
+
+
+@dataclass
+class Image(Shape):
+    local_path: str
+    url_path: Optional[str]
+
+    def __post_init__(self) -> None:
+        if self.local_path.endswith("svg"):
+            out = BytesIO()
+            cairosvg.svg2png(url=self.local_path, write_to=out)
+        else:
+            out = open(self.local_path, "rb")  # type:ignore
+
+        self.im = PIL.Image.open(out)
+        self.height = self.im.height
+        self.width = self.im.width
+
+    def get_bounding_box(self) -> BoundingBox:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        tl = Point(left, top)
+        br = Point(left + self.width, top + self.height)
+        return BoundingBox(tl, br)
+
+    def render(self, ctx: PyCairoContext) -> None:
+        surface = from_pil(self.im)
+        ctx.set_source_surface(surface, -(self.width / 2), -(self.height / 2))
+        ctx.paint()
+
+    def render_svg(self, dwg: Drawing) -> BaseElement:
+        dx = -self.width / 2
+        dy = -self.height / 2
+        return dwg.image(
+            href=self.url_path, transform=f"translate({dx}, {dy})"
         )

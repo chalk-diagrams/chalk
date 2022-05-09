@@ -27,7 +27,6 @@ class Diagram:
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
         is accumulated upwards, from the tree's leaves.
-
         """
         raise NotImplementedError
 
@@ -83,11 +82,13 @@ class Diagram:
             α = height // ((1 + pad) * box.height)
         else:
             α = width // ((1 + pad) * box.width)
-
-        dwg = svgwrite.Drawing(path)
+        dwg = svgwrite.Drawing(
+            path,
+            size=(width, height),
+        )
         x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
         outer = dwg.g(
-            transform=f"scale({α} {α}) translate({x} {y})",
+            transform=f"scale({α}) translate({x} {y})",
             style="fill:white; stroke: black; stroke-width: 0.01;",
         )
         # Arrow marker
@@ -155,10 +156,48 @@ class Diagram:
         t = tx.Translate(-box.left, 0)
         return ApplyTransform(t, self)
 
+    def pad_l(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x - extra, box.tl.y, box.br.x, box.br.y
+        )
+        return Compose(new_box, self, Empty())
+
+    def pad_t(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x, box.tl.y - extra, box.br.x, box.br.y
+        )
+        return Compose(new_box, self, Empty())
+
+    def pad_r(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x, box.tl.y, box.br.x + extra, box.br.y
+        )
+        return Compose(new_box, self, Empty())
+
+    def pad_b(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x, box.tl.y, box.br.x, box.br.y + extra
+        )
+        return Compose(new_box, self, Empty())
+
     def apply_transform(self, transform: tx.Transform) -> "Diagram":
         return ApplyTransform(transform, self)
 
     def scale(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(α, α), self)
+
+    def scale_uniform_to_x(self, x: float) -> "Diagram":
+        box = self.get_bounding_box()
+        α = x / box.width
+        return ApplyTransform(tx.Scale(α, α), self)
+
+    def scale_uniform_to_y(self, y: float) -> "Diagram":
+        box = self.get_bounding_box()
+        α = y / box.width
         return ApplyTransform(tx.Scale(α, α), self)
 
     def reflect_x(self) -> "Diagram":
@@ -190,6 +229,9 @@ class Diagram:
 
     def fill_color(self, color: Color) -> "Diagram":
         return ApplyStyle(Style(fill_color=color), self)
+
+    def fill_opacity(self, opacity: float) -> "Diagram":
+        return ApplyStyle(Style(fill_opacity=opacity), self)
 
     def dashing(
         self, dashing_strokes: List[float], offset: float

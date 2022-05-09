@@ -22,6 +22,7 @@ class Style:
     line_width: Optional[float] = None
     line_color: Optional[Color] = None
     fill_color: Optional[Color] = None
+    fill_opacity: Optional[float] = None
     dashing: Optional[Tuple[List[float], float]] = None
 
     @classmethod
@@ -68,4 +69,11 @@ class Style:
             style += f"stroke: {self.line_color.hex_l};"
         if self.line_width is not None:
             style += f"stroke-width: {self.line_width};"
+        if self.fill_opacity is not None:
+            style += f"fill-opacity: {self.fill_opacity};"
+        if self.dashing is not None:
+            style += (
+                f"stroke-dasharray: {' '.join(map(str, self.dashing[0]))};"
+            )
+
         return style
