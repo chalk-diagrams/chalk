@@ -8,7 +8,8 @@ import cairo
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
 
-from svgwrite import Drawing, BaseElement
+from svgwrite import Drawing
+from svgwrite.base import BaseElement
 
 PyCairoContext = Any
 

@@ -21,5 +21,8 @@ hanoi:
 escher_square: 
 	python examples/escher_square_limit.py
 
+lattice: 
+	python examples/lattice.py
+
 images: squares hanoi intro escher_square
 

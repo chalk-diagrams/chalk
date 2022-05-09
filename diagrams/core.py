@@ -5,7 +5,8 @@ from typing import Any, List, Optional
 
 import cairo
 import svgwrite
-from svgwrite import Drawing, BaseElement
+from svgwrite import Drawing
+from svgwrite.base import BaseElement
 from colour import Color
 
 from diagrams.bounding_box import BoundingBox
@@ -219,7 +220,7 @@ class Diagram:
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
-        raise NotImplementedError
+        return None
 
     def to_svg(self, dwg: Drawing) -> BaseElement:
         raise NotImplementedError

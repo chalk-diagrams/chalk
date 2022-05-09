@@ -34,7 +34,4 @@ jobs:
         make type
     - name: Make sure examples run
       run: |
-        python examples/intro.py
-        python examples/hanoi.py
-        python examples/squares.py
-        python examples/escher_square_limit.py
+        make images
