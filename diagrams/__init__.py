@@ -52,8 +52,7 @@ def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height
 
     if h < 1e-6:
         # Draw a line if the height is too small
-        elements = [MoveTo(Point(0, 0)), LineTo(Point(v.dx, v.dy))]
-        shape = Primitive.from_shape(Path(elements))
+        shape = make_path([(0, 0), (d, 0)])
     else:
         # Determine the arc's angle θ and its radius r
         θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
