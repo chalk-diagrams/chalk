@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, Path, Text
+from diagrams.shape import Circle, Rectangle, Path, Text, Image
 from diagrams.point import Point
 
 
@@ -53,6 +53,10 @@ def rectangle(
     return Primitive.from_shape(Rectangle(width, height, radius))
 
 
+def image(local_path: str, url_path: Optional[str]) -> Diagram:
+    return Primitive.from_shape(Image(local_path, url_path))
+
+
 def square(side: float) -> Diagram:
     return Primitive.from_shape(Rectangle(side, side))
 
@@ -94,7 +98,7 @@ def connect_outer(
 ) -> Diagram:
     bb1 = diagram.get_subdiagram_bounding_box(name1)
     bb2 = diagram.get_subdiagram_bounding_box(name2)
-    assert bb1 is not None, "Name {name1} not found"
-    assert bb2 is not None, "Name {name2} not found"
+    assert bb1 is not None, f"Name {name1} not found"
+    assert bb2 is not None, f"Name {name2} not found"
     points = [bb1.cardinal(c1), bb2.cardinal(c2)]
     return Primitive.from_shape(Path(points))

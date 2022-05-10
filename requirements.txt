@@ -3,3 +3,5 @@ streamlit
 toolz
 colour
 svgwrite
+cairosvg
+Pillow
