@@ -94,4 +94,5 @@ connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)] + \
  
 d += concat([connect_all(d, *b) for b in connect])
 
+d.render("examples/output/lenet.png", 500)
 d.render_svg("examples/output/lenet.svg", 400)
