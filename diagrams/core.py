@@ -8,7 +8,7 @@ from colour import Color  # type: ignore
 
 from diagrams.bounding_box import BoundingBox
 from diagrams.point import Point, ORIGIN
-from diagrams.shape import Shape, Circle
+from diagrams.shape import Shape, Circle, Rectangle
 from diagrams.style import Style
 from diagrams import transform as tx
 
@@ -98,9 +98,19 @@ class Diagram:
         t = tx.Translate(-c.x, -c.y)
         return ApplyTransform(t, self)
 
+    def align_l(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.left, 0)
+        return ApplyTransform(t, self)
+
     def align_t(self) -> "Diagram":
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.top)
+        return ApplyTransform(t, self)
+
+    def align_r(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.right, 0)
         return ApplyTransform(t, self)
 
     def align_b(self) -> "Diagram":
@@ -158,6 +168,11 @@ class Diagram:
         origin_size = min(box.height, box.width) / 50
         origin = Primitive(Circle(origin_size), Style(fill_color=Color("red")), I)
         return self + origin
+
+    def show_bounding_box(self) -> "Diagram":
+        box = self.get_bounding_box()
+        box = Primitive(Rectangle(box.width, box.height), Style(line_color=Color("red")), tx.Translate(box.center.x, box.center.y))
+        return self + box
 
 
 @dataclass
