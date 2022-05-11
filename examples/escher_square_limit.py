@@ -9,7 +9,7 @@ import streamlit as st  # type: ignore
 
 from toolz import take, iterate  # type: ignore
 
-from diagrams import concat, make_path, square
+from chalk import concat, make_path, square
 
 
 # fmt: off

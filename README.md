@@ -1,4 +1,6 @@
-Pydiagrams is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
+![logo](examples/output/logo-sm.png)
+
+Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
 The API draws heavy inspiration from
 Haskell's [diagrams](https://diagrams.github.io/),
 Scala's [doodle](https://github.com/creativescala/doodle/) and
@@ -15,7 +17,7 @@ We start by importing the [`colour`](https://github.com/vaab/colour) module and 
 
 ```python
 from colour import Color
-from diagrams import *
+from chalk import *
 ```
 
 We also define some colors that will be shortly used:
@@ -104,10 +106,11 @@ streamlit run examples/hanoi.py
 
 ## Acknowledgements
 
-Many thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
+Special thanks to [Alexander Rush](http://rush-nlp.com/) for contributing significantly to this library and
+also to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
 
 ## TODO
 
 - [ ] Add example: [Brent–Kung parallel prefix circuit](http://www.cs.ox.ac.uk/jeremy.gibbons/publications/embedding.pdf).
 - [ ] Remove dependency on streamlit.
-- [ ] Decide on a more inspired name for the library.
+- [x] Decide on a more inspired name for the library.

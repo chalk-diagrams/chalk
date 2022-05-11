@@ -1,6 +1,6 @@
-from diagrams import *
+from chalk import *
 from colour import Color
-from diagrams.bounding_box import BoundingBox
+from chalk.bounding_box import BoundingBox
 
 # Colors
 papaya = Color("#ff9700")

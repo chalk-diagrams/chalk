@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from diagrams import transform as tx
+from chalk import transform as tx
 
 
 @dataclass

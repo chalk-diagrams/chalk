@@ -9,10 +9,10 @@ from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from colour import Color
 
-from diagrams.bounding_box import BoundingBox
-from diagrams.shape import Shape, Circle
-from diagrams.style import Style
-from diagrams import transform as tx
+from chalk.bounding_box import BoundingBox
+from chalk.shape import Shape, Circle
+from chalk.style import Style
+from chalk import transform as tx
 
 
 PyCairoContext = Any

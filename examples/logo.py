@@ -1,5 +1,5 @@
 from colour import Color
-from diagrams import *
+from chalk import *
 
 # Needed for recursion 
 import sys

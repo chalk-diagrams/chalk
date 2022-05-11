@@ -6,7 +6,7 @@ from itertools import product
 import streamlit as st  # type: ignore
 
 from colour import Color
-from diagrams import square, concat
+from chalk import square, concat
 
 
 def make_square():

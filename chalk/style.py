@@ -2,7 +2,6 @@ from typing import Any, Optional, List, Tuple
 
 from dataclasses import dataclass, fields
 
-
 from colour import Color
 
 

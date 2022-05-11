@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from diagrams.point import Point, ORIGIN
-from diagrams.transform import Transform
+from chalk.point import Point, ORIGIN
+from chalk.transform import Transform
 
 
 @dataclass
