@@ -1,6 +1,6 @@
 import streamlit as st  # type: ignore
 from colour import Color
-from diagrams import *
+from chalk import *
 
 # define some colors
 papaya = Color("#ff9700")

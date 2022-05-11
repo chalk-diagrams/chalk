@@ -1,13 +1,13 @@
 .PHONY: help check autoformat notebook html clean
 
 flake: 
-	flake8 --show-source diagrams/*
+	flake8 --show-source chalk/*
 
 black: 
-	black --line-length 79 diagrams/*
+	black --line-length 79 chalk/*
 
 type:
-	mypy --strict --ignore-missing-imports diagrams/*.py
+	mypy --strict --ignore-missing-imports chalk/*.py
 
 intro:
 	python examples/intro.py

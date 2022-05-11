@@ -3,9 +3,9 @@ import math
 from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
-from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, Path, Text, Image
-from diagrams.point import Point
+from chalk.core import Diagram, Empty, Primitive
+from chalk.shape import Circle, Rectangle, Path, Text, Image
+from chalk.point import Point
 
 
 def empty() -> Diagram:

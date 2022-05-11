@@ -8,8 +8,8 @@ import PIL
 from io import BytesIO
 import cairosvg
 
-from diagrams.bounding_box import BoundingBox
-from diagrams.point import Point, ORIGIN
+from chalk.bounding_box import BoundingBox
+from chalk.point import Point, ORIGIN
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
