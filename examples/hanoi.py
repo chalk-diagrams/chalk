@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 import streamlit as st
 
 from colour import Color  # type: ignore
-from diagrams import Diagram, rectangle, concat, hcat, vcat
+from chalk import Diagram, rectangle, concat, hcat, vcat
 
 Disk = int
 Stack = List[Disk]  # disks on one peg

@@ -1,14 +1,14 @@
 from distutils.core import setup
 
 setup(
-    name="pydiagrams",
+    name="chalk",
     version="0.1dev",
     packages=[
-        "diagrams",
+        "chalk",
     ],
-    description="Python Distribution Utilities",
+    description="A declarative drawing API",
     long_description=open("README.md").read(),
     author="Dan Oneață",
     author_email="dan.oneata@gmail.com",
-    # url='https://www.python.org/sigs/distutils-sig/',
+    url="https://github.com/danoneata/chalk",
 )

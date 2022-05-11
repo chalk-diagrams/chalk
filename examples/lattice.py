@@ -1,4 +1,4 @@
-from diagrams import *
+from chalk import *
 from colour import Color
 
 black = Color("#000000")

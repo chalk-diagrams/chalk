@@ -1,5 +1,5 @@
-from diagrams import *
-from diagrams.transform import *
+from chalk import *
+from chalk.transform import *
 
 
 # Draw a space filling Hilbert curve
