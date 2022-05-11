@@ -207,6 +207,9 @@ class Arc(Shape):
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
+    def render_svg(self, dwg: Drawing) -> BaseElement:
+        path = dwg.path()
+        # path.push_arc(target)
 
 
 @dataclass
