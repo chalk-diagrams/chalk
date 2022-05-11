@@ -130,6 +130,16 @@ class Diagram:
 
     __truediv__ = above
 
+    def above2(self, other: "Diagram") -> "Diagram":
+        box1 = self.get_bounding_box()
+        box2 = other.get_bounding_box()
+        dy = box1.bottom - box2.top
+        t = tx.Translate(0, -dy)
+        new_box = box2.union(box1.apply_transform(t))
+        return Compose(new_box, ApplyTransform(t, self), other)
+
+    __floordiv__ = above2
+
     def center_xy(self) -> "Diagram":
         box = self.get_bounding_box()
         c = box.center

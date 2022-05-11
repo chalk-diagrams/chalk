@@ -6,6 +6,9 @@ from typing import Iterable, List, Tuple, Optional
 from diagrams.core import Diagram, Empty, Primitive
 from diagrams.shape import Circle, Rectangle, Path, Text, Image
 from diagrams.point import Point
+from diagrams.trail import Trail
+
+ignore = [Trail]
 
 
 def empty() -> Diagram:

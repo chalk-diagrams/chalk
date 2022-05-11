@@ -12,5 +12,11 @@ class Point:
         new_x, new_y = t().transform_point(self.x, self.y)
         return Point(new_x, new_y)
 
+    def __add__(self, other: "Point") -> "Point":
+        return Point(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: "Point") -> "Point":
+        return Point(self.x - other.x, self.y - other.y)
+
 
 ORIGIN = Point(0, 0)
