@@ -10,7 +10,8 @@ from svgwrite.base import BaseElement
 from colour import Color
 
 from diagrams.bounding_box import BoundingBox
-from diagrams.shape import Shape, Circle
+from diagrams.point import Point, ORIGIN
+from diagrams.shape import Shape, Circle, Rectangle
 from diagrams.style import Style
 from diagrams import transform as tx
 
@@ -136,9 +137,19 @@ class Diagram:
         t = tx.Translate(-c.x, -c.y)
         return ApplyTransform(t, self)
 
+    def align_l(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.left, 0)
+        return ApplyTransform(t, self)
+
     def align_t(self) -> "Diagram":
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.top)
+        return ApplyTransform(t, self)
+
+    def align_r(self) -> "Diagram":
+        box = self.get_bounding_box()
+        t = tx.Translate(-box.right, 0)
         return ApplyTransform(t, self)
 
     def align_b(self) -> "Diagram":
@@ -270,6 +281,11 @@ class Diagram:
 
     def to_svg(self, dwg: Drawing) -> BaseElement:
         raise NotImplementedError
+
+    def show_bounding_box(self) -> "Diagram":
+        box = self.get_bounding_box()
+        box = Primitive(Rectangle(box.width, box.height), Style(line_color=Color("red")), tx.Translate(box.center.x, box.center.y))
+        return self + box
 
 
 @dataclass

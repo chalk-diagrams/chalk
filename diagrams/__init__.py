@@ -49,7 +49,7 @@ def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height
 
     h = abs(height)
     v = q - p
-    d = v.norm()
+    d = v.length
 
     if h < 1e-6:
         # Draw a line if the height is too small
@@ -70,7 +70,7 @@ def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height
 
         shape = Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
 
-    return shape.rotate(v.angle()).translate(p.x, p.y)
+    return shape.rotate(v.angle).translate(p.x, p.y)
 
 
 def circle(radius: float) -> Diagram:
