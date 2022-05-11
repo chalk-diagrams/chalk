@@ -4,11 +4,11 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from diagrams.core import Diagram, Empty, Primitive
-from diagrams.shape import Circle, Rectangle, Path, Text, Image
 from diagrams.point import Point
 from diagrams.shape import (
     Arc,
     Circle,
+    Image,
     LineTo,
     MoveTo,
     Path,

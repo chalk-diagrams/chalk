@@ -82,6 +82,7 @@ class Rectangle(Shape):
         )
 
 
+
 @dataclass
 class RoundedRectangle(Shape):
     width: float
@@ -170,6 +171,12 @@ class Path(Shape):
         for elem in self.elements:
             elem.render(ctx)
 
+    # def render_svg(self, dwg: Drawing) -> BaseElement:
+    #     line = dwg.polyline([(p.x, p.y) for p in self.points])
+    #     if self.arrow:
+    #         line.set_markers((None, False, dwg.defs.elements[0]))
+    #     return line
+
 
 @dataclass
 class Arc(Shape):
@@ -189,11 +196,6 @@ class Arc(Shape):
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
-        line = dwg.polyline([(p.x, p.y) for p in self.points])
-        if self.arrow:
-            line.set_markers((None, False, dwg.defs.elements[0]))
-        return line
 
 
 @dataclass
