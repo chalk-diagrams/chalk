@@ -12,9 +12,11 @@ def empty() -> Diagram:
     return Empty()
 
 
-def make_path(coords: List[Tuple[float, float]]) -> Diagram:
+def make_path(
+    coords: List[Tuple[float, float]], arrow: bool = False
+) -> Diagram:
     points = [Point(x, y) for x, y in coords]
-    return Primitive.from_shape(Path(points))
+    return Primitive.from_shape(Path(points, arrow))
 
 
 def circle(radius: float) -> Diagram:

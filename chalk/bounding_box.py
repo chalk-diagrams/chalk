@@ -35,6 +35,10 @@ class BoundingBox:
             "S": Point(self.left + self.width / 2, self.bottom),
             "W": Point(self.left, self.top + self.height / 2),
             "E": Point(self.right, self.top + self.height / 2),
+            "NW": Point(self.left, self.top),
+            "NE": Point(self.right, self.top),
+            "SW": Point(self.left, self.bottom),
+            "SE": Point(self.right, self.bottom),
             "C": self.center,
         }[dir]
 
