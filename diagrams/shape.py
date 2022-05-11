@@ -122,6 +122,9 @@ class MoveTo(PathElement):
     def render(self, ctx: PyCairoContext) -> None:
         ctx.move_to(self.point.x, self.point.y)
 
+    def render_svg(self, path):
+        path.push("M{},{}".format(self.point.x, self.point.y))
+
 
 @dataclass
 class LineTo(PathElement):
@@ -133,6 +136,9 @@ class LineTo(PathElement):
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.line_to(self.point.x, self.point.y)
+
+    def render_svg(self, path) -> BaseElement:
+        path.push("L{},{}".format(self.point.x, self.point.y))
 
 
 @dataclass
@@ -160,6 +166,11 @@ class BezierCurveTo(PathElement):
 class Path(Shape):
     elements: List[PathElement]
 
+    @classmethod
+    def from_points(cls, points):
+        fst, *rest = points
+        return cls([MoveTo(fst)] + [LineTo(p) for p in rest])
+
     def get_bounding_box(self) -> BoundingBox:
         box = BoundingBox.empty()
         for elem in self.elements:
@@ -171,11 +182,11 @@ class Path(Shape):
         for elem in self.elements:
             elem.render(ctx)
 
-    # def render_svg(self, dwg: Drawing) -> BaseElement:
-    #     line = dwg.polyline([(p.x, p.y) for p in self.points])
-    #     if self.arrow:
-    #         line.set_markers((None, False, dwg.defs.elements[0]))
-    #     return line
+    def render_svg(self, dwg: Drawing) -> BaseElement:
+        path = dwg.path()
+        for elem in self.elements:
+            elem.render_svg(path)
+        return path
 
 
 @dataclass

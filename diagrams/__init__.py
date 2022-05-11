@@ -28,9 +28,7 @@ def make_path(coords: List[Tuple[float, float]]) -> Diagram:
         return empty()
     else:
         points = [Point(x, y) for x, y in coords]
-        start, *rest = points
-        elements = [MoveTo(start)] + [LineTo(p) for p in rest]
-        return Primitive.from_shape(Path(elements))
+        return Primitive.from_shape(Path.from_points(points))
 
 
 def arc_between(point1: Tuple[float, float], point2: Tuple[float, float], height: float) -> Diagram:
@@ -157,4 +155,4 @@ def connect_outer(
     assert bb1 is not None, f"Name {name1} not found"
     assert bb2 is not None, f"Name {name2} not found"
     points = [bb1.cardinal(c1), bb2.cardinal(c2)]
-    return Primitive.from_shape(Path(points))
+    return Primitive.from_shape(Path.from_points(points))
