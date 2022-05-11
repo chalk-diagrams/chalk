@@ -24,5 +24,11 @@ escher_square:
 lattice: 
 	python examples/lattice.py
 
-images: squares hanoi intro escher_square
+lenet: 
+	python examples/lenet.py
+
+logo: 
+	python examples/logo.py
+
+images: squares hanoi intro escher_square lenet logo
 
