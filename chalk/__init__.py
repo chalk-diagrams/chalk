@@ -26,7 +26,7 @@ def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
 
 
-def arc(radius: float, angle0: float, angle1: float):
+def arc(radius: float, angle0: float, angle1: float) -> Diagram:
     return Primitive.from_shape(Arc(radius, angle0, angle1))
 
 
