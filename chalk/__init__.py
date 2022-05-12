@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from chalk.core import Diagram, Empty, Primitive
-from chalk.shape import Circle, Rectangle, Path, Text, Image
+from chalk.shape import Arc, Circle, Rectangle, Path, Text, Image
 from chalk.point import Point
 from chalk.trail import Trail
 
@@ -24,6 +24,53 @@ def make_path(
 
 def circle(radius: float) -> Diagram:
     return Primitive.from_shape(Circle(radius))
+
+
+def arc(radius: float, angle0: float, angle1: float):
+    return Primitive.from_shape(Arc(radius, angle0, angle1))
+
+
+def arc_between(
+    point1: Tuple[float, float], point2: Tuple[float, float], height: float
+) -> Diagram:
+    """Makes an arc starting at point1 and ending at point2, with the midpoint
+    at a distance of abs(height) away from the straight line from point1 to
+    point2. A positive value of height results in an arc to the left of the
+    line from point1 to point2; a negative value yields one to the right.
+    The implementaion is based on the the function arcBetween from Haskell's
+    diagrams:
+    https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
+    """
+    p = Point(*point1)
+    q = Point(*point2)
+
+    h = abs(height)
+    v = q - p
+    d = v.length
+
+    if h < 1e-6:
+        # Draw a line if the height is too small
+        shape = make_path([(0, 0), (d, 0)])
+    else:
+        # Determine the arc's angle θ and its radius r
+        θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
+        r = d / (2 * math.sin(θ))
+
+        if height > 0:
+            # bend left
+            φ = -math.pi / 2
+            dy = r - h
+        else:
+            # bend right
+            φ = +math.pi / 2
+            dy = h - r
+
+        print(d / 2, dy)
+        shape = (
+            Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
+        )
+
+    return shape.rotate(v.angle).translate(p.x, p.y)
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:

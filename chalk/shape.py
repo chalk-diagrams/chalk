@@ -9,7 +9,7 @@ from io import BytesIO
 import cairosvg
 
 from chalk.bounding_box import BoundingBox
-from chalk.point import Point, ORIGIN
+from chalk.point import Point, Vector, ORIGIN
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -104,6 +104,36 @@ class Path(Shape):
         if self.arrow:
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
+
+
+@dataclass
+class Arc(Shape):
+    radius: float
+    angle0: float
+    angle1: float
+
+    def __post_init__(self) -> None:
+        surface = cairo.SVGSurface("undefined.svg", 1280, 200)
+        self.ctx = cairo.Context(surface)
+
+    def get_bounding_box(self) -> BoundingBox:
+        self.render(self.ctx)
+        l, t, r, b = self.ctx.path_extents()
+        return BoundingBox(Point(l, t), Point(r, b))
+
+    def render(self, ctx: PyCairoContext) -> None:
+        ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
+
+    def render_svg(self, dwg: Drawing) -> BaseElement:
+        u = Vector.from_polar(self.radius, self.angle0)
+        v = Vector.from_polar(self.radius, self.angle1)
+        path = dwg.path(fill="none")
+        path.push(
+            "M {} {} A {} {} 0 0 1 {} {}".format(
+                u.dx, u.dy, self.radius, self.radius, v.dx, v.dy
+            )
+        )
+        return path
 
 
 @dataclass
