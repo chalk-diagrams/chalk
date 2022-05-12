@@ -223,10 +223,10 @@ class Diagram:
     def reflect_y(self) -> "Diagram":
         return ApplyTransform(tx.Scale(+1, -1), self)
 
-    def shear_x(self, λ) -> "Diagram":
+    def shear_x(self, λ: float) -> "Diagram":
         return ApplyTransform(tx.ShearX(λ), self)
 
-    def shear_y(self, λ) -> "Diagram":
+    def shear_y(self, λ: float) -> "Diagram":
         return ApplyTransform(tx.ShearY(λ), self)
 
     # def at(self, x: float, y: float) -> "Diagram":
