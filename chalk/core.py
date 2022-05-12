@@ -201,6 +201,12 @@ class Diagram:
     def scale(self, α: float) -> "Diagram":
         return ApplyTransform(tx.Scale(α, α), self)
 
+    def scale_x(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(α, 1), self)
+
+    def scale_y(self, α: float) -> "Diagram":
+        return ApplyTransform(tx.Scale(1, α), self)
+
     def scale_uniform_to_x(self, x: float) -> "Diagram":
         box = self.get_bounding_box()
         α = x / box.width
@@ -216,6 +222,12 @@ class Diagram:
 
     def reflect_y(self) -> "Diagram":
         return ApplyTransform(tx.Scale(+1, -1), self)
+
+    def shear_x(self, λ) -> "Diagram":
+        return ApplyTransform(tx.ShearX(λ), self)
+
+    def shear_y(self, λ) -> "Diagram":
+        return ApplyTransform(tx.ShearY(λ), self)
 
     # def at(self, x: float, y: float) -> "Diagram":
     #     t = tx.Translate(x, y)

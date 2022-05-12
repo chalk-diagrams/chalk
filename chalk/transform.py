@@ -63,6 +63,30 @@ class Translate(Transform):
 
 
 @dataclass
+class ShearX(Transform):
+    λ: float
+
+    def __call__(self) -> cairo.Matrix:
+        matrix = cairo.Matrix(1, 0, self.λ, 1, 0, 0)
+        return matrix
+
+    def to_svg(self) -> str:
+        return f"matrix(1 0 {self.λ} 1 0 0)"
+
+
+@dataclass
+class ShearY(Transform):
+    λ: float
+
+    def __call__(self) -> cairo.Matrix:
+        matrix = cairo.Matrix(1, self.λ, 0, 1, 0, 0)
+        return matrix
+
+    def to_svg(self) -> str:
+        return f"matrix(1 {self.λ} 0 1 0 0)"
+
+
+@dataclass
 class Compose(Transform):
     t: Transform
     u: Transform
