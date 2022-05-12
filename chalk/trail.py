@@ -1,12 +1,15 @@
+import math
+
+from typing import List, Any
+
 from chalk.core import Primitive
-from chalk.point import Point
+from chalk.point import Point, Vector
 from chalk.shape import Path
 from chalk import transform as tx
-from typing import List, Any
 
 
 class Trail:
-    def __init__(self, offsets: List[Point]):
+    def __init__(self, offsets: List[Vector]):
         self.offsets = offsets
 
     def __add__(self, other: "Trail") -> "Trail":
@@ -24,5 +27,5 @@ class Trail:
     def stroke(self) -> Primitive:
         points = [Point(0, 0)]
         for s in self.offsets:
-            points.append(s + points[-1])
+            points.append(points[-1] + s)
         return Primitive.from_shape(Path(points))
