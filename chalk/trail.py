@@ -18,6 +18,23 @@ class Trail:
     def transform(self, t: tx.Transform) -> "Trail":
         return Trail([p.apply_transform(t) for p in self.offsets])
 
+    def scale(self, α: float) -> "Trail":
+        return self.transform(tx.Scale(α, α))
+
+    def rotate(self, θ: float) -> "Trail":
+        return self.transform(tx.Rotate(θ))
+
+    def rotate_by(self, turns: float) -> "Trail":
+        """Rotate by fractions of a circle (turn)."""
+        θ = 2 * math.pi * turns
+        return self.transform(tx.Rotate(θ))
+
+    def reflect_x(self) -> "Trail":
+        return self.transform(tx.Scale(-1, +1))
+
+    def reflect_y(self) -> "Trail":
+        return self.transform(tx.Scale(+1, -1))
+
     @staticmethod
     def from_path(path: Any) -> "Trail":
         pts = path.shape.points
