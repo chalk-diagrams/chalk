@@ -5,10 +5,10 @@ from typing import Iterable, List, Tuple, Optional
 
 from chalk.core import Diagram, Empty, Primitive
 from chalk.shape import Circle, Rectangle, Path, Text, Image
-from chalk.point import Point
+from chalk.point import Point, Vector
 from chalk.trail import Trail
 
-ignore = [Trail]
+ignore = [Trail, Vector]
 
 
 def empty() -> Diagram:

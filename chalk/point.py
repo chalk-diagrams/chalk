@@ -52,5 +52,14 @@ class Vector:
 
     __rmul__ = __mul__
 
+    def __add__(self, other: "Vector") -> "Vector":
+        return Vector(self.dx + other.dx, self.dy + other.dy)
+
+    def __sub__(self, other: "Vector") -> "Vector":
+        return Vector(self.dx - other.dx, self.dy - other.dy)
+
+    def __neg__(self) -> "Vector":
+        return Vector(-self.dx, -self.dy)
+
 
 ORIGIN = Point(0, 0)

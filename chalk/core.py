@@ -10,8 +10,9 @@ from svgwrite.base import BaseElement
 from colour import Color
 
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Shape, Circle
+from chalk.shape import Shape, Circle, Rectangle
 from chalk.style import Style
+from chalk.point import Vector
 from chalk import transform as tx
 
 
@@ -223,6 +224,9 @@ class Diagram:
     def translate(self, dx: float, dy: float) -> "Diagram":
         return ApplyTransform(tx.Translate(dx, dy), self)
 
+    def translate_by(self, vector: Vector) -> "Diagram":
+        return ApplyTransform(tx.Translate(vector.dx, vector.dy), self)
+
     def rotate(self, θ: float) -> "Diagram":
         return ApplyTransform(tx.Rotate(θ), self)
 
@@ -262,6 +266,15 @@ class Diagram:
         origin = Primitive(
             Circle(origin_size), Style(fill_color=Color("red")), Ident
         )
+        return self + origin
+
+    def show_bounding_box(self) -> "Diagram":
+        box = self.get_bounding_box()
+        origin = Primitive(
+            Rectangle(box.width, box.height),
+            Style(fill_opacity=0, line_color=Color("red")),
+            Ident,
+        ).translate(box.center.x, box.center.y)
         return self + origin
 
     def named(self, name: str) -> "Diagram":
