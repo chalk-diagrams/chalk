@@ -30,8 +30,11 @@ lenet:
 logo: 
 	python examples/logo.py
 
-hanoi: 
+hilbert:
+	python examples/hilbert.py
+
+koch:
 	python examples/koch.py
 
-images: squares hanoi intro escher_square lenet logo koch
+images: squares hanoi intro escher_square lenet logo hilbert koch
 
