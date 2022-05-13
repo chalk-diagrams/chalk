@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=500></p>
+<p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=200></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
 The API draws heavy inspiration from
