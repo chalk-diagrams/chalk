@@ -8,6 +8,7 @@ import streamlit as st  # type: ignore
 from colour import Color
 from chalk import square, concat
 
+random.seed(0)
 
 def make_square():
     colors = [

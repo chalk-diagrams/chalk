@@ -263,12 +263,17 @@ class Latex(Shape):
         # Need to install latextools for this to run.
         import latextools
 
+        # Border ensures no cropping.
         latex_eq = latextools.render_snippet(
-            self.text, commands=[latextools.cmd.all_math]
+            f"{self.text}",
+            commands=[latextools.cmd.all_math],
+            config=latextools.DocumentConfig(
+                "standalone", {"crop=true,border=0.1cm"}
+            ),
         )
         self.eq = latex_eq.as_svg()
-        self.width = self.eq.width + 0.05
-        self.height = self.eq.height + 0.05
+        self.width = self.eq.width
+        self.height = self.eq.height
         self.content = self.eq.content
         # From latextools Ensures no clash between multiple math statements
         id_prefix = f"embed-{hash(self.content)}-"
