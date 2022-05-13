@@ -50,7 +50,7 @@ def arc_between(
 
     if h < 1e-6:
         # Draw a line if the height is too small
-        shape = make_path([(0, 0), (d, 0)])
+        shape: Diagram = make_path([(0, 0), (d, 0)])
     else:
         # Determine the arc's angle θ and its radius r
         θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
@@ -65,11 +65,10 @@ def arc_between(
             φ = +math.pi / 2
             dy = h - r
 
-        shape: Diagram = (
+        shape = (
             Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
         )
-    ret: Diagram = shape.rotate(v.angle).translate(p.x, p.y)
-    return ret
+    return shape.rotate(v.angle).translate(p.x, p.y)
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
