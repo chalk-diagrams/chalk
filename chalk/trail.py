@@ -1,5 +1,3 @@
-import math
-
 from typing import List, Any
 
 from chalk.core import Primitive
@@ -8,32 +6,12 @@ from chalk.shape import Path
 from chalk import transform as tx
 
 
-class Trail:
+class Trail(tx.Transformable):
     def __init__(self, offsets: List[Vector]):
         self.offsets = offsets
 
     def __add__(self, other: "Trail") -> "Trail":
         return Trail(self.offsets + other.offsets)
-
-    def transform(self, t: tx.Transform) -> "Trail":
-        return Trail([p.apply_transform(t) for p in self.offsets])
-
-    def scale(self, α: float) -> "Trail":
-        return self.transform(tx.Scale(α, α))
-
-    def rotate(self, θ: float) -> "Trail":
-        return self.transform(tx.Rotate(θ))
-
-    def rotate_by(self, turns: float) -> "Trail":
-        """Rotate by fractions of a circle (turn)."""
-        θ = 2 * math.pi * turns
-        return self.transform(tx.Rotate(θ))
-
-    def reflect_x(self) -> "Trail":
-        return self.transform(tx.Scale(-1, +1))
-
-    def reflect_y(self) -> "Trail":
-        return self.transform(tx.Scale(+1, -1))
 
     @staticmethod
     def from_path(path: Any) -> "Trail":
@@ -46,3 +24,9 @@ class Trail:
         for s in self.offsets:
             points.append(points[-1] + s)
         return Primitive.from_shape(Path(points))
+
+    def transform(self, t: tx.Transform) -> "Trail":
+        return Trail([p.apply_transform(t) for p in self.offsets])
+
+    def apply_transform(self, t: tx.Transform) -> "Trail":
+        return self.transform(t)

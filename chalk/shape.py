@@ -26,7 +26,7 @@ class Shape:
         pass
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        pass
+        return dwg.g()
 
 
 @dataclass
@@ -199,3 +199,16 @@ class Image(Shape):
         return dwg.image(
             href=self.url_path, transform=f"translate({dx}, {dy})"
         )
+
+
+@dataclass
+class Spacer(Shape):
+    width: float
+    height: float
+
+    def get_bounding_box(self) -> BoundingBox:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        tl = Point(left, top)
+        br = Point(left + self.width, top + self.height)
+        return BoundingBox(tl, br)

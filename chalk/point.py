@@ -6,7 +6,7 @@ from chalk import transform as tx
 
 
 @dataclass
-class Point:
+class Point(tx.Transformable):
     x: float
     y: float
 
@@ -22,7 +22,7 @@ class Point:
 
 
 @dataclass
-class Vector:
+class Vector(tx.Transformable):
     dx: float
     dy: float
 
@@ -51,6 +51,15 @@ class Vector:
         return Vector(α * self.dx, α * self.dy)
 
     __rmul__ = __mul__
+
+    def __add__(self, other: "Vector") -> "Vector":
+        return Vector(self.dx + other.dx, self.dy + other.dy)
+
+    def __sub__(self, other: "Vector") -> "Vector":
+        return Vector(self.dx - other.dx, self.dy - other.dy)
+
+    def __neg__(self) -> "Vector":
+        return Vector(-self.dx, -self.dy)
 
 
 ORIGIN = Point(0, 0)
