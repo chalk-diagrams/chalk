@@ -97,7 +97,7 @@ class Diagram(tx.Transformable):
         dwg.defs.add(marker)
 
         dwg.add(outer)
-        outer.add(self.to_svg(dwg))
+        outer.add(self.to_svg(dwg, Style.default()))
         dwg.save()
 
     def atop(self, other: "Diagram") -> "Diagram":
@@ -271,7 +271,7 @@ class Diagram(tx.Transformable):
     ) -> Optional[BoundingBox]:
         return None
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         raise NotImplementedError
 
 
@@ -301,8 +301,8 @@ class Primitive(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [self.apply_transform(t)]
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
-        style = self.style.to_svg()
+    def to_svg(self, dwg: Drawing, other_style: Style) -> BaseElement:
+        style = self.style.merge(other_style).to_svg()
         transform = self.transform.to_svg()
         inner = self.shape.render_svg(dwg)
 
@@ -324,7 +324,7 @@ class Empty(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return []
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         return dwg.g()
 
 
@@ -348,10 +348,10 @@ class Compose(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         g = dwg.g()
-        g.add(self.diagram1.to_svg(dwg))
-        g.add(self.diagram2.to_svg(dwg))
+        g.add(self.diagram1.to_svg(dwg, style))
+        g.add(self.diagram2.to_svg(dwg, style))
         return g
 
 
@@ -376,9 +376,9 @@ class ApplyTransform(Diagram):
             prim.apply_transform(t_new) for prim in self.diagram.to_list(t)
         ]
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         g = dwg.g(transform=self.transform.to_svg())
-        g.add(self.diagram.to_svg(dwg))
+        g.add(self.diagram.to_svg(dwg, style))
         return g
 
 
@@ -400,15 +400,8 @@ class ApplyStyle(Diagram):
             prim.apply_style(self.style) for prim in self.diagram.to_list(t)
         ]
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
-        style = self.style.to_svg()
-        inner = self.diagram.to_svg(dwg)
-        if style:
-            g = dwg.g(style=self.style.to_svg())
-            g.add(inner)
-            return g
-        else:
-            return inner
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        return self.diagram.to_svg(dwg, self.style.merge(style))
 
 
 @dataclass
@@ -430,7 +423,7 @@ class ApplyName(Diagram):
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [prim for prim in self.diagram.to_list(t)]
 
-    def to_svg(self, dwg: Drawing) -> BaseElement:
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         g = dwg.g()
-        g.add(self.diagram.to_svg(dwg))
+        g.add(self.diagram.to_svg(dwg, style))
         return g
