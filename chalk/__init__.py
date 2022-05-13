@@ -114,7 +114,8 @@ def square(side: float) -> Diagram:
 def text(t: str, size: Optional[float]) -> Diagram:
     return Primitive.from_shape(Text(t, font_size=size))
 
-def math(t: str, size: Optional[float]=None) -> Diagram:
+
+def latex(t: str) -> Diagram:
     return Primitive.from_shape(Math(t))
 
 

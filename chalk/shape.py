@@ -1,5 +1,4 @@
 import math
-import re
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
@@ -10,6 +9,7 @@ import cairosvg
 
 from chalk.bounding_box import BoundingBox
 from chalk.point import Point, Vector, ORIGIN
+import xml.etree.ElementTree as ET
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -245,27 +245,16 @@ class Spacer(Shape):
         return BoundingBox(tl, br)
 
 
-@dataclass
-class Spacer(Shape):
-    width: float
-    height: float
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
-
-class Raw(Rect):
+class Raw(Rect):  # type: ignore
     "A fake SVG node for importing latex"
-    def __init__(self, st):
-        import xml.etree.ElementTree as ET
+
+    def __init__(self, st: str):
         self.xml = ET.fromstring(st)
 
-    def get_xml(self):
+    def get_xml(self) -> ET.Element:
         return self.xml
-    
+
+
 @dataclass
 class Math(Shape):
     text: str
@@ -273,19 +262,21 @@ class Math(Shape):
     def __post_init__(self) -> None:
         # Need to install latextools for this to run.
         import latextools
+
         latex_eq = latextools.render_snippet(
-            self.text,
-            commands=[latextools.cmd.all_math])
+            self.text, commands=[latextools.cmd.all_math]
+        )
         self.eq = latex_eq.as_svg()
         self.width = self.eq.width
         self.height = self.eq.height
         self.content = self.eq.content
         # From latextools Ensures no clash between multiple math statements
-        id_prefix = f'embed-{hash(self.content)}-'
-        self.content = (self.content
-                    .replace('id="', f'id="{id_prefix}')
-                    .replace('="url(#', f'="url(#{id_prefix}')
-                    .replace('xlink:href="#', f'xlink:href="#{id_prefix}'))
+        id_prefix = f"embed-{hash(self.content)}-"
+        self.content = (
+            self.content.replace('id="', f'id="{id_prefix}')
+            .replace('="url(#', f'="url(#{id_prefix}')
+            .replace('xlink:href="#', f'xlink:href="#{id_prefix}')
+        )
 
     def get_bounding_box(self) -> BoundingBox:
         left = ORIGIN.x - self.width / 2
@@ -296,8 +287,11 @@ class Math(Shape):
 
     def render(self, ctx: PyCairoContext) -> None:
         raise NotImplementedError
-    
+
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        g = dwg.g(transform=f"scale(0.05) translate({-self.width / 2} {-self.height / 2})")
+        dx, dy = -self.width / 2, -self.height / 2
+        g = dwg.g(
+            transform=f"scale(0.05) translate({dx} {dy})"
+        )
         g.add(Raw(self.content))
         return g
