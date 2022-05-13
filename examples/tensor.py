@@ -9,6 +9,7 @@ papaya = Color("#ff9700")
 white = Color("white")
 black = Color("black")
 
+
 # Text
 def label(te, s=1.5):
     return (text(te, s).fill_color(black).line_color(white).pad_t(2.5).center_xy())
@@ -18,16 +19,16 @@ def tensor(depth, rows, columns):
     
     up = Vector(0, -1)
     right = Vector(1, 0)
-    hyp = (up * 0.5).apply_transform(tx.ShearX(-1))
+    hyp = (up * 0.5).shear_x(-1)
     
     # Faces
-    face_m = rectangle(1, 1).align_tl()
+    face_m = rectangle(1, 1).align_tl().show_origin()
     face_t = rectangle(1, 0.5).shear_x(-1).align_bl()
     face_r = rectangle(0.5, 1).shear_y(-1).align_tr()
     
 
     # Make a single cube with bounding box around the front face
-    cube = (face_m + face_t).align_t().align_r() + face_r
+    cube = (face_m + face_t).align_tr() + face_r
     return concat(([cube.translate_by(hyp * i + -up * j + right * k)
                     for i in reversed(range(depth))
                     for j in reversed(range(rows))

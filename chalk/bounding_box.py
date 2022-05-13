@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from chalk.point import Point, ORIGIN
-from chalk.transform import Transform
+from chalk.transform import Transform, Transformable
 
 
 @dataclass
-class BoundingBox:
+class BoundingBox(Transformable):
     tl: Point
     br: Point
 

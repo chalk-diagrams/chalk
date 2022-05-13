@@ -36,5 +36,8 @@ hilbert:
 koch:
 	python examples/koch.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch
+tensor:
+	python examples/tensor.py
+
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor
 

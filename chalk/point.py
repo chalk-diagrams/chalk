@@ -6,7 +6,7 @@ from chalk import transform as tx
 
 
 @dataclass
-class Point:
+class Point(tx.Transformable):
     x: float
     y: float
 
@@ -22,7 +22,7 @@ class Point:
 
 
 @dataclass
-class Vector:
+class Vector(tx.Transformable):
     dx: float
     dy: float
 
