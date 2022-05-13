@@ -39,5 +39,8 @@ koch:
 tensor:
 	python examples/tensor.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor
+math:
+	python examples/math.py
+
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor math
 
