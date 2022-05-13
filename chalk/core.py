@@ -214,8 +214,8 @@ class Diagram(tx.Transformable):
         α = y / box.width
         return ApplyTransform(tx.Scale(α, α), self)
 
-    def apply_transform(self, transform: tx.Transform) -> "Diagram":
-        return ApplyTransform(transform, self)
+    def apply_transform(self, t: tx.Transform) -> "Diagram":  # type: ignore
+        return ApplyTransform(t, self)
 
     # def at(self, x: float, y: float) -> "Diagram":
     #     t = tx.Translate(x, y)
@@ -261,7 +261,7 @@ class Diagram(tx.Transformable):
             Style(fill_opacity=0, line_color=Color("red")),
             Ident,
         ).translate(box.center.x, box.center.y)
-        return self + origin  # type: ignore
+        return self + origin
 
     def named(self, name: str) -> "Diagram":
         return ApplyName(name, self)
@@ -285,8 +285,8 @@ class Primitive(Diagram):
     def from_shape(cls, shape: Shape) -> "Primitive":
         return cls(shape, Style.default(), Ident)
 
-    def apply_transform(self, other_transform: tx.Transform) -> "Primitive":
-        new_transform = tx.Compose(other_transform, self.transform)
+    def apply_transform(self, t: tx.Transform) -> "Primitive":  # type: ignore
+        new_transform = tx.Compose(t, self.transform)
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":

@@ -28,5 +28,5 @@ class Trail(tx.Transformable):
     def transform(self, t: tx.Transform) -> "Trail":
         return Trail([p.apply_transform(t) for p in self.offsets])
 
-    def apply_transform(self, t: tx.Transform) -> "Trail":
+    def apply_transform(self, t: tx.Transform) -> "Trail":  # type: ignore
         return self.transform(t)
