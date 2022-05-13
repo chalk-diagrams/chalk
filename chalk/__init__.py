@@ -65,8 +65,7 @@ def arc_between(
             φ = +math.pi / 2
             dy = h - r
 
-        print(d / 2, dy)
-        shape = (
+        shape : Diagram = (
             Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
         )
 
