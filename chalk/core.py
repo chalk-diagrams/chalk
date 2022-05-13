@@ -1,5 +1,3 @@
-import math
-
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
@@ -10,7 +8,7 @@ from svgwrite.base import BaseElement
 from colour import Color
 
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Shape, Circle
+from chalk.shape import Shape, Circle, Rectangle
 from chalk.style import Style
 from chalk import transform as tx
 
@@ -20,7 +18,7 @@ Ident = tx.Identity()
 
 
 @dataclass
-class Diagram:
+class Diagram(tx.Transformable):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         raise NotImplementedError
 
@@ -166,6 +164,18 @@ class Diagram:
         t = tx.Translate(-box.left, 0)
         return ApplyTransform(t, self)
 
+    def align_tl(self) -> "Diagram":
+        return self.align_t().align_l()
+
+    def align_br(self) -> "Diagram":
+        return self.align_b().align_r()
+
+    def align_tr(self) -> "Diagram":
+        return self.align_t().align_r()
+
+    def align_bl(self) -> "Diagram":
+        return self.align_b().align_l()
+
     def pad_l(self, extra: float) -> "Diagram":
         box = self.get_bounding_box()
         new_box = BoundingBox.from_limits(
@@ -194,12 +204,6 @@ class Diagram:
         )
         return Compose(new_box, self, Empty())
 
-    def apply_transform(self, transform: tx.Transform) -> "Diagram":
-        return ApplyTransform(transform, self)
-
-    def scale(self, α: float) -> "Diagram":
-        return ApplyTransform(tx.Scale(α, α), self)
-
     def scale_uniform_to_x(self, x: float) -> "Diagram":
         box = self.get_bounding_box()
         α = x / box.width
@@ -210,26 +214,12 @@ class Diagram:
         α = y / box.width
         return ApplyTransform(tx.Scale(α, α), self)
 
-    def reflect_x(self) -> "Diagram":
-        return ApplyTransform(tx.Scale(-1, +1), self)
-
-    def reflect_y(self) -> "Diagram":
-        return ApplyTransform(tx.Scale(+1, -1), self)
+    def apply_transform(self, transform: tx.Transform) -> "Diagram":
+        return ApplyTransform(transform, self)
 
     # def at(self, x: float, y: float) -> "Diagram":
     #     t = tx.Translate(x, y)
     #     return ApplyTransform(t, self.center_xy())
-
-    def translate(self, dx: float, dy: float) -> "Diagram":
-        return ApplyTransform(tx.Translate(dx, dy), self)
-
-    def rotate(self, θ: float) -> "Diagram":
-        return ApplyTransform(tx.Rotate(θ), self)
-
-    def rotate_by(self, turns: float) -> "Diagram":
-        """Rotate by fractions of a circle (turn)."""
-        θ = 2 * math.pi * turns
-        return ApplyTransform(tx.Rotate(θ), self)
 
     def line_width(self, width: float) -> "Diagram":
         return ApplyStyle(Style(line_width=width), self)
@@ -264,6 +254,15 @@ class Diagram:
         )
         return self + origin
 
+    def show_bounding_box(self) -> "Diagram":
+        box = self.get_bounding_box()
+        origin = Primitive(
+            Rectangle(box.width, box.height),
+            Style(fill_opacity=0, line_color=Color("red")),
+            Ident,
+        ).translate(box.center.x, box.center.y)
+        return self + origin  # type: ignore
+
     def named(self, name: str) -> "Diagram":
         return ApplyName(name, self)
 
@@ -296,7 +295,8 @@ class Primitive(Diagram):
         )
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
-        return self.shape.get_bounding_box().apply_transform(t)
+        new_transform = tx.Compose(t, self.transform)
+        return self.shape.get_bounding_box().apply_transform(new_transform)
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         return [self.apply_transform(t)]

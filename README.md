@@ -1,4 +1,4 @@
-<p align="center"><img src="examples/output/logo.svg" width=500></p>
+<p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=500></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
 The API draws heavy inspiration from
@@ -34,7 +34,7 @@ For example:
 d = circle(1).fill_color(papaya)
 ```
 
-![circle](examples/output/intro-01.png)
+![circle](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-01.png)
 
 The diagram can be saved to an image using the `render` method:
 
@@ -57,7 +57,7 @@ circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
 
 This code produces the following image:
 
-![atop](examples/output/intro-02.png)
+![atop](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-02.png)
 
 We also provide combinators for a list of diagrams:
 `hcat` for horizontal composition, `vcat` for vertical composition.
@@ -66,7 +66,7 @@ For example:
 ```python
 hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 ```
-![hcat](examples/output/intro-03.png)
+![hcat](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-03.png)
 
 We can use Python functions to build more intricate diagrams:
 
@@ -81,7 +81,7 @@ def sierpinski(n: int, size: int) -> Diagram:
 d = sierpinski(5, 4).fill_color(papaya)
 ```
 
-![sierpinski](examples/output/intro-04.png)
+![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
 
 For more examples, please check the `examples` folder.
 These scripts can be run using [Streamlit](https://streamlit.io/):
@@ -90,19 +90,19 @@ These scripts can be run using [Streamlit](https://streamlit.io/):
 streamlit run examples/squares.py
 ```
 
-![squares](examples/output/squares.png)
+![squares](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png)
 
 ```bash
 streamlit run examples/escher_square_limit.py
 ```
 
-![escher](examples/output/escher-square-limit.png)
+![escher](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png)
 
 ```bash
 streamlit run examples/hanoi.py
 ```
 
-![hanoi](examples/output/hanoi.png)
+![hanoi](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hanoi.png)
 
 ## Acknowledgements
 
