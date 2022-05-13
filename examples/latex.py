@@ -17,4 +17,4 @@ def arrow(text, d=True):
 
 # Autograd 1
 d = hcat([arrow(r"$f'_x(g(x))$"), box("$f$"), arrow(r"$f'_{g(x)}(g(x))$"), box("$g$"), arrow("1")], 0.2)
-d.render_svg("examples/output/math.svg", 100)
+d.render_svg("examples/output/latex.svg", 100)
