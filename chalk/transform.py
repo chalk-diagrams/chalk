@@ -67,7 +67,7 @@ class ShearX(Transform):
     λ: float
 
     def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix(1, 0, self.λ, 1, 0, 0)
+        matrix = cairo.Matrix(1, 0, self.λ, 1, 0, 0)  # type: ignore
         return matrix
 
     def to_svg(self) -> str:
@@ -79,7 +79,7 @@ class ShearY(Transform):
     λ: float
 
     def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix(1, self.λ, 0, 1, 0, 0)
+        matrix = cairo.Matrix(1, self.λ, 0, 1, 0, 0)  # type: ignore
         return matrix
 
     def to_svg(self) -> str:

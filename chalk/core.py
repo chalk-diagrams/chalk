@@ -167,6 +167,18 @@ class Diagram:
         t = tx.Translate(-box.left, 0)
         return ApplyTransform(t, self)
 
+    def align_tl(self) -> "Diagram":
+        return self.align_t().align_l()
+
+    def align_br(self) -> "Diagram":
+        return self.align_b().align_r()
+
+    def align_tr(self) -> "Diagram":
+        return self.align_t().align_r()
+
+    def align_bl(self) -> "Diagram":
+        return self.align_b().align_l()
+
     def pad_l(self, extra: float) -> "Diagram":
         box = self.get_bounding_box()
         new_box = BoundingBox.from_limits(

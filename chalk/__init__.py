@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from chalk.core import Diagram, Empty, Primitive
-from chalk.shape import Circle, Rectangle, Path, Text, Image
+from chalk.shape import Circle, Rectangle, Path, Text, Image, Spacer
 from chalk.point import Point, Vector
 from chalk.trail import Trail
 
@@ -86,12 +86,32 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     return reduce(atop, diagrams, empty())
 
 
-def hcat(diagrams: Iterable[Diagram]) -> Diagram:
-    return reduce(beside, diagrams, empty())
+def hstrut(width: Optional[float]) -> Diagram:
+    if width is None:
+        return empty()
+    return Primitive.from_shape(Spacer(width, 0))
 
 
-def vcat(diagrams: Iterable[Diagram]) -> Diagram:
-    return reduce(above, diagrams, empty())
+def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+    diagrams = iter(diagrams)
+    start = next(diagrams, None)
+    if start is None:
+        return empty()
+    return reduce(lambda a, b: a | hstrut(sep) | b, diagrams, start)
+
+
+def vstrut(height: Optional[float]) -> Diagram:
+    if height is None:
+        return empty()
+    return Primitive.from_shape(Spacer(0, height))
+
+
+def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+    diagrams = iter(diagrams)
+    start = next(diagrams, None)
+    if start is None:
+        return empty()
+    return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
 
 
 def connect(diagram: Diagram, name1: str, name2: str) -> Diagram:
