@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypeVar
 
 import cairo
 import math
@@ -99,41 +100,44 @@ class Compose(Transform):
         return self.t.to_svg() + " " + self.u.to_svg()
 
 
+TTrans = TypeVar("TTrans", bound="Transformable")
+
+
 class Transformable:
-    def apply_transform(self, t: Transform) -> "Transformable":
+    def apply_transform(self, t: Transform) -> TTrans:
         pass
 
-    def scale(self, α: float) -> "Transformable":
+    def scale(self: TTrans, α: float) -> TTrans:
         return self.apply_transform(Scale(α, α))
 
-    def scale_x(self, α: float) -> "Transformable":
+    def scale_x(self: TTrans, α: float) -> TTrans:
         return self.apply_transform(Scale(α, 1))
 
-    def scale_y(self, α: float) -> "Transformable":
+    def scale_y(self: TTrans, α: float) -> TTrans:
         return self.apply_transform(Scale(1, α))
 
-    def rotate(self, θ: float) -> "Transformable":
+    def rotate(self: TTrans, θ: float) -> TTrans:
         return self.apply_transform(Rotate(θ))
 
-    def rotate_by(self, turns: float) -> "Transformable":
+    def rotate_by(self: TTrans, turns: float) -> TTrans:
         """Rotate by fractions of a circle (turn)."""
         θ = 2 * math.pi * turns
         return self.apply_transform(Rotate(θ))
 
-    def reflect_x(self) -> "Transformable":
+    def reflect_x(self: TTrans) -> TTrans:
         return self.apply_transform(Scale(-1, +1))
 
-    def reflect_y(self) -> "Transformable":
+    def reflect_y(self: TTrans) -> TTrans:
         return self.apply_transform(Scale(+1, -1))
 
-    def shear_x(self, λ: float) -> "Transformable":
+    def shear_x(self: TTrans, λ: float) -> TTrans:
         return self.apply_transform(ShearX(λ))
 
-    def shear_y(self, λ: float) -> "Transformable":
+    def shear_y(self: TTrans, λ: float) -> TTrans:
         return self.apply_transform(ShearY(λ))
 
-    def translate(self, dx: float, dy: float) -> "Transformable":
+    def translate(self: TTrans, dx: float, dy: float) -> TTrans:
         return self.apply_transform(Translate(dx, dy))
 
-    def translate_by(self, vector) -> "Transformable":  # type: ignore
+    def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
         return self.apply_transform(Translate(vector.dx, vector.dy))

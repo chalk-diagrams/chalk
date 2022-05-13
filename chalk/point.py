@@ -10,7 +10,7 @@ class Point(tx.Transformable):
     x: float
     y: float
 
-    def apply_transform(self, t: tx.Transform) -> "Point":
+    def apply_transform(self, t: tx.Transform):  # type: ignore
         new_x, new_y = t().transform_point(self.x, self.y)
         return Point(new_x, new_y)
 
@@ -40,7 +40,7 @@ class Vector(tx.Transformable):
         dy = r * math.sin(angle)
         return cls(dx, dy)
 
-    def apply_transform(self, t: tx.Transform) -> "Vector":
+    def apply_transform(self, t: tx.Transform):  # type:ignore
         new_dx, new_dy = t().transform_point(self.dx, self.dy)
         return Vector(new_dx, new_dy)
 

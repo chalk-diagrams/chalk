@@ -80,7 +80,7 @@ class BoundingBox(Transformable):
             max(self.bottom, point.y),
         )
 
-    def apply_transform(self, t: Transform) -> "BoundingBox":
+    def apply_transform(self, t: Transform) -> "BoundingBox":  # type: ignore
         tl = self.tl.apply_transform(t)
         return (
             BoundingBox(tl, tl)
