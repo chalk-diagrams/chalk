@@ -65,11 +65,11 @@ def arc_between(
             φ = +math.pi / 2
             dy = h - r
 
-        shape : Diagram = (
+        shape: Diagram = (
             Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
         )
-
-    return shape.rotate(v.angle).translate(p.x, p.y)
+    ret: Diagram = shape.rotate(v.angle).translate(p.x, p.y)
+    return ret
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
