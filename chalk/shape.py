@@ -256,7 +256,7 @@ class Raw(Rect):  # type: ignore
 
 
 @dataclass
-class Math(Shape):
+class Latex(Shape):
     text: str
 
     def __post_init__(self) -> None:
@@ -267,8 +267,8 @@ class Math(Shape):
             self.text, commands=[latextools.cmd.all_math]
         )
         self.eq = latex_eq.as_svg()
-        self.width = self.eq.width
-        self.height = self.eq.height
+        self.width = self.eq.width + 0.05
+        self.height = self.eq.height + 0.05
         self.content = self.eq.content
         # From latextools Ensures no clash between multiple math statements
         id_prefix = f"embed-{hash(self.content)}-"
@@ -290,8 +290,6 @@ class Math(Shape):
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         dx, dy = -self.width / 2, -self.height / 2
-        g = dwg.g(
-            transform=f"scale(0.05) translate({dx} {dy})"
-        )
+        g = dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
         g.add(Raw(self.content))
         return g

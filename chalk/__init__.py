@@ -4,7 +4,16 @@ from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
 from chalk.core import Diagram, Empty, Primitive
-from chalk.shape import Arc, Circle, Rectangle, Path, Text, Image, Spacer, Math
+from chalk.shape import (
+    Arc,
+    Circle,
+    Rectangle,
+    Path,
+    Text,
+    Image,
+    Spacer,
+    Latex,
+)
 from chalk.point import Point, Vector
 from chalk.trail import Trail
 
@@ -116,7 +125,7 @@ def text(t: str, size: Optional[float]) -> Diagram:
 
 
 def latex(t: str) -> Diagram:
-    return Primitive.from_shape(Math(t))
+    return Primitive.from_shape(Latex(t))
 
 
 def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
