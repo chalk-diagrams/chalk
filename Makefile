@@ -39,8 +39,11 @@ koch:
 tensor:
 	python examples/tensor.py
 
+latex:
+	python examples/latex.py
+
 hex_variation:
 	python examples/hex_variation.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation
 
