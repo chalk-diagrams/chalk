@@ -5,3 +5,4 @@ colour
 svgwrite
 cairosvg
 Pillow
+latextools

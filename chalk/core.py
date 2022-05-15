@@ -211,7 +211,7 @@ class Diagram(tx.Transformable):
 
     def scale_uniform_to_y(self, y: float) -> "Diagram":
         box = self.get_bounding_box()
-        α = y / box.width
+        α = y / box.height
         return ApplyTransform(tx.Scale(α, α), self)
 
     def apply_transform(self, t: tx.Transform) -> "Diagram":  # type: ignore
