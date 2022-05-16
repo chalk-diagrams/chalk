@@ -120,8 +120,10 @@ python examples/hanoi.py
 
 ![hanoi](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hanoi.png)
 
-## Acknowledgements
+## Authors
 
-Special thanks to [Alexander Rush](http://rush-nlp.com/) for contributing significantly to this library and
-also to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
+- [Dan Oneață](http://doneata.bitbucket.io/)
+- [Alexander Rush](http://rush-nlp.com/)
+
+Special thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
 
