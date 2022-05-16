@@ -8,6 +8,22 @@ Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific 
 
 ⚠️ The library is still very much work in progress and subject to change.
 
+## Installation
+
+The library is available on PyPI as `chalk-diagrams` and can be installed with `pip`:
+```bash
+pip install chalk-diagrams
+```
+If you want to use the LaTeX extension, run:
+```bash
+pip install chalk-diagrams[latex]
+```
+For the LaTeX extension you might need to install `pdf2svg` and `texlive`;
+on Debian these dependencies can be installed as follows:
+```bash
+sudo apt-get install pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra
+```
+
 ## Overview
 
 Below we provide a brief introduction of the main functionality of the library.
