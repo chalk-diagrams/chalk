@@ -6,8 +6,8 @@ with open("README.md", "r") as f:
 
 
 setup(
-    name="chalk",
-    version="0.1.dev",
+    name="chalk-diagrams",
+    version="0.1.1",
     packages=[
         "chalk",
     ],
