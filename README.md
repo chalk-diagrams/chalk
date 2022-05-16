@@ -106,19 +106,23 @@ These scripts can be run as follows:
 python examples/squares.py
 ```
 
-![squares](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png)
-
-```bash
-python examples/escher_square_limit.py
-```
-
-![escher](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png)
-
-```bash
-python examples/hanoi.py
-```
-
-![hanoi](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hanoi.png)
+<table>
+<tr>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png"><br><code>squares.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo.png"><br><code>logo.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png"><br><code>escher_square.py</code></td>
+</tr>
+<tr>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hilbert.png"><br><code>hilbert.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/koch.png"><br><code>koch.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hex-variation.png"><br><code>hex-variation.py</code></td>
+</tr>
+<tr>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/lenet.png"><br><code>lenet.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/tensor.png"><br><code>tensor.py</code></td>
+<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/latex.svg"><br><code>latex.py</code></td>
+</tr>
+</table>
 
 ## Authors
 
