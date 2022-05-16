@@ -90,6 +90,12 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     return make_path(coords)
 
 
+def place_at(
+    diagrams: Iterable[Diagram], points: List[Tuple[float, float]]
+) -> Diagram:
+    return concat(d.translate(x, y) for d, (x, y) in zip(diagrams, points))
+
+
 def hrule(length: float) -> Diagram:
     return make_path([(-length / 2, 0), (length / 2, 0)])
 
