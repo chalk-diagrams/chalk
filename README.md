@@ -100,22 +100,22 @@ d = sierpinski(5, 4).fill_color(papaya)
 ![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
 
 For more examples, please check the `examples` folder.
-These scripts can be run using [Streamlit](https://streamlit.io/):
+These scripts can be run as follows:
 
 ```bash
-streamlit run examples/squares.py
+python examples/squares.py
 ```
 
 ![squares](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png)
 
 ```bash
-streamlit run examples/escher_square_limit.py
+python examples/escher_square_limit.py
 ```
 
 ![escher](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png)
 
 ```bash
-streamlit run examples/hanoi.py
+python examples/hanoi.py
 ```
 
 ![hanoi](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hanoi.png)
@@ -125,8 +125,3 @@ streamlit run examples/hanoi.py
 Special thanks to [Alexander Rush](http://rush-nlp.com/) for contributing significantly to this library and
 also to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
 
-## TODO
-
-- [ ] Add example: [Brent–Kung parallel prefix circuit](http://www.cs.ox.ac.uk/jeremy.gibbons/publications/embedding.pdf).
-- [ ] Remove dependency on streamlit.
-- [x] Decide on a more inspired name for the library.

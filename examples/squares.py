@@ -3,8 +3,6 @@ import random
 
 from itertools import product
 
-import streamlit as st  # type: ignore
-
 from colour import Color
 from chalk import square, concat
 
@@ -37,7 +35,6 @@ diagram = diagram.line_width(0.02)
 
 path = "examples/output/squares.png"
 diagram.render(path, height=256)
-st.image(path)
 
 path = "examples/output/squares.svg"
 diagram.render_svg(path, height=256)

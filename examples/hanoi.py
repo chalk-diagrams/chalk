@@ -1,13 +1,9 @@
 # Based on the following example from Diagrams
 # https://archives.haskell.org/projects.haskell.org/diagrams/gallery/Hanoi.html
 
-# streamlit run example/hanoi.py
-
 from typing import Dict, List, Tuple
 
-import streamlit as st
-
-from colour import Color  # type: ignore
+rom colour import Color  # type: ignore
 from chalk import Diagram, rectangle, concat, hcat, vcat
 
 Disk = int

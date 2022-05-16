@@ -5,8 +5,6 @@
 
 import math
 
-import streamlit as st  # type: ignore
-
 from toolz import take, iterate  # type: ignore
 
 from chalk import concat, make_path, square
@@ -84,7 +82,6 @@ markings = {
 }
 # fmt: on
 
-output_path = "examples/output/escher-square-limit.png"
 names = "pqrs"
 blank = square(1).line_width(0)
 θ = -math.pi / 2
@@ -125,8 +122,8 @@ corner_2 = quartet(corner_1, side_1, side_1.rotate(θ), fish_u)
 pseudocorner = quartet(corner_2, side_2, side_2.rotate(θ), fish_t.rotate(θ))
 pseudolimit = cycle(pseudocorner)
 
+output_path = "examples/output/escher-square-limit.png"
 pseudolimit.render(output_path, height=512)
-st.image(output_path)
 
 # SVG render
 output_path = "examples/output/escher-square-limit.svg"
