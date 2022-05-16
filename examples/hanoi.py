@@ -3,7 +3,7 @@
 
 from typing import Dict, List, Tuple
 
-rom colour import Color  # type: ignore
+from colour import Color  # type: ignore
 from chalk import Diagram, rectangle, concat, hcat, vcat
 
 Disk = int
