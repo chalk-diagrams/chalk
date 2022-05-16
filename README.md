@@ -104,12 +104,8 @@ d = sierpinski(5, 4).fill_color(papaya)
 
 ![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
 
-For more examples, please check the `examples` folder.
-These scripts can be run as follows:
-
-```bash
-python examples/squares.py
-```
+For more examples, please check the `examples` folder;
+their output is illustrated in the following gallery:
 
 <table>
 <tr>
@@ -128,6 +124,12 @@ python examples/squares.py
 <td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/latex.svg"><br><code>latex.py</code></td>
 </tr>
 </table>
+
+These scripts can be run as follows:
+
+```bash
+python examples/squares.py
+```
 
 ## Authors
 
