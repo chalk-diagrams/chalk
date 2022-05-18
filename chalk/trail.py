@@ -1,7 +1,7 @@
-from typing import List, Any
+from typing import List
 
 from chalk.core import Primitive
-from chalk.point import Point, Vector
+from chalk.point import Point, Vector, ORIGIN
 from chalk.shape import Path
 from chalk import transform as tx
 
@@ -13,20 +13,27 @@ class Trail(tx.Transformable):
     def __add__(self, other: "Trail") -> "Trail":
         return Trail(self.offsets + other.offsets)
 
-    @staticmethod
-    def from_path(path: Any) -> "Trail":
-        pts = path.shape.points
+    @classmethod
+    def from_path(cls, path: Path) -> "Trail":
+        pts = path.points
         offsets = [t - s for s, t in zip(pts, pts[1:])]
-        return Trail(offsets)
+        return cls(offsets)
 
-    def stroke(self) -> Primitive:
-        points = [Point(0, 0)]
+    def to_path(self, origin: Point = ORIGIN) -> Path:
+        points = [origin]
         for s in self.offsets:
             points.append(points[-1] + s)
-        return Primitive.from_shape(Path(points))
+        return Path(points)
+
+    def stroke(self) -> Primitive:
+        return Primitive.from_shape(self.to_path())
 
     def transform(self, t: tx.Transform) -> "Trail":
         return Trail([p.apply_transform(t) for p in self.offsets])
 
     def apply_transform(self, t: tx.Transform) -> "Trail":  # type: ignore
         return self.transform(t)
+
+
+unit_x = Trail([Vector(1, 0)])
+unit_y = Trail([Vector(0, 1)])

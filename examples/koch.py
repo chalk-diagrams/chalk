@@ -1,10 +1,11 @@
 from chalk import *
 from chalk.transform import *
+from chalk.trail import unit_x
 
 
 def koch(n):
     if n == 0:
-        return Trail.from_path(hrule(5))
+        return unit_x.scale_x(5)
     else:
         return (
             koch(n - 1).scale(1 / 3)
