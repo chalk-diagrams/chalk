@@ -69,8 +69,6 @@ d
 
 
 
-![circle](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-01.png)
-
 The diagram can be saved to an image using the `render` method:
 
 
@@ -90,7 +88,7 @@ circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 
 
     
-![svg](README_files/README_19_0.svg)
+![svg](README_files/README_18_0.svg)
     
 
 
@@ -106,7 +104,7 @@ circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 
 
     
-![svg](README_files/README_21_0.svg)
+![svg](README_files/README_20_0.svg)
     
 
 
@@ -124,7 +122,7 @@ hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 
 
     
-![svg](README_files/README_23_0.svg)
+![svg](README_files/README_22_0.svg)
     
 
 
@@ -150,7 +148,7 @@ sierpinski(5, 4).fill_color(papaya)
 
 
     
-![svg](README_files/README_26_0.svg)
+![svg](README_files/README_25_0.svg)
     
 
 
