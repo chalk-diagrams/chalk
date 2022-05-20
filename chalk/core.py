@@ -3,6 +3,8 @@ from typing import Any, List, Optional
 
 import cairo
 import svgwrite
+import tempfile
+import os
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from colour import Color
@@ -100,6 +102,13 @@ class Diagram(tx.Transformable):
         outer.add(self.to_svg(dwg, Style.default()))
         dwg.save()
 
+    def _repr_svg_(self):
+        f = tempfile.NamedTemporaryFile(delete=False)
+        self.render_svg(f.name)
+        svg = f.name.read()
+        os.unlink(f.name)
+        return svg
+        
     def atop(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
