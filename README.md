@@ -1,3 +1,7 @@
+```python
+
+```
+
 <p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=300></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
@@ -8,7 +12,7 @@ Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific 
 
 ⚠️ The library is still very much work in progress and subject to change.
 
-## Installation
+# Installation
 
 The library is available on PyPI as `chalk-diagrams` and can be installed with `pip`:
 ```bash
@@ -19,7 +23,6 @@ On Debian (or Colab) you will need to install Cairo
 ```bash
 sudo apt-get install libcairo2-dev
 ```
-
 
 If you want to use the LaTeX extension, run:
 ```bash
@@ -38,12 +41,14 @@ These examples are available in the `examples/intro.py` file.
 
 We start by importing the [`colour`](https://github.com/vaab/colour) module and the `diagrams` functions:
 
+
 ```python
 from colour import Color
 from chalk import *
 ```
 
 We also define some colors that will be shortly used:
+
 
 ```python
 papaya = Color("#ff9700")
@@ -53,13 +58,25 @@ blue = Color("#005FDB")
 We can easily create basic shapes (the functions `circle`, `square`, `triangle`) and style them with various attributes (the methods`fill_color`, `line_color`, `line_width`).
 For example:
 
+
 ```python
 d = circle(1).fill_color(papaya)
+d
 ```
+
+
+
+
+    
+![svg](README_files/README_15_0.svg)
+    
+
+
 
 ![circle](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-01.png)
 
 The diagram can be saved to an image using the `render` method:
+
 
 ```python
 d.render("examples/output/intro-01.png", height=64)
@@ -68,15 +85,35 @@ d.render("examples/output/intro-01.png", height=64)
 We can glue together two diagrams using the combinators `atop` (or `+`), `beside` (or `|`), `above` (or `/`).
 For example:
 
+
 ```python
 circle(2).fill_color(papaya) | square(1).fill_color(blue)
 ```
 
+
+
+
+    
+![svg](README_files/README_20_0.svg)
+    
+
+
+
 which is equivalent to
+
 
 ```python
 circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
 ```
+
+
+
+
+    
+![svg](README_files/README_22_0.svg)
+    
+
+
 
 This code produces the following image:
 
@@ -86,12 +123,27 @@ We also provide combinators for a list of diagrams:
 `hcat` for horizontal composition, `vcat` for vertical composition.
 For example:
 
+
 ```python
 hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 ```
-![hcat](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-03.png)
+
+
+
+
+    
+![svg](README_files/README_26_0.svg)
+    
+
+
+
+
+```python
+
+```
 
 We can use Python functions to build more intricate diagrams:
+
 
 ```python
 def sierpinski(n: int, size: int) -> Diagram:
@@ -100,11 +152,26 @@ def sierpinski(n: int, size: int) -> Diagram:
     else:
         smaller = sierpinski(n - 1, size / 2)
         return smaller.above(smaller.beside(smaller).center_xy())
-
-d = sierpinski(5, 4).fill_color(papaya)
 ```
 
-![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
+
+```python
+sierpinski(5, 4).fill_color(papaya)
+```
+
+
+
+
+    
+![svg](README_files/README_30_0.svg)
+    
+
+
+
+
+```python
+
+```
 
 For more examples, please check the `examples` folder.
 These scripts can be run as follows:
@@ -133,4 +200,3 @@ python examples/hanoi.py
 - [Alexander Rush](http://rush-nlp.com/)
 
 Special thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
-
