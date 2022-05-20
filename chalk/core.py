@@ -105,7 +105,8 @@ class Diagram(tx.Transformable):
     def _repr_svg_(self):
         f = tempfile.NamedTemporaryFile(delete=False)
         self.render_svg(f.name)
-        svg = f.name.read()
+        f.close()
+        svg = open(f.name).read()
         os.unlink(f.name)
         return svg
         
