@@ -153,11 +153,6 @@ sierpinski(5, 4).fill_color(papaya)
 
 
 
-
-```python
-
-```
-
 For more examples, please check the `examples` folder.
 These scripts can be run as follows:
 
