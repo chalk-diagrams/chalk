@@ -1,7 +1,3 @@
-```python
-
-```
-
 <p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=300></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
@@ -68,7 +64,7 @@ d
 
 
     
-![svg](README_files/README_15_0.svg)
+![svg](README_files/README_14_0.svg)
     
 
 
@@ -87,14 +83,14 @@ For example:
 
 
 ```python
-circle(2).fill_color(papaya) | square(1).fill_color(blue)
+circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 ```
 
 
 
 
     
-![svg](README_files/README_20_0.svg)
+![svg](README_files/README_19_0.svg)
     
 
 
@@ -103,21 +99,17 @@ which is equivalent to
 
 
 ```python
-circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
+circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 ```
 
 
 
 
     
-![svg](README_files/README_22_0.svg)
+![svg](README_files/README_21_0.svg)
     
 
 
-
-This code produces the following image:
-
-![atop](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-02.png)
 
 We also provide combinators for a list of diagrams:
 `hcat` for horizontal composition, `vcat` for vertical composition.
@@ -132,15 +124,10 @@ hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 
 
     
-![svg](README_files/README_26_0.svg)
+![svg](README_files/README_23_0.svg)
     
 
 
-
-
-```python
-
-```
 
 We can use Python functions to build more intricate diagrams:
 
@@ -163,7 +150,7 @@ sierpinski(5, 4).fill_color(papaya)
 
 
     
-![svg](README_files/README_30_0.svg)
+![svg](README_files/README_26_0.svg)
     
 
 
