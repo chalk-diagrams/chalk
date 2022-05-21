@@ -3,6 +3,11 @@ import math
 from functools import reduce
 from typing import Iterable, List, Tuple, Optional
 
+try:
+    from importlib import metadata
+except ImportError:  # for Python<3.8
+    import importlib_metadata as metadata
+
 from chalk.core import Diagram, Empty, Primitive
 from chalk.shape import (
     Arc,
@@ -17,14 +22,11 @@ from chalk.shape import (
 from chalk.point import Point, Vector
 from chalk.trail import Trail
 
-try:
-    from importlib import metadata
-except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata
 
-
-__title__ = __name__
-__version__ = metadata.version(__title__)  # type: ignore
+# Set library name the same as on PyPI 
+# must be the same as setup.py:setup(name=?)
+__libname__: str = "chalk-diagrams" # custom dunder attribute
+__version__ = metadata.version(__libname__)  # type: ignore
 
 
 ignore = [Trail, Vector]

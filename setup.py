@@ -1,12 +1,25 @@
 import pathlib
 from setuptools import setup, find_packages
+import chalk as ck
 
 LICENSE: str = "MIT"
 README: str = pathlib.Path("README.md").read_text()
 
+#---------------------------------------------------------------
+# NOTE:
+# Since the library name (chal-diagrams) is different from 
+#   the module (chalk), we set the custom dunder attribute 
+#   __libname__ in chalk/__init__.py and use it there to fetch
+#   and set __version__ with library metadata inside 
+#   chalk/__init__.py. 
+#   Since, library name will not be changed in future, it is 
+#   being maintained from a single place (chalk/__init__.py) 
+#   and the version will be updated often from setup.py.
+#---------------------------------------------------------------
+LIBNAME: str = ck.__libname__ # same as "chalk-diagrams"
 
 setup(
-    name="chalk-diagrams",
+    name=LIBNAME,
     version="0.1.2",
     packages=find_packages(
         include=["chalk"], 
