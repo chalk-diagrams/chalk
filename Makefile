@@ -46,6 +46,3 @@ hex_variation:
 	python examples/hex_variation.py
 
 images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation
-
-README.md: readme.py
-	jupytext --to ipynb --execute readme.py; jupyter nbconvert --to markdown --output README.md readme.ipynb
