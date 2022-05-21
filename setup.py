@@ -16,7 +16,8 @@ README: str = pathlib.Path("README.md").read_text()
 #   being maintained from a single place (chalk/__init__.py) 
 #   and the version will be updated often from setup.py.
 #---------------------------------------------------------------
-LIBNAME: str = ck.__libname__ # same as "chalk-diagrams"
+LIBNAME: str = "chalk-diagrams"
+assert ck.__libname__ == LIBNAME
 
 setup(
     name=LIBNAME,
