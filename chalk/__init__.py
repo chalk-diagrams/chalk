@@ -6,7 +6,7 @@ from typing import Iterable, List, Tuple, Optional
 try:
     from importlib import metadata
 except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata
+    import importlib_metadata as metadata  # type: ignore
 
 from chalk.core import Diagram, Empty, Primitive
 from chalk.shape import (
@@ -23,9 +23,9 @@ from chalk.point import Point, Vector
 from chalk.trail import Trail
 
 
-# Set library name the same as on PyPI 
+# Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
-__libname__: str = "chalk-diagrams" # custom dunder attribute
+__libname__: str = "chalk-diagrams"  # custom dunder attribute
 __version__ = metadata.version(__libname__)  # type: ignore
 
 

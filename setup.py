@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 import chalk as ck
 
 LICENSE: str = "MIT"
-README: str = pathlib.Path("README.md").read_text()
+README: str = pathlib.Path("README.md").read_text(encoding="utf-8")
 
 #---------------------------------------------------------------
 # NOTE:
