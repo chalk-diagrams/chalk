@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="chalk-diagrams",
-    version="0.1.1",
+    version="0.1.2",
     packages=[
         "chalk",
     ],
@@ -26,4 +26,5 @@ setup(
     author="Dan Oneață",
     author_email="dan.oneata@gmail.com",
     url="https://github.com/danoneata/chalk",
+    license="MIT",
 )
