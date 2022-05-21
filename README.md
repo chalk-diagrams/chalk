@@ -14,6 +14,11 @@ The library is available on PyPI as `chalk-diagrams` and can be installed with `
 ```bash
 pip install chalk-diagrams
 ```
+On Debian (or Colab) you will need to install Cairo
+```bash
+sudo apt-get install libcairo2-dev
+```
+
 If you want to use the LaTeX extension, run:
 ```bash
 pip install chalk-diagrams[latex]
