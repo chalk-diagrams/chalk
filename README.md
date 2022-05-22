@@ -14,6 +14,11 @@ The library is available on PyPI as `chalk-diagrams` and can be installed with `
 ```bash
 pip install chalk-diagrams
 ```
+On Debian (or Colab) you will need to install Cairo
+```bash
+sudo apt-get install libcairo2-dev
+```
+
 If you want to use the LaTeX extension, run:
 ```bash
 pip install chalk-diagrams[latex]
@@ -62,13 +67,13 @@ We can glue together two diagrams using the combinators `atop` (or `+`), `beside
 For example:
 
 ```python
-circle(2).fill_color(papaya) | square(1).fill_color(blue)
+circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 ```
 
 which is equivalent to
 
 ```python
-circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
+circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 ```
 
 This code produces the following image:
