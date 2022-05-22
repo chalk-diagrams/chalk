@@ -27,8 +27,7 @@ def empty() -> Diagram:
 def make_path(
     coords: List[Tuple[float, float]], arrow: bool = False
 ) -> Diagram:
-    points = [Point(x, y) for x, y in coords]
-    return Primitive.from_shape(Path(points, arrow))
+    return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
 
 
 def circle(radius: float) -> Diagram:
@@ -81,31 +80,19 @@ def arc_between(
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
-    coords = []
-    n = sides + 1
-    for s in range(n):
-        # Rotate to align with x axis.
-        t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
-        coords.append((radius * math.cos(t), radius * math.sin(t)))
-    return make_path(coords)
-
-
-def place_at(
-    diagrams: Iterable[Diagram], points: List[Tuple[float, float]]
-) -> Diagram:
-    return concat(d.translate(x, y) for d, (x, y) in zip(diagrams, points))
-
-
-def hrule(length: float) -> Diagram:
-    return make_path([(-length / 2, 0), (length / 2, 0)])
-
-
-def vrule(length: float) -> Diagram:
-    return make_path([(0, -length / 2), (0, length / 2)])
+    return Primitive.from_shape(Path.polygon(sides, radius, rotation))
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
-    return polygon(sides, side_length / (2 * math.sin(math.pi / sides)))
+    return Primitive.from_shape(Path.regular_polygon(sides, side_length))
+
+
+def hrule(length: float) -> Diagram:
+    return Primitive.from_shape(Path.hrule(length))
+
+
+def vrule(length: float) -> Diagram:
+    return Primitive.from_shape(Path.vrule(length))
 
 
 def triangle(width: float) -> Diagram:
@@ -140,6 +127,16 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
 
 def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.beside(diagram2)
+
+
+def place_at(
+    diagrams: Iterable[Diagram], points: List[Tuple[float, float]]
+) -> Diagram:
+    return concat(d.translate(x, y) for d, (x, y) in zip(diagrams, points))
+
+
+def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
+    return concat(d.translate(p.x, p.y) for d, p in zip(diagrams, path.points))
 
 
 def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
