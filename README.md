@@ -121,7 +121,7 @@ their output is illustrated in the following gallery:
 <tr>
 <td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
 <td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
-<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
+<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
 </tr>
 <!--<tr>
 <td align="center"><img src="doc/imgs/latex.svg"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/latex.py">latex.py</a></code></td>
