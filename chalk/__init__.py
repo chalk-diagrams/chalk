@@ -180,11 +180,16 @@ def connect(diagram: Diagram, name1: str, name2: str) -> Diagram:
 
 
 def connect_outer(
-    diagram: Diagram, name1: str, c1: str, name2: str, c2: str
+    diagram: Diagram,
+    name1: str,
+    c1: str,
+    name2: str,
+    c2: str,
+    arrow: bool = False,
 ) -> Diagram:
     bb1 = diagram.get_subdiagram_bounding_box(name1)
     bb2 = diagram.get_subdiagram_bounding_box(name2)
     assert bb1 is not None, f"Name {name1} not found"
     assert bb2 is not None, f"Name {name2} not found"
     points = [bb1.cardinal(c1), bb2.cardinal(c2)]
-    return Primitive.from_shape(Path(points))
+    return Primitive.from_shape(Path(points, arrow))
