@@ -109,20 +109,24 @@ their output is illustrated in the following gallery:
 
 <table>
 <tr>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png"><br><code>squares.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo.png"><br><code>logo.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png"><br><code>escher_square.py</code></td>
+<td align="center"><img src="doc/imgs/squares.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
+<td align="center"><img src="doc/imgs/logo.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
+<td align="center"><img src="doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hilbert.png"><br><code>hilbert.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/koch.png"><br><code>koch.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hex-variation.png"><br><code>hex-variation.py</code></td>
+<td align="center"><img src="doc/imgs/hilbert.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
+<td align="center"><img src="doc/imgs/koch.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
+<td align="center"><img src="doc/imgs/hex-variation.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/lenet.png"><br><code>lenet.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/tensor.png"><br><code>tensor.py</code></td>
-<td align="center"><img width=128 src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/latex.svg"><br><code>latex.py</code></td>
+<td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
+<td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
+<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
 </tr>
+<!--<tr>
+<td align="center"><img src="doc/imgs/latex.svg"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/latex.py">latex.py</a></code></td>
+</tr>
+-->
 </table>
 
 These scripts can be run as follows:
