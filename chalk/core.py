@@ -214,6 +214,16 @@ class Diagram(tx.Transformable):
         )
         return Compose(new_box, self, Empty())
 
+    def pad(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x - extra,
+            box.tl.y - extra,
+            box.br.x + extra,
+            box.br.y + extra,
+        )
+        return Compose(new_box, self, Empty())
+
     def scale_uniform_to_x(self, x: float) -> "Diagram":
         box = self.get_bounding_box()
         α = x / box.width
