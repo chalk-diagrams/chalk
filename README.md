@@ -104,8 +104,10 @@ d = sierpinski(5, 4).fill_color(papaya)
 
 ![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
 
+### Gallery of examples
+
 For more examples, please check the `examples` folder;
-their output is illustrated in the following gallery:
+their output is illustrated below:
 
 <table>
 <tr>
