@@ -40,6 +40,9 @@ class Vector(tx.Transformable):
         dy = r * math.sin(angle)
         return cls(dx, dy)
 
+    def cross(self, other):
+        return 0
+
     def apply_transform(self, t: tx.Transform):  # type:ignore
         new_dx, new_dy = t().transform_point(self.dx, self.dy)
         return Vector(new_dx, new_dy)
