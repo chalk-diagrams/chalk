@@ -1,6 +1,5 @@
 import pathlib
 from setuptools import setup, find_packages
-import chalk as ck
 
 LICENSE: str = "MIT"
 README: str = pathlib.Path("README.md").read_text(encoding="utf-8")
@@ -13,11 +12,13 @@ README: str = pathlib.Path("README.md").read_text(encoding="utf-8")
 #   and set __version__ with library metadata inside 
 #   chalk/__init__.py. 
 #   Since, library name will not be changed in future, it is 
-#   being maintained from a single place (chalk/__init__.py) 
-#   and the version will be updated often from setup.py.
+#   being maintained at two places
+#   1. setup.py
+#   1. chalk/__init__.py
+#
+#   The version will be updated often only from setup.py.
 #---------------------------------------------------------------
 LIBNAME: str = "chalk-diagrams"
-assert ck.__libname__ == LIBNAME
 
 setup(
     name=LIBNAME,
