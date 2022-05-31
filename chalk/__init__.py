@@ -26,7 +26,7 @@ from chalk.trail import Trail
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
 __libname__: str = "chalk-diagrams"  # custom dunder attribute
-__version__ = metadata.version(__libname__)  # type: ignore
+__version__ = metadata.version(__libname__)
 
 
 ignore = [Trail, Vector]
@@ -73,7 +73,7 @@ def arc_between(
         shape: Diagram = make_path([(0, 0), (d, 0)])
     else:
         # Determine the arc's angle θ and its radius r
-        θ = math.acos((d ** 2 - 4 * h ** 2) / (d ** 2 + 4 * h ** 2))
+        θ = math.acos((d**2 - 4 * h**2) / (d**2 + 4 * h**2))
         r = d / (2 * math.sin(θ))
 
         if height > 0:
