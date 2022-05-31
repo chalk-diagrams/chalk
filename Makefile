@@ -1,6 +1,6 @@
 
 # maintenance
-.PHONY: flake black test types interrogate \
+.PHONY: flake black test type interrogate \
 		clean cleanall style check
 
 # installation
@@ -50,7 +50,7 @@ test:
 
 ## Run mypy
 
-types:
+type:
 	@ echo "Applying type checker: mypy ... ⏳"
 	mypy --strict --ignore-missing-imports $(PACKAGE_NAME)/*.py \
 		# tests \
