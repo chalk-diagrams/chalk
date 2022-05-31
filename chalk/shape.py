@@ -1,19 +1,23 @@
 import math
-import xml.etree.ElementTree as ET
+
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
+import PIL
 import cairo
 import cairosvg
-import PIL
+import xml.etree.ElementTree as ET
+
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
 
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.point import ORIGIN, Point, Vector
+from chalk.point import Point, Vector, ORIGIN
+from chalk.trace import Trace, SignedDistance
+
 
 PyCairoContext = Any
 
@@ -107,6 +111,10 @@ class Path(Shape, tx.Transformable):
         points = [Point(x, y) for x, y in coords]
         return cls(points, arrow)
 
+    @property
+    def segments(self) -> List[Segment]:
+        return [Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])] 
+
     @staticmethod
     def hrule(length: float) -> "Path":
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
@@ -139,6 +147,9 @@ class Path(Shape, tx.Transformable):
 
     def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
         return Path([p.apply_transform(t) for p in self.points])
+
+    def get_trace(self) -> Trace:
+        return Trace.concat(segment.get_trace() for segment in self.segments)
 
     def render(self, ctx: PyCairoContext) -> None:
         p, *rest = self.points

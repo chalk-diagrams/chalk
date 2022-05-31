@@ -96,6 +96,9 @@ class Vector(tx.Transformable):
         dy = r * math.sin(angle)
         return cls(dx, dy)
 
+    def cross(self, other):
+        return 0
+
     def apply_transform(self, t: tx.Transform):  # type:ignore
         """Applies a transformation on a vector
         and returns the transformed vector.
