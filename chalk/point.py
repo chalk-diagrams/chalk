@@ -28,7 +28,7 @@ class Vector(tx.Transformable):
 
     @property
     def length(self) -> float:
-        return math.sqrt(self.dx ** 2 + self.dy ** 2)
+        return math.sqrt(self.dx**2 + self.dy**2)
 
     @property
     def angle(self) -> float:
