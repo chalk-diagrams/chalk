@@ -3,6 +3,8 @@ from typing import Any, List, Optional
 
 import cairo
 import svgwrite
+import tempfile
+import os
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from colour import Color
@@ -99,6 +101,14 @@ class Diagram(tx.Transformable):
         dwg.add(outer)
         outer.add(self.to_svg(dwg, Style.default()))
         dwg.save()
+
+    def _repr_svg_(self) -> str:
+        f = tempfile.NamedTemporaryFile(delete=False)
+        self.render_svg(f.name)
+        f.close()
+        svg = open(f.name).read()
+        os.unlink(f.name)
+        return svg
 
     def atop(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
@@ -201,6 +211,16 @@ class Diagram(tx.Transformable):
         box = self.get_bounding_box()
         new_box = BoundingBox.from_limits(
             box.tl.x, box.tl.y, box.br.x, box.br.y + extra
+        )
+        return Compose(new_box, self, Empty())
+
+    def pad(self, extra: float) -> "Diagram":
+        box = self.get_bounding_box()
+        new_box = BoundingBox.from_limits(
+            box.tl.x - extra,
+            box.tl.y - extra,
+            box.br.x + extra,
+            box.br.y + extra,
         )
         return Compose(new_box, self, Empty())
 

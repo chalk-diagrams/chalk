@@ -14,6 +14,11 @@ The library is available on PyPI as `chalk-diagrams` and can be installed with `
 ```bash
 pip install chalk-diagrams
 ```
+On Debian (or Colab) you will need to install Cairo
+```bash
+sudo apt-get install libcairo2-dev
+```
+
 If you want to use the LaTeX extension, run:
 ```bash
 pip install chalk-diagrams[latex]
@@ -62,13 +67,13 @@ We can glue together two diagrams using the combinators `atop` (or `+`), `beside
 For example:
 
 ```python
-circle(2).fill_color(papaya) | square(1).fill_color(blue)
+circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 ```
 
 which is equivalent to
 
 ```python
-circle(2).fill_color(papaya).beside(square(1).fill_color(blue))
+circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 ```
 
 This code produces the following image:
@@ -99,26 +104,38 @@ d = sierpinski(5, 4).fill_color(papaya)
 
 ![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
 
-For more examples, please check the `examples` folder.
+### Gallery of examples
+
+For more examples, please check the `examples` folder;
+their output is illustrated below:
+
+<table>
+<tr>
+<td align="center"><img src="doc/imgs/squares.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
+<td align="center"><img src="doc/imgs/logo.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
+<td align="center"><img src="doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
+</tr>
+<tr>
+<td align="center"><img src="doc/imgs/hilbert.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
+<td align="center"><img src="doc/imgs/koch.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
+<td align="center"><img src="doc/imgs/hex-variation.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
+</tr>
+<tr>
+<td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
+<td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
+<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
+</tr>
+<!--<tr>
+<td align="center"><img src="doc/imgs/latex.svg"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/latex.py">latex.py</a></code></td>
+</tr>
+-->
+</table>
+
 These scripts can be run as follows:
 
 ```bash
 python examples/squares.py
 ```
-
-![squares](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/squares.png)
-
-```bash
-python examples/escher_square_limit.py
-```
-
-![escher](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/escher-square-limit.png)
-
-```bash
-python examples/hanoi.py
-```
-
-![hanoi](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/hanoi.png)
 
 ## Authors
 

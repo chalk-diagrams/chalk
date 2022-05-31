@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 import cairo
 import PIL
@@ -9,6 +9,7 @@ import cairosvg
 
 from chalk.bounding_box import BoundingBox
 from chalk.point import Point, Vector, ORIGIN
+from chalk import transform as tx
 import xml.etree.ElementTree as ET
 
 from svgwrite import Drawing
@@ -84,15 +85,49 @@ class Rectangle(Shape):
 
 
 @dataclass
-class Path(Shape):
+class Path(Shape, tx.Transformable):
     points: List[Point]
     arrow: bool = False
+
+    @classmethod
+    def from_list_of_tuples(
+        cls, coords: List[Tuple[float, float]], arrow: bool = False
+    ) -> "Path":
+        points = [Point(x, y) for x, y in coords]
+        return cls(points, arrow)
+
+    @staticmethod
+    def hrule(length: float) -> "Path":
+        return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
+
+    @staticmethod
+    def vrule(length: float) -> "Path":
+        return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
+
+    @staticmethod
+    def polygon(sides: int, radius: float, rotation: float = 0) -> "Path":
+        coords = []
+        n = sides + 1
+        for s in range(n):
+            # Rotate to align with x axis.
+            t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
+            coords.append((radius * math.cos(t), radius * math.sin(t)))
+        return Path.from_list_of_tuples(coords)
+
+    @staticmethod
+    def regular_polygon(sides: int, side_length: float) -> "Path":
+        return Path.polygon(
+            sides, side_length / (2 * math.sin(math.pi / sides))
+        )
 
     def get_bounding_box(self) -> BoundingBox:
         box = BoundingBox(self.points[0], self.points[0])
         for p in self.points:
             box = box.enclose(p)
         return box
+
+    def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
+        return Path([p.apply_transform(t) for p in self.points])
 
     def render(self, ctx: PyCairoContext) -> None:
         p, *rest = self.points
