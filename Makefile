@@ -45,7 +45,7 @@ black:
 ## Run pytest
 
 test:
-	@ echo "Run tests: pytest ..."
+	@ echo "Run tests: pytest ... ⏳"
 	pytest tests
 
 ## Run mypy
