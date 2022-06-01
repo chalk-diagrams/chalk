@@ -22,7 +22,16 @@ PKG_INFO := "import pkginfo; dev = pkginfo.Develop('.'); print((dev.$${FIELD}))"
 # and other generated archives
 ARCHIVES_DIR := ".archives"
 
+# Folder path for tests
+TESTS_DIR := "tests"
+
+# Interrogate will flag the test as FAILED if
+# % success threshold is under the following value
 INTERROGATE_FAIL_UNDER := 0  # ideally this should be 100
+
+# Specify paths of requirements.txt and dev_requirements.txt
+REQ_FILE := "requirements.txt"
+DEV_REQ_FILE := "dev_requirements.txt"
 
 ####------------------------------------------------------------####
 
@@ -31,36 +40,40 @@ INTERROGATE_FAIL_UNDER := 0  # ideally this should be 100
 ## Run flake8
 
 flake:
-	@ echo "Applying formatter: flake8 ... ⏳"
+	@ echo "✨ Applying formatter: flake8 ... ⏳"
 	flake8 --show-source chalk/*.py setup.py \
 		# tests \
 
 ## Run black
 
 black:
-	@ echo "Applying formatter: black ... ⏳"
+	@ echo "✨ Applying formatter: black ... ⏳"
 	black --target-version py38 --line-length 79 $(PACKAGE_NAME)/*.py setup.py \
 		# tests \
 
 ## Run pytest
 
 test:
-	@ echo "Run tests: pytest ... ⏳"
-	pytest tests
+	@ echo "✨ Run tests: pytest ... ⏳"
+	@if [ -d "$(TESTS_DIR)" ]; then pytest $(TESTS_DIR); else echo "\n\t🔥 No tests configured yet. Skipping tests.\n"; fi
 
 ## Run mypy
 
 type:
-	@ echo "Applying type checker: mypy ... ⏳"
+	@ echo "✨ Applying type checker: mypy ... ⏳"
 	mypy --strict --ignore-missing-imports $(PACKAGE_NAME)/*.py \
 		# tests \
 
 ## Run interrogate
 
 interrogate:
-	@ echo "Applying doctest checker: interrogate ... ⏳"
-	# interrogate -vv --ignore-nested-functions --ignore-semiprivate --ignore-private --ignore-magic --ignore-module --ignore-init-method --fail-under $(INTERROGATE_FAIL_UNDER) tests
-	interrogate -vv --ignore-nested-functions --ignore-semiprivate --ignore-private --ignore-magic --ignore-module --ignore-init-method --fail-under $(INTERROGATE_FAIL_UNDER) $(PACKAGE_NAME)
+	@ echo "✨ Applying doctest checker: interrogate ... ⏳"
+	$(eval INTERROGATE_CONFIG := -vv --ignore-nested-functions --ignore-semiprivate --ignore-private --ignore-magic --ignore-module --ignore-init-method --fail-under $(INTERROGATE_FAIL_UNDER))
+	$(eval INTERROGATE_COMMAND := interrogate $(INTERROGATE_CONFIG))
+	# Check tests
+	@if [ -d "$(TESTS_DIR)" ]; then $(INTERROGATE_COMMAND) $(TESTS_DIR); else echo "\n\t🔥 No tests configured yet. Skipping tests.\n"; fi
+	# Check package
+	@$(INTERROGATE_COMMAND) $(PACKAGE_NAME)
 
 ## Cleanup
 #
@@ -76,14 +89,14 @@ interrogate:
 #--------------------------------------------------------------------
 
 clean:
-	@ echo "Cleaning repository ... ⏳"
+	@ echo "🪣 Cleaning repository ... ⏳"
 	rm -rf \
 		.ipynb_checkpoints **/.ipynb_checkpoints \
 		.pytest_cache **/.pytest_cache \
 		**/__pycache__ **/**/__pycache__
 
 cleanall: clean
-	@ echo "Cleaning dist/archive files ... ⏳"
+	@ echo "🪣 Cleaning dist/archive files ... ⏳"
 	rm -rf build/* dist/* $(PACKAGE_NAME).egg-info/* $(ARCHIVES_DIR)/*
 
 ## Style Checks and Unit Tests
@@ -107,13 +120,14 @@ check: clean black flake interrogate test clean
 #                         making some changes) to the source code.
 #--------------------------------------------------------------------
 
-install:
-	@echo "Installing $(PACKAGE_NAME) from local source ... ⏳"
-	python -m pip install -e "."
+install: clean
+	@echo "📀 Installing $(PACKAGE_NAME) from local source ... ⏳"
+	if [ -f $(REQ_FILE) ]; then python -m pip install -r $(REQ_FILE); fi
+	python -m pip install -Ue "."
 
 installextras: install
-	@echo "Installing $(PACKAGE_NAME) extra-dependencies from PyPI ... ⏳"
-	python -m pip install -r dev_requirements.txt
+	@echo "📀 Installing $(PACKAGE_NAME) extra-dependencies from PyPI ... ⏳"
+	if [ -f $(DEV_REQ_FILE) ]; then python -m pip install -r $(DEV_REQ_FILE); fi
 
 ## Install from test.pypi.org
 #
@@ -124,7 +138,7 @@ installextras: install
 #--------------------------------------------------------------------
 
 pipinstalltest:
-	@echo "Installing $(PACKAGE_NAME) from TestPyPI ($(TESTPYPI_DOWNLOAD_URL)) ... ⏳"
+	@echo "💿 Installing $(PACKAGE_NAME) from TestPyPI ($(TESTPYPI_DOWNLOAD_URL)) ... ⏳"
 	@if [ $(VERSION) ]; then $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME)==$(VERSION); else $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME); fi;
 
 
@@ -169,3 +183,4 @@ hex_variation:
 	python examples/hex_variation.py
 
 images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation
+	@echo "🎁 Generate all examples ... ⏳"
