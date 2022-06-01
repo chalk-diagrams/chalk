@@ -139,6 +139,13 @@ installextras: install
 
 pipinstalltest:
 	@echo "💿 Installing $(PACKAGE_NAME) from TestPyPI ($(TESTPYPI_DOWNLOAD_URL)) ... ⏳"
+	# Example Usage:
+	#   👉 To run a command like:
+	#   > python -m pip install -U --index-url https://test.pypi.org/simple/ $(PACKAGE_NAME)==$(VERSION)
+	#   👉 Run the following command:
+	#   > make pipinstalltest VERSION="0.1.0"
+	#   👉 Specifying VERSION="#.#.#" installs a specific version.
+	#      If no version is specified, the latest version is installed from TestPyPI.
 	@if [ $(VERSION) ]; then $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME)==$(VERSION); else $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME); fi;
 
 
