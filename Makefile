@@ -103,7 +103,7 @@ cleanall: clean
 
 style: clean black flake interrogate clean
 
-check: clean black flake interrogate test clean
+check: style type test clean
 
 ####------------------------------------------------------------####
 
