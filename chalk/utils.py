@@ -3,7 +3,6 @@ import sys
 import tempfile
 import time
 from typing import NoReturn, Union, Optional, Any, TypeVar
-
 from PIL import Image as PILImage
 
 import chalk
@@ -58,6 +57,25 @@ def imgen(
 
     Returns:
         Union[NoReturn, None]: Does not return anything.
+
+    Usage:
+        from colour import Color
+        from chalk import circle
+
+        papaya = Color("#ff9700")
+        d = circle(0.5).fill_color(papaya)
+
+        # Minimal example
+        imgen(d, temporary=True)
+
+        # Temporary file is created in current directory
+        imgen(d, temporary=True, dirpath=None)
+
+        # Folder path must exist; otherwise temporary folder is used
+        imgen(d, temporary=True, dirpath="examples/output")
+
+        # Display and delete the temporary file after 10 seconds
+        imgen(d, temporary=True, wait=10)
     """
     make_tempdir = False
     dp = None
