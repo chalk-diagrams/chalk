@@ -32,7 +32,7 @@ jobs:
     - name: Doctest coverage check with interrogate
       run: |
         # stop the build if doctest threshold does not meet
-        make iterrogate
+        make interrogate
     - name: Type check with mypy
       run: |
         # stop the build if there are type errors
