@@ -9,6 +9,20 @@ import chalk
 
 _HERE = os.path.dirname(__file__)
 
+try:
+    from loguru import logger
+    logger.remove()
+    logger.add(sys.stdout,
+        colorize=True,
+        format="<light-red>{time:HH:mm:ss}</light-red> <level>{message}</level>",
+        level="INFO",
+    )
+    prnt_success = logger.success
+    prnt_warning = logger.warning
+except ImportError:
+    prnt_success = print
+    prnt_warning = print
+
 # Define type alias
 # source: https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases # noqa: E501
 Diagram = TypeVar("Diagram", chalk.core.Diagram, Any)
@@ -89,15 +103,15 @@ def imgen(
         with tempfile.NamedTemporaryFile(
             dir=dirpath, prefix=prefix, suffix=suffix
         ) as fp:
-            print(f"1. Created temporary file: {os.path.relpath(fp.name)}")
+            prnt_success(f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}")
             d.render(fp.name, height=height)
-            print("2. Saved rendered image to temporary file.")
+            prnt_success(" ✅ 2. Saved rendered image to temporary file.")
             fp.seek(0)
-            print("3. Displaying image from temporary file.")
+            prnt_success(" ✅ 3. Displaying image from temporary file.")
             show(fp.name)
             time.sleep(wait)
 
-        print("4. Closed and removed temporary image!")
+        prnt_success(" ✅ 4. Closed and removed temporary image!")
 
         if make_tempdir and dp:
             # Cleanup temporary directory
@@ -147,7 +161,7 @@ def quick_probe(
         quick_probe(verbose=True)
     """
     if verbose:
-        print(f"{chalk.__name__} version: v{chalk.__version__}")
+        prnt_warning(f"{chalk.__name__} version: v{chalk.__version__}")
     if d is None:
         d = create_sample_diagram()
     if dirpath is None:
