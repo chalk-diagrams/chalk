@@ -46,6 +46,7 @@ def imgen(
     suffix: str = "_image.png",
     height: int = 64,
     wait: int = 5,
+    verbose: bool = True,
 ) -> Union[NoReturn, None]:
     """Render a ``chalk`` diagram and visualize.
 
@@ -63,6 +64,7 @@ def imgen(
                 Defaults to 64.
         wait (int, optional): The time (in seconds) to wait until destroying
                 the temporary image file. Defaults to 5.
+        verbose (bool): Set verbosity. Defaults to True.
 
     Raises:
         NotImplementedError: For non temporary file (``temporary=False``),
@@ -103,15 +105,19 @@ def imgen(
         with tempfile.NamedTemporaryFile(
             dir=dirpath, prefix=prefix, suffix=suffix
         ) as fp:
-            prnt_success(f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}")
+            if verbose:
+                prnt_success(f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}")
             d.render(fp.name, height=height)
-            prnt_success(" ✅ 2. Saved rendered image to temporary file.")
+            if verbose:
+                prnt_success(" ✅ 2. Saved rendered image to temporary file.")
             fp.seek(0)
-            prnt_success(" ✅ 3. Displaying image from temporary file.")
+            if verbose:
+                prnt_success(" ✅ 3. Displaying image from temporary file.")
             show(fp.name)
             time.sleep(wait)
 
-        prnt_success(" ✅ 4. Closed and removed temporary image!")
+        if verbose:
+            prnt_success(" ✅ 4. Closed and removed temporary image!")
 
         if make_tempdir and dp:
             # Cleanup temporary directory
@@ -142,11 +148,14 @@ def quick_probe(
     d: Optional[Diagram] = None,
     dirpath: Optional[str] = None,
     verbose: bool = True,
+    **kwargs
 ) -> Union[NoReturn, None]:
     """Render diagram and generate an image tempfile (``.png``)
 
-    This utility is made to quickly create a diagram and display it,
-    without saving any permanent image file on disk.
+    This utility is made to quickly create a sample diagram and display it,
+    without saving any permanent image file on disk. If a diagram is not
+    provided, a sample diagram is generated. If a diagram is provided, it
+    is displayed.
 
     Args:
         d (Optional[Diagram], optional): A chalk diagram object
@@ -167,7 +176,7 @@ def quick_probe(
     if dirpath is None:
         dirpath = os.path.join(_HERE, "../examples/output")
     # render diagram and generate an image tempfile (.png)
-    imgen(d, dirpath=dirpath)
+    imgen(d, dirpath=dirpath, verbose=verbose, **kwargs)
 
 
 if __name__ == "__main__":
