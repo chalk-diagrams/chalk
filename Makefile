@@ -31,7 +31,7 @@ INTERROGATE_FAIL_UNDER := 0  # ideally this should be 100
 
 # Specify paths of requirements.txt and dev_requirements.txt
 REQ_FILE := "requirements.txt"
-DEV_REQ_FILE := "dev_requirements.txt"
+DEV_REQ_FILE := "requirements-dev.txt"
 
 ####------------------------------------------------------------####
 
