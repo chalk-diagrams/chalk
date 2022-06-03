@@ -7,7 +7,7 @@ from PIL import Image as PILImage
 
 import chalk
 
-HERE = os.path.dirname(__file__)
+_HERE = os.path.dirname(__file__)
 
 # Define type alias
 # source: https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases # noqa: E501
@@ -108,6 +108,22 @@ def imgen(
         )
 
 
+def create_sample_diagram() -> Diagram:
+    """Creates a sample diagram.
+
+    Returns:
+        Diagram: Returns a sample diagram.
+    """
+    from colour import Color
+    from chalk import circle, square
+
+    papaya = Color("#ff9700")
+    blue = Color("#005FDB")
+    d = circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
+
+    return d  # type: ignore
+
+
 def quick_probe(
     d: Optional[Diagram] = None,
     dirpath: Optional[str] = None,
@@ -133,14 +149,9 @@ def quick_probe(
     if verbose:
         print(f"{chalk.__name__} version: v{chalk.__version__}")
     if d is None:
-        from colour import Color
-        from chalk import circle, square
-
-        papaya = Color("#ff9700")
-        blue = Color("#005FDB")
-        d = circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
+        d = create_sample_diagram()
     if dirpath is None:
-        dirpath = os.path.join(HERE, "../examples/output")
+        dirpath = os.path.join(_HERE, "../examples/output")
     # render diagram and generate an image tempfile (.png)
     imgen(d, dirpath=dirpath)
 
@@ -150,7 +161,7 @@ if __name__ == "__main__":
     # determine initial directory
     root = os.path.abspath(os.curdir)
     # update sys-path
-    sys.path.append(HERE)
-    os.chdir(HERE)  # change directory
+    sys.path.append(_HERE)
+    os.chdir(_HERE)  # change directory
     quick_probe(verbose=True)  # generate diagram
     os.chdir(root)  # switch back to initial directory
