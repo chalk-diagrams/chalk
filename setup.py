@@ -6,7 +6,7 @@ README: str = pathlib.Path("README.md").read_text(encoding="utf-8")
 
 # ---------------------------------------------------------------
 # NOTE:
-# Since the library name (chal-diagrams) is different from
+# Since the library name (chalk-diagrams) is different from
 #   the module (chalk), we set the custom dunder attribute
 #   __libname__ in chalk/__init__.py and use it there to fetch
 #   and set __version__ with library metadata inside
