@@ -4,6 +4,7 @@ import tempfile
 import time
 from typing import Optional, Any, TypeVar
 from PIL import Image as PILImage
+from colour import Color
 
 import chalk
 
@@ -139,7 +140,6 @@ def create_sample_diagram() -> Diagram:
     Returns:
         Diagram: Returns a sample diagram.
     """
-    from colour import Color
     from chalk import circle, square
 
     papaya = Color("#ff9700")
