@@ -25,10 +25,6 @@ except ImportError:
     prnt_success = print  # type: ignore
     prnt_warning = print  # type: ignore
 
-# Define type alias
-# source: https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases  # noqa: E501
-Diagram = TypeVar("Diagram", chalk.core.Diagram, Any)
-
 
 def show(filepath: str):  # type: ignore
     """Show image from filepath.
@@ -41,7 +37,7 @@ def show(filepath: str):  # type: ignore
 
 
 def imgen(
-    d: Diagram,
+    d: "Diagram",
     temporary: bool = True,
     dirpath: Optional[str] = "examples/output",
     prefix: str = "trial_",
@@ -132,7 +128,7 @@ def imgen(
         )
 
 
-def create_sample_diagram() -> Diagram:
+def create_sample_diagram() -> "Diagram":
     """Creates a sample diagram.
 
     Returns:
@@ -149,7 +145,7 @@ def create_sample_diagram() -> Diagram:
 
 
 def quick_probe(
-    d: Optional[Diagram] = None,
+    d: Optional["Diagram"] = None,
     dirpath: Optional[str] = None,
     verbose: bool = True,
     **kwargs: Any,
