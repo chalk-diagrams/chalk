@@ -11,20 +11,22 @@ _HERE = os.path.dirname(__file__)
 
 try:
     from loguru import logger
+
     logger.remove()
-    logger.add(sys.stdout,
+    logger.add(
+        sys.stdout,
         colorize=True,
-        format="<light-red>{time:HH:mm:ss}</light-red> <level>{message}</level>",
+        format="<light-red>{time:HH:mm:ss}</light-red> <level>{message}</level>",  # noqa: E501
         level="INFO",
-    )
+    )  # noqa: E124
     prnt_success = logger.success
     prnt_warning = logger.warning
 except ImportError:
-    prnt_success = print
-    prnt_warning = print
+    prnt_success = print  # type: ignore
+    prnt_warning = print  # type: ignore
 
 # Define type alias
-# source: https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases # noqa: E501
+# source: https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases  # noqa: E501
 Diagram = TypeVar("Diagram", chalk.core.Diagram, Any)
 
 
@@ -106,7 +108,9 @@ def imgen(
             dir=dirpath, prefix=prefix, suffix=suffix
         ) as fp:
             if verbose:
-                prnt_success(f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}")
+                prnt_success(
+                    f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}"
+                )  # noqa: E501
             d.render(fp.name, height=height)
             if verbose:
                 prnt_success(" ✅ 2. Saved rendered image to temporary file.")
@@ -141,14 +145,14 @@ def create_sample_diagram() -> Diagram:
     blue = Color("#005FDB")
     d = circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 
-    return d  # type: ignore
+    return d
 
 
 def quick_probe(
     d: Optional[Diagram] = None,
     dirpath: Optional[str] = None,
     verbose: bool = True,
-    **kwargs
+    **kwargs: Any,
 ) -> Union[NoReturn, None]:
     """Render diagram and generate an image tempfile (``.png``)
 
