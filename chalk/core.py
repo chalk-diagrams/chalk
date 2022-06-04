@@ -490,7 +490,7 @@ class Diagram(tx.Transformable):
     def dashing(
         self, dashing_strokes: List[float], offset: float
     ) -> "Diagram":
-        """Apply dashing to a diagram.
+        """Apply dashed line to the edge of a diagram.
 
         > [TODO]: improve args description.
 
@@ -504,6 +504,20 @@ class Diagram(tx.Transformable):
         return ApplyStyle(Style(dashing=(dashing_strokes, offset)), self)
 
     def at_center(self, other: "Diagram") -> "Diagram":
+        """Center two given diagrams.
+
+        💡 `a.at_center(b)` means center of ``a`` is translated
+        to the center of ``b``, and ``b`` sits on top of
+        ``a`` along the axis out of the plane of the image.
+
+        💡 In other words, ``b`` occludes ``a``.
+
+        Args:
+            other (Diagram): Another diagram object.
+
+        Returns:
+            Diagram: A diagram object.
+        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         c = box1.center
