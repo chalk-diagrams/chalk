@@ -32,7 +32,7 @@ class Diagram(tx.Transformable):
         raise NotImplementedError
 
     def display(
-        self, height: int = 64, verbose: bool = True, **kwargs: Any
+        self, height: int = 256, verbose: bool = True, **kwargs: Any
     ) -> None:
         """Display the diagram using the default renderer.
 
