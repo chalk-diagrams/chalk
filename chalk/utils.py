@@ -2,7 +2,7 @@ import os
 import sys
 import tempfile
 import time
-from typing import Optional, Any, TypeVar
+from typing import Optional, Any, Tuple, TypeVar, Union
 from PIL import Image as PILImage
 from colour import Color
 
@@ -134,9 +134,25 @@ def imgen(
         )
 
 
-def create_sample_diagram() -> Diagram:
+def create_sample_diagram(
+    option: Optional[str] = "a|b",
+) -> Union[Diagram, Tuple[Diagram, Diagram]]:
     """Creates a sample diagram.
 
+    Args:
+        option (Optional[str], optional): A string denoting what
+            kind of sample diagram(s) to return.
+            💡 Choose from:
+            - "a+b" : means a.atop(b)    | Single Diagram
+            - "b+a" : means b.atop(a)    | Single Diagram
+            - "a|b" : means a.beside(b)  | Single Diagram
+            - "b|a" : means b.beside(a)  | Single Diagram
+            - "a/b" : means a.above(b)   | Single Diagram
+            - "b/a" : means b.above(a)   | Single Diagram
+            - "a//b": means a.above2(b)  | Single Diagram
+            - "b//a": means b.above2(a)  | Single Diagram
+            - "a,b" : means (a, b) --> ✨| Two Diagrams
+            💡 Defaults to "a|b".
     Returns:
         Diagram: Returns a sample diagram.
     """
@@ -144,9 +160,46 @@ def create_sample_diagram() -> Diagram:
 
     papaya = Color("#ff9700")
     blue = Color("#005FDB")
-    d = circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
+    a = circle(0.5).fill_color(papaya)
+    b = square(1).fill_color(blue)
 
+    if option is None:
+        d = a.beside(b)
+    else:
+        option = "".join(option.split())
+        # handle specific cases
+        if option == "a+b":
+            d = a + b  # a.atop(b)
+        if option == "b+a":
+            d = b + a  # b.atop(a)
+        elif option == "a|b":
+            d = a | b  # a.beside(b)
+        elif option == "a|b":
+            d = b | a  # b.beside(a)
+        elif option == "a/b":
+            d = a / b  # a.above(b)
+        elif option == "b/a":
+            d = b / a  # b.above(a)
+        elif option == "a//b":
+            d = a // b  # a.above2(b)
+        elif option == "b//a":
+            d = b // a  # b.above2(a)
+        elif option == "a,b":
+            d = (a, b)  # type: ignore
+        elif option == "b,a":
+            d = (b, a)  # type: ignore
     return d  # type: ignore
+
+
+def create_double_diagrams() -> Tuple[Diagram, Diagram]:
+    """Creates a pair of sample diagrams (a circle and a square).
+
+    Returns:
+        Diagram: Returns a sample diagram.
+    """
+    a, b = create_sample_diagram(option="a,b")  # type: ignore
+
+    return (a, b)
 
 
 def quick_probe(
@@ -177,7 +230,7 @@ def quick_probe(
     # if verbose:
     #     prnt_warning(f"{chalk.__name__} version: v{chalk.__version__}")
     if d is None:
-        d = create_sample_diagram()
+        d = create_sample_diagram()  # type: ignore
     if dirpath is None:
         dirpath = os.path.join(_HERE, "../examples/output")
     # render diagram and generate an image tempfile (.png)
