@@ -2,7 +2,7 @@ import os
 import sys
 import tempfile
 import time
-from typing import NoReturn, Union, Optional, Any, TypeVar
+from typing import Optional, Any, TypeVar
 from PIL import Image as PILImage
 
 import chalk
@@ -25,6 +25,8 @@ except ImportError:
     prnt_success = print  # type: ignore
     prnt_warning = print  # type: ignore
 
+Diagram = TypeVar("Diagram")
+
 
 def show(filepath: str):  # type: ignore
     """Show image from filepath.
@@ -37,7 +39,7 @@ def show(filepath: str):  # type: ignore
 
 
 def imgen(
-    d: "Diagram",
+    d: Diagram,
     temporary: bool = True,
     dirpath: Optional[str] = "examples/output",
     prefix: str = "trial_",
@@ -45,7 +47,7 @@ def imgen(
     height: int = 64,
     wait: int = 5,
     verbose: bool = True,
-) -> Union[NoReturn, None]:
+) -> None:
     """Render a ``chalk`` diagram and visualize.
 
     Args:
@@ -53,7 +55,8 @@ def imgen(
         temporary (bool, optional): Whether to use a temporary file or not.
                 Defaults to True.
         dirpath (Optional[str], optional): Directory to save the temporary
-                file in. Defaults to "examples/output".
+                file in. If does not exist, creates a temporary directory
+                and destroys it afterwards. Defaults to "examples/output".
         prefix (str, optional): Prefix for the generated image file.
                 Defaults to "trial_".
         suffix (str, optional): Suffix for the generated image file.
@@ -93,6 +96,8 @@ def imgen(
     """
     make_tempdir = False
     dp = None
+    if verbose:
+        prnt_warning(f" ✨ {chalk.__name__} version: v{chalk.__version__}")
     if temporary:
         if (dirpath is not None) and (not os.path.isdir(dirpath)):
             make_tempdir = True
@@ -105,9 +110,9 @@ def imgen(
         ) as fp:
             if verbose:
                 prnt_success(
-                    f" ✅ 1. Created temporary file: {os.path.relpath(fp.name)}"
+                    f" ✅ 1. Created temporary file: \n\t\t{os.path.relpath(fp.name)}"  # noqa: E501
                 )  # noqa: E501
-            d.render(fp.name, height=height)
+            d.render(fp.name, height=height)  # type: ignore
             if verbose:
                 prnt_success(" ✅ 2. Saved rendered image to temporary file.")
             fp.seek(0)
@@ -128,7 +133,7 @@ def imgen(
         )
 
 
-def create_sample_diagram() -> "Diagram":
+def create_sample_diagram() -> Diagram:
     """Creates a sample diagram.
 
     Returns:
@@ -141,15 +146,15 @@ def create_sample_diagram() -> "Diagram":
     blue = Color("#005FDB")
     d = circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 
-    return d
+    return d  # type: ignore
 
 
 def quick_probe(
-    d: Optional["Diagram"] = None,
+    d: Optional[Diagram] = None,
     dirpath: Optional[str] = None,
     verbose: bool = True,
     **kwargs: Any,
-) -> Union[NoReturn, None]:
+) -> None:
     """Render diagram and generate an image tempfile (``.png``)
 
     This utility is made to quickly create a sample diagram and display it,
@@ -169,8 +174,8 @@ def quick_probe(
     Usage:
         quick_probe(verbose=True)
     """
-    if verbose:
-        prnt_warning(f"{chalk.__name__} version: v{chalk.__version__}")
+    # if verbose:
+    #     prnt_warning(f"{chalk.__name__} version: v{chalk.__version__}")
     if d is None:
         d = create_sample_diagram()
     if dirpath is None:
