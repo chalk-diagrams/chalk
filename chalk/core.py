@@ -42,7 +42,7 @@ class Diagram(tx.Transformable):
         kwargs.update({"height": height})
         kwargs.update({"verbose": verbose})
         kwargs.update({"dirpath": None})
-        kwargs.update({"wait": kwargs.get("wait", 2)})
+        kwargs.update({"wait": kwargs.get("wait", 1)})
         # render and display the diagram
         imgen(self, **kwargs)
 
