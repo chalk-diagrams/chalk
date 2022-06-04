@@ -12,6 +12,7 @@ from colour import Color
 from chalk.bounding_box import BoundingBox
 from chalk.shape import Shape, Circle, Rectangle
 from chalk.style import Style
+from chalk.utils import imgen
 from chalk import transform as tx
 
 
@@ -30,9 +31,31 @@ class Diagram(tx.Transformable):
         """
         raise NotImplementedError
 
+    def display(self, height: int=64, verbose: bool=True, **kwargs: Any) -> None:
+        """Display the diagram using the default renderer.
+
+        Note: see ``chalk.utils.imgen`` for details on the keyword arguments.
+        """
+        # update kwargs with defaults and user-specified values
+        kwargs.update({"height": height})
+        kwargs.update({"verbose": verbose})
+        kwargs.update({"dirpath": None})
+        kwargs.update({"wait": kwargs.get("wait", 2)})
+        # render and display the diagram
+        imgen(self, **kwargs)
+
     def render(
         self, path: str, height: int = 128, width: Optional[int] = None
     ) -> None:
+        """Render the diagram to a PNG file.
+
+        Args:
+            path (str): Path of the .png file.
+            height (int, optional): Height of the rendered image.
+                                    Defaults to 128.
+            width (Optional[int], optional): Width of the rendered image.
+                                             Defaults to None.
+        """
         pad = 0.05
         box = self.get_bounding_box()
 
@@ -70,7 +93,15 @@ class Diagram(tx.Transformable):
     def render_svg(
         self, path: str, height: int = 128, width: Optional[int] = None
     ) -> None:
+        """Render the diagram to an SVG file.
 
+        Args:
+            path (str): Path of the .svg file.
+            height (int, optional): Height of the rendered image.
+                                    Defaults to 128.
+            width (Optional[int], optional): Width of the rendered image.
+                                             Defaults to None.
+        """
         pad = 0.05
         box = self.get_bounding_box()
 
