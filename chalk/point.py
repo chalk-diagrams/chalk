@@ -9,6 +9,8 @@ from chalk import transform as tx
 class Point(tx.Transformable):
     """Point class.
 
+    This is derived from a ``chalk.transform.Transformable`` class.
+
     This is a point in 2D and so has ``(x,y)``
     coordinates, and no ``z``-coordinate.
     """
@@ -56,6 +58,8 @@ class Point(tx.Transformable):
 @dataclass
 class Vector(tx.Transformable):
     """Vector class.
+
+    This is derived from a ``chalk.transform.Transformable`` class.
 
     This is a 2D vector.
     """
