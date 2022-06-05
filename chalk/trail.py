@@ -7,6 +7,13 @@ from chalk import transform as tx
 
 
 class Trail(tx.Transformable):
+    """Trail class.
+
+    This is derived from a ``chalk.transform.Transformable`` class.
+
+    [TODO]: Need more explanation on what this class is for (preferably
+    with illustrations/figures).
+    """
     def __init__(self, offsets: List[Vector]):
         self.offsets = offsets
 
