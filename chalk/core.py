@@ -23,6 +23,7 @@ Ident = tx.Identity()
 @dataclass
 class Diagram(tx.Transformable):
     """A Diagram class (``chalk.core.Diagram``)."""
+
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Get the bounding box of a diagram."""
         raise NotImplementedError
