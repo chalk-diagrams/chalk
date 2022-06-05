@@ -35,6 +35,12 @@ class BoundingBox(Transformable):
     def empty(cls) -> "BoundingBox":
         """Returns an empty bounding box.
 
+        The bounding box will have the following
+        specifications:
+
+        - top-left corner: `(0,0)`
+        - bottom-right corner: `(0,0)`
+
         Returns:
             BoundingBox: A bounding box object.
         """
