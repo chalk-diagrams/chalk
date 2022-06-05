@@ -164,7 +164,7 @@ def create_sample_diagram(
     b = square(1).fill_color(blue)
 
     if option is None:
-        d = a.beside(b)
+        d = a.beside(b) # a|b
     else:
         option = "".join(option.split())
         # handle specific cases
