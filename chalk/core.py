@@ -22,7 +22,9 @@ Ident = tx.Identity()
 
 @dataclass
 class Diagram(tx.Transformable):
+    """A Diagram class (``chalk.core.Diagram``)."""
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Get the bounding box of a diagram."""
         raise NotImplementedError
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
@@ -144,7 +146,7 @@ class Diagram(tx.Transformable):
         return svg
 
     def atop(self, other: "Diagram") -> "Diagram":
-        """Given to diagrams ``a`` and ``b``, ``a.atop(b)``
+        """Given two diagrams ``a`` and ``b``, ``a.atop(b)``
         places ``a`` and ``b`` such that none of them move.
         This is equivalent to **union** operation of two the
         shapes.
@@ -165,7 +167,7 @@ class Diagram(tx.Transformable):
     __add__ = atop
 
     def beside(self, other: "Diagram") -> "Diagram":
-        """Given to diagrams ``a`` and ``b``, ``a.beside(b)``
+        """Given two diagrams ``a`` and ``b``, ``a.beside(b)``
         places ``b`` on the right side of ``a``. This moves
         ``b`` up to touch ``a``.
 
@@ -187,7 +189,7 @@ class Diagram(tx.Transformable):
     __or__ = beside
 
     def above(self, other: "Diagram") -> "Diagram":
-        """Given to diagrams ``a`` and ``b``, ``a.above(b)``
+        """Given two diagrams ``a`` and ``b``, ``a.above(b)``
         places ``b`` under ``a``. This moves ``b`` up to
         touch ``a``.
 
@@ -209,7 +211,7 @@ class Diagram(tx.Transformable):
     __truediv__ = above
 
     def above2(self, other: "Diagram") -> "Diagram":
-        """Given to diagrams ``a`` and ``b``, ``a.above2(b)``
+        """Given two diagrams ``a`` and ``b``, ``a.above2(b)``
         places ``a`` on top of ``b``. This moves ``a`` down to
         touch ``b``.
 
@@ -566,9 +568,11 @@ class Diagram(tx.Transformable):
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
+        """Get the bounding box of the sub-diagram."""
         return None
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Convert a diagram to SVG image."""
         raise NotImplementedError
 
 
