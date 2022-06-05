@@ -579,31 +579,81 @@ class Diagram(tx.Transformable):
 
 @dataclass
 class Primitive(Diagram):
+    """Primitive class.
+
+    This is derived from a ``chalk.core.Diagram`` class.
+
+    [TODO]: explain what Primitive class is for.
+    """
+
     shape: Shape
     style: Style
     transform: tx.Transform
 
     @classmethod
     def from_shape(cls, shape: Shape) -> "Primitive":
+        """Create and return a primitive from a shape.
+
+        Args:
+            shape (Shape): A shape object (``chalk.shape.Shape``)
+
+        Returns:
+            Primitive: A primitive object.
+        """
         return cls(shape, Style.default(), Ident)
 
     def apply_transform(self, t: tx.Transform) -> "Primitive":  # type: ignore
+        """Applies a transform and returns a primitive.
+
+        Args:
+            t (Transform): A transform object (``chalk.transform.Transform``)
+
+        Returns:
+            Primitive: A primitive object.
+        """
         new_transform = tx.Compose(t, self.transform)
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":
+        """Applies a style and returns a primitive.
+
+        Args:
+            other_style (Style): A style object (``chalk.style.Style``)
+
+        Returns:
+            Primitive: A primitive object.
+        """
         return Primitive(
             self.shape, self.style.merge(other_style), self.transform
         )
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Apply a transform and return a bounding box.
+
+        Args:
+            t (Transform): A transform object (``chalk.transform.Transform``)
+                           Defaults to Ident.
+
+        Returns:
+            BoundingBox: A bounding box object (``chalk.BoundingBox``)
+        """
         new_transform = tx.Compose(t, self.transform)
         return self.shape.get_bounding_box().apply_transform(new_transform)
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives.
+
+        Args:
+            t (Transform): A transform object (``chalk.transform.Transform``)
+                           Defaults to Ident.
+
+        Returns:
+            List[Primitive]: List of primitives.
+        """
         return [self.apply_transform(t)]
 
     def to_svg(self, dwg: Drawing, other_style: Style) -> BaseElement:
+        """Convert a diagram to SVG image."""
         style = self.style.merge(other_style).to_svg()
         transform = self.transform.to_svg()
         inner = self.shape.render_svg(dwg)
@@ -620,37 +670,48 @@ class Primitive(Diagram):
 
 @dataclass
 class Empty(Diagram):
+    """An Empty diagram class."""
+
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Returns the bounding box of a diagram."""
         return BoundingBox.empty()
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives."""
         return []
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Converts to SVG image."""
         return dwg.g()
 
 
 @dataclass
 class Compose(Diagram):
+    """Compose class."""
+
     box: BoundingBox
     diagram1: Diagram
     diagram2: Diagram
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Returns the bounding box of a diagram."""
         return self.box.apply_transform(t)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
+        """Get the bounding box of the sub-diagram."""
         bb = self.diagram1.get_subdiagram_bounding_box(name, t)
         if bb is None:
             bb = self.diagram2.get_subdiagram_bounding_box(name, t)
         return bb
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives."""
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Converts to SVG image."""
         g = dwg.g()
         g.add(self.diagram1.to_svg(dwg, style))
         g.add(self.diagram2.to_svg(dwg, style))
@@ -659,26 +720,32 @@ class Compose(Diagram):
 
 @dataclass
 class ApplyTransform(Diagram):
+    """ApplyTransform class."""
+
     transform: tx.Transform
     diagram: Diagram
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Returns the bounding box of a diagram."""
         t_new = tx.Compose(t, self.transform)
         return self.diagram.get_bounding_box(t_new)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
+        """Get the bounding box of the sub-diagram."""
         t_new = tx.Compose(t, self.transform)
         return self.diagram.get_subdiagram_bounding_box(name, t_new)
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives."""
         t_new = tx.Compose(t, self.transform)
         return [
             prim.apply_transform(t_new) for prim in self.diagram.to_list(t)
         ]
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Converts to SVG image."""
         g = dwg.g(transform=self.transform.to_svg())
         g.add(self.diagram.to_svg(dwg, style))
         return g
@@ -686,46 +753,58 @@ class ApplyTransform(Diagram):
 
 @dataclass
 class ApplyStyle(Diagram):
+    """ApplyStyle class."""
+
     style: Style
     diagram: Diagram
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
+        """Get the bounding box of the sub-diagram."""
         return self.diagram.get_subdiagram_bounding_box(name, t)
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives."""
         return [
             prim.apply_style(self.style) for prim in self.diagram.to_list(t)
         ]
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Converts to SVG image."""
         return self.diagram.to_svg(dwg, self.style.merge(style))
 
 
 @dataclass
 class ApplyName(Diagram):
+    """ApplyName class."""
+
     dname: str
     diagram: Diagram
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+        """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
+        """Get the bounding box of the sub-diagram."""
         if name == self.dname:
             return self.diagram.get_bounding_box(t)
         else:
             return None
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+        """Returns a list of primitives."""
         return [prim for prim in self.diagram.to_list(t)]
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        """Converts to SVG image."""
         g = dwg.g()
         g.add(self.diagram.to_svg(dwg, style))
         return g
