@@ -123,7 +123,7 @@ def imgen(
             time.sleep(wait)
 
         if verbose:
-            prnt_success(" ✅ 4. Closed and removed temporary image!")
+            prnt_success(" ✅ 4. Removed temporary image file!")
 
         if make_tempdir and dp:
             # Cleanup temporary directory
