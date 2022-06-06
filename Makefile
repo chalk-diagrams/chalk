@@ -6,6 +6,9 @@
 # installation
 .PHONY: install installextras pipinstalltest
 
+# documentation
+.PHONY: gendocs
+
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
 		hilbert koch tensor latex hex_variation images
@@ -153,6 +156,14 @@ pipinstalltest:
 	#      If no version is specified, the latest version is installed from TestPyPI.
 	@if [ $(VERSION) ]; then $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME)==$(VERSION); else $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME); fi;
 
+
+####------------------------------------------------------------####
+
+### Generate documentation with MkDocs
+
+gendocs:
+	@echo "🔥 Generate documentation with MkDocs ... ⏳"
+	mkdocs serve
 
 ####------------------------------------------------------------####
 
