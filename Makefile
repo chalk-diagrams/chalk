@@ -7,7 +7,7 @@
 .PHONY: install installextras pipinstalltest
 
 # documentation
-.PHONY: gendocs
+.PHONY: pregendocs gendocs postgendocs gendocsall
 
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
@@ -161,9 +161,20 @@ pipinstalltest:
 
 ### Generate documentation with MkDocs
 
+pregendocs:
+	@echo "make a copy of doc folder inside docs ... ⏳"
+	cp -rf doc docs/doc
+
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
+	# generate documentation
 	mkdocs serve
+
+postgendocs:
+	#echo "Cleanup docs... ⏳"
+	rm -rf docs/doc
+
+gendocsall: pregendocs gendocs postgendocs
 
 ####------------------------------------------------------------####
 
