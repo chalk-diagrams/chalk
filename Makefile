@@ -132,7 +132,7 @@ installextras: install
 	@echo "Installing from: $(DEV_REQ_FILE) ... ⏳"
 	if [ -f $(REQ_FOLDER)/$(DEV_REQ_FILE) ]; then python -m pip install -r $(REQ_FOLDER)/$(DEV_REQ_FILE); fi
 	@echo "Installing from: $(DOCS_REQ_FILE) ... ⏳"
-	if [ -f $(REQ_FOLDER)/$(DOCS_REQ_FILE) ]; then python -m pip install -r $(REQ_FOLDER)/$(DOCS_REQ_FILE); fi
+	@if [ -f $(REQ_FOLDER)/$(DOCS_REQ_FILE) ]; then python -m pip install -r $(REQ_FOLDER)/$(DOCS_REQ_FILE); fi
 
 ## Install from test.pypi.org
 #
