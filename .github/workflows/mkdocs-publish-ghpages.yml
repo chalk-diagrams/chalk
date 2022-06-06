@@ -32,7 +32,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Python dependencies for MkDocs
-        run: pip install -r requirements/docs.txt
+        run: python -m pip install -r requirements/docs.txt
 
       - name: Deploy documentation
         env:
