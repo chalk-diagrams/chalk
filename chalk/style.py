@@ -18,6 +18,8 @@ LW = 0.01
 
 @dataclass
 class Style:
+    """Style class."""
+
     line_width: Optional[float] = None
     line_color: Optional[Color] = None
     fill_color: Optional[Color] = None
@@ -29,6 +31,14 @@ class Style:
         return cls()
 
     def merge(self, other: "Style") -> "Style":
+        """Merges two styles and returns the merged style.
+
+        Args:
+            other (Style): Another style object.
+
+        Returns:
+            Style: A style object.
+        """
         return Style(
             *(
                 m(getattr(other, dim.name), getattr(self, dim.name))
@@ -37,6 +47,11 @@ class Style:
         )
 
     def render(self, ctx: PyCairoContext) -> None:
+        """Renders the style object.
+
+        Args:
+            ctx (PyCairoContext): A context.
+        """
         if self.fill_color:
             ctx.set_source_rgb(*self.fill_color.rgb)
             ctx.fill_preserve()
@@ -61,6 +76,11 @@ class Style:
         ctx.stroke()
 
     def to_svg(self) -> str:
+        """Converts to SVG.
+
+        Returns:
+            str: A string notation of the SVG.
+        """
         style = ""
         if self.fill_color is not None:
             style += f"fill: {self.fill_color.hex_l};"
