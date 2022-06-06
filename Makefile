@@ -164,6 +164,7 @@ pipinstalltest:
 pregendocs:
 	@echo "make a copy of doc folder inside docs ... ⏳"
 	cp -rf doc docs/doc
+	cp -rf examples/* docs/examples/
 
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
