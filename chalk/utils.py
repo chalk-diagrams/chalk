@@ -1,3 +1,22 @@
+"""
+The ``chalk.utils`` module is meant to provide various
+utility-oriented functionalities.
+
+Importing:
+
+    ```python
+    # method-1
+    from chalk import utils as U
+
+    # method-2
+    import chalk.utils
+
+    # method-3
+    from chalk.utils import <some_function>
+
+    ```
+"""
+
 import os
 import sys
 import tempfile
@@ -29,12 +48,19 @@ except ImportError:
 Diagram = TypeVar("Diagram")
 
 
-def show(filepath: str):  # type: ignore
+def show(filepath: str) -> None:
     """Show image from filepath.
 
     Args:
         filepath (str): Filepath of the image.
                         example: "examples/output/intro-01-a.png"
+
+    Usage:
+
+        ```python
+        from chalk.utils import show
+        show("examples/output/intro-01.png")
+        ```
     """
     PILImage.open(filepath).show()
 
@@ -77,8 +103,11 @@ def imgen(
         Union[NoReturn, None]: Does not return anything.
 
     Usage:
+
+        ```python
         from colour import Color
         from chalk import circle
+        from chalk.utils import imgen
 
         papaya = Color("#ff9700")
         d = circle(0.5).fill_color(papaya)
@@ -94,6 +123,7 @@ def imgen(
 
         # Display and delete the temporary file after 10 seconds
         imgen(d, temporary=True, wait=10)
+        ```
     """
     make_tempdir = False
     dp = None
@@ -142,19 +172,50 @@ def create_sample_diagram(
     Args:
         option (Optional[str], optional): A string denoting what
             kind of sample diagram(s) to return.
-            💡 Choose from:
-            - "a+b" : means a.atop(b)    | Single Diagram
-            - "b+a" : means b.atop(a)    | Single Diagram
-            - "a|b" : means a.beside(b)  | Single Diagram
-            - "b|a" : means b.beside(a)  | Single Diagram
-            - "a/b" : means a.above(b)   | Single Diagram
-            - "b/a" : means b.above(a)   | Single Diagram
-            - "a//b": means a.above2(b)  | Single Diagram
-            - "b//a": means b.above2(a)  | Single Diagram
-            - "a,b" : means (a, b) --> ✨| Two Diagrams
-            💡 Defaults to "a|b".
+            💡 Defaults to ``"a|b"``.
+
+    Choose ``option`` from for the following.
+
+    Click to expand:
+
+        |   Option    |      Meaning      |     Output      |
+        |:-----------:|:------------------|:---------------:|
+        | ``"a+b"``   | ``a.atop(b)``     | Single Diagram  |
+        | ``"b+a"``   | ``b.atop(a)``     | Single Diagram  |
+        | ``"a|b"``   | ``a.beside(b)``   | Single Diagram  |
+        | ``"b|a"``   | ``b.beside(a)``   | Single Diagram  |
+        | ``"a/b"``   | ``a.above(b)``    | Single Diagram  |
+        | ``"b/a"``   | ``b.above(a)``    | Single Diagram  |
+        | ``"a//b"``  | ``a.above2(b)``   | Single Diagram  |
+        | ``"b//a"``  | ``b.above2(a)``   | Single Diagram  |
+        | ``"a,b"``   | ``(a, b)``        | Two Diagrams    |
+
     Returns:
         Diagram: Returns a sample diagram.
+
+    Usage:
+
+        ```python
+        from chalk.utils import create_sample_diagram
+
+        # create a diagram composed of two diagrams: a|b
+        d = create_sample_diagram(option="a|b")
+
+        # create a diagram composed of two diagrams: b|a
+        d = create_sample_diagram(option="b|a")
+
+        # create a diagram composed of two diagrams: a+b
+        d = create_sample_diagram(option="a+b")
+
+        # create a diagram composed of two diagrams: a/b
+        d = create_sample_diagram(option="a/b")
+
+        # create a diagram composed of two diagrams: a//b
+        d = create_sample_diagram(option="a//b")
+
+        # create two diagrams: (a,b)
+        a, b = create_sample_diagram(option="a,b")
+        ```
     """
     from chalk import circle, square
 
@@ -225,7 +286,11 @@ def quick_probe(
         verbose (bool): Set verbosity. Defaults to True.
 
     Usage:
-        quick_probe(verbose=True)
+
+        ```python
+        from chalk.utils import quick_probe
+        quick_probe(verbose=True, wait=2)
+        ```
     """
     # if verbose:
     #     prnt_warning(f"{chalk.__name__} version: v{chalk.__version__}")
