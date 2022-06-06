@@ -47,5 +47,6 @@ jobs:
           echo "Current Git Branch: ${USER_SPECIFIED_BRANCH}"
 
           # Begin Deploying MkDocs
+          make pregendocs
           mkdocs gh-deploy --force
           mkdocs --version
