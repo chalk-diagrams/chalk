@@ -12,7 +12,7 @@ on:
     branches:
       - master
       - main
-      - add_chalk_utils
+      - add_docs_website
 
 env:
   PYTHON_VERSION: "3.7"
