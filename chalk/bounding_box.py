@@ -72,18 +72,25 @@ class BoundingBox(Transformable):
 
         Args:
             dir (str): Direction of the edge or the corner.
-                Options are:
-                  - ``N``: North        | edge
-                  - ``S``: South        | edge
-                  - ``W``: West         | edge
-                  - ``E``: East         | edge
-                  - ``NW``: North West  | corner
-                  - ``NE``: North East  | corner
-                  - ``SW``: South West  | corner
-                  - ``SE``: South East  | corner
+
+        Choose `dir` from the following table.
+
+        Click to expand:
+
+            | `dir`  |   Directon   |  Type  |
+            |:-------|:-------------|:------:|
+            | ``N``  | North        | edge   |
+            | ``S``  | South        | edge   |
+            | ``W``  | West         | edge   |
+            | ``E``  | East         | edge   |
+            | ``NW`` | North West   | corner |
+            | ``NE`` | North East   | corner |
+            | ``SW`` | South West   | corner |
+            | ``SE`` | South East   | corner |
 
         Returns:
             Point: A point object (``chalk.point.Point``).
+
         """
         return {
             "N": Point(self.left + self.width / 2, self.top),
