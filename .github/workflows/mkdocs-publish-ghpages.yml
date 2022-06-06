@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Python dependencies for MkDocs
         run: |
-          echo "REPO_OWNER:" ${{ REPO_OWNER }}
+          echo "REPO_OWNER: ${{ env.REPO_OWNER }}"
           python -m pip install -r requirements/docs.txt
 
       - name: Deploy documentation
