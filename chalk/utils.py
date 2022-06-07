@@ -99,9 +99,6 @@ def imgen(
                              raises an error, as it has not been
                              implemented yet.
 
-    Returns:
-        Union[NoReturn, None]: Does not return anything.
-
     Usage:
 
         ```python
@@ -283,7 +280,9 @@ def quick_probe(
                 file in. For example, you could use "examples/output" with
                 respect to the location of running a script.
                 Defaults to None.
-        verbose (bool): Set verbosity. Defaults to True.
+        verbose (bool, optional): Set verbosity. Defaults to True.
+        **kwargs (Any, optional): See the keyword arguments of
+                                  [``imgen()``][chalk.utils.imgen].
 
     Usage:
 
