@@ -12,7 +12,9 @@
 		uninstall.base uninstall.dev uninstall.docs
 
 # documentation
-.PHONY: pregendocs gendocs postgendocs gendocsall
+.PHONY: pregendocs.doc pregendocs.examples pregendocs.local pregendocs.remote
+		gendocs
+		postgendocs.doc postgendocs.local postgendocs.remote gendocsall.local
 
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
@@ -247,25 +249,25 @@ pipinstalltest:
 
 ## Pregendocs
 
-.PHONY: pregendocs.doc
+# .PHONY: pregendocs.doc
 pregendocs.doc:
 	@echo "make a copy of doc folder inside docs ... ⏳"
 	cp -rf doc docs/doc
 
-.PHONY: pregendocs.examples
+# .PHONY: pregendocs.examples
 pregendocs.examples:
 	@echo "make a copy of examples folder inside docs ... ⏳"
 	cp -rf examples/* docs/examples/
 
-.PHONY: pregendocs.local
+# .PHONY: pregendocs.local
 pregendocs.local: pregendocs.doc
 
-.PHONY: pregendocs.remote
+# .PHONY: pregendocs.remote
 pregendocs.remote: pregendocs.doc pregendocs.examples
 
 ## Gendocs
 
-.PHONY: gendocs
+# .PHONY: gendocs
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
 	# generate documentation
@@ -273,18 +275,18 @@ gendocs:
 
 ## Postgendocs
 
-.PHONY: postgendocs.doc
+# .PHONY: postgendocs.doc
 postgendocs.doc:
 	#echo "Cleanup docs... ⏳"
 	rm -rf docs/doc
 
-.PHONY: postgendocs.local
+# .PHONY: postgendocs.local
 postgendocs.local: postgendocs.doc
 
-.PHONY: postgendocs.remote
+# .PHONY: postgendocs.remote
 postgendocs.remote: postgendocs.doc
 
-.PHONY: gendocsall.local
+# .PHONY: gendocsall.local
 gendocsall.local: pregendocs.local gendocs postgendocs.local
 
 # .PHONY: gendocsall.remote
