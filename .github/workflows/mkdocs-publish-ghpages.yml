@@ -34,11 +34,12 @@ jobs:
       - name: Install Python dependencies for MkDocs
         run: |
           echo "REPO_OWNER: ${{ env.REPO_OWNER }}"
-          python -m pip install -r requirements/docs.txt
+          # python -m pip install -r requirements/docs.txt
+          make install.docs
 
       - name: Install all other dependencies
         run: |
-          make install.dev install.base install.e
+          make install
 
       - name: Deploy documentation
         env:
