@@ -258,10 +258,10 @@ pregendocs.examples:
 	cp -rf examples/* docs/examples/
 
 .PHONY: pregendocs.local
-pregendocs.local: pregendocs.docs
+pregendocs.local: pregendocs.doc
 
 .PHONY: pregendocs.remote
-pregendocs.remote: pregendocs.docs pregendocs.examples
+pregendocs.remote: pregendocs.doc pregendocs.examples
 
 ## Gendocs
 
