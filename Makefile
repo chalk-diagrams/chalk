@@ -53,11 +53,12 @@ DOCS_REQ_FILE := "docs.txt"
 
 ### Code maintenance
 
-## Run flake8
+## Run isort
 
-flake:
-	@ echo "✨ Applying formatter: flake8 ... ⏳"
-	flake8 --show-source chalk/*.py setup.py \
+isort:
+	@ echo "✨ Applying import sorter: isort ... ⏳"
+	# The settings are maintained in setup.cfg file.
+	isort $(PACKAGE_NAME)/*.py setup.py \
 		# tests \
 
 ## Run black
@@ -65,6 +66,13 @@ flake:
 black:
 	@ echo "✨ Applying formatter: black ... ⏳"
 	black --target-version py38 --line-length 79 $(PACKAGE_NAME)/*.py setup.py \
+		# tests \
+
+## Run flake8
+
+flake:
+	@ echo "✨ Applying formatter: flake8 ... ⏳"
+	flake8 --show-source chalk/*.py setup.py \
 		# tests \
 
 ## Run pytest
@@ -124,7 +132,7 @@ cleanall: clean
 
 ## Style Checks and Unit Tests
 
-style: clean black flake clean
+style: clean isort black flake clean
 
 docs: clean darglint interrogate clean
 
