@@ -12,8 +12,8 @@
 		uninstall.base uninstall.dev uninstall.docs
 
 # documentation
-.PHONY: pregendocs.doc pregendocs.examples pregendocs.local pregendocs.remote
-		gendocs
+.PHONY: pregendocs.doc pregendocs.examples pregendocs.local pregendocs.remote \
+		gendocs \
 		postgendocs.doc postgendocs.local postgendocs.remote gendocsall.local
 
 # generate examples
