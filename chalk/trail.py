@@ -1,9 +1,9 @@
 from typing import List
 
-from chalk.core import Primitive
-from chalk.point import Point, Vector, ORIGIN
-from chalk.shape import Path
 from chalk import transform as tx
+from chalk.core import Primitive
+from chalk.point import ORIGIN, Point, Vector
+from chalk.shape import Path
 
 
 class Trail(tx.Transformable):

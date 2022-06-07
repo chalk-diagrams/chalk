@@ -21,9 +21,10 @@ import os
 import sys
 import tempfile
 import time
-from typing import Optional, Any, Tuple, TypeVar, Union
-from PIL import Image as PILImage
+from typing import Any, Optional, Tuple, TypeVar, Union
+
 from colour import Color
+from PIL import Image as PILImage
 
 import chalk
 

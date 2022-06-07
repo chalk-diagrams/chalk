@@ -1,9 +1,7 @@
-from typing import Any, Optional, List, Tuple
-
 from dataclasses import dataclass, fields
+from typing import Any, List, Optional, Tuple
 
 from colour import Color
-
 
 PyCairoContext = Any
 

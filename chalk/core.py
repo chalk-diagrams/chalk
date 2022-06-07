@@ -1,20 +1,19 @@
+import os
+import tempfile
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
 import cairo
 import svgwrite
-import tempfile
-import os
+from colour import Color
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
-from colour import Color
 
+from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Shape, Circle, Rectangle
+from chalk.shape import Circle, Rectangle, Shape
 from chalk.style import Style
 from chalk.utils import imgen
-from chalk import transform as tx
-
 
 PyCairoContext = Any
 Ident = tx.Identity()

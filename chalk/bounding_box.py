@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from chalk.point import Point, ORIGIN
+from chalk.point import ORIGIN, Point
 from chalk.transform import Transform, Transformable
 
 
