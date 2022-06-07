@@ -247,7 +247,8 @@ pipinstalltest:
 
 ## Pregendocs
 
-pregendocs.docs:
+.PHONY: pregendocs.doc
+pregendocs.doc:
 	@echo "make a copy of doc folder inside docs ... ⏳"
 	cp -rf doc docs/doc
 
@@ -256,14 +257,15 @@ pregendocs.examples:
 	@echo "make a copy of examples folder inside docs ... ⏳"
 	cp -rf examples/* docs/examples/
 
-.PHONY: pregendocs
+.PHONY: pregendocs.local
 pregendocs.local: pregendocs.docs
 
-.PHONY: pregendocs
+.PHONY: pregendocs.remote
 pregendocs.remote: pregendocs.docs pregendocs.examples
 
 ## Gendocs
 
+.PHONY: gendocs
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
 	# generate documentation
@@ -271,16 +273,16 @@ gendocs:
 
 ## Postgendocs
 
-.PHONY: postgendocs.docs
-postgendocs.docs:
+.PHONY: postgendocs.doc
+postgendocs.doc:
 	#echo "Cleanup docs... ⏳"
 	rm -rf docs/doc
 
 .PHONY: postgendocs.local
-postgendocs.local: postgendocs.docs
+postgendocs.local: postgendocs.doc
 
 .PHONY: postgendocs.remote
-postgendocs.remote: postgendocs.docs
+postgendocs.remote: postgendocs.doc
 
 .PHONY: gendocsall.local
 gendocsall.local: pregendocs.local gendocs postgendocs.local
