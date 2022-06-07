@@ -36,6 +36,10 @@ jobs:
           echo "REPO_OWNER: ${{ env.REPO_OWNER }}"
           python -m pip install -r requirements/docs.txt
 
+      - name: Install all other dependencies
+        run: |
+          make install.dev install.base install.e
+
       - name: Deploy documentation
         env:
           FONTAWESOME_KIT: ${{ secrets.FONTAWESOME_KIT }}
