@@ -18,12 +18,11 @@ jobs:
       run: |
         sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra
         python -m pip install --upgrade pip
-        pip install -r requirements/dev.txt
         pip install -U pip setuptools wheel
-        make install
+        make install.dev install.base install.e
     - name: Format with [[ isort ]]
       run: |
-        # stop the build if there are errors raised by black
+        # stop the build if there are errors raised by isort
         make black
     - name: Format with [[ black ]]
       run: |
