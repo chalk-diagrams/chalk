@@ -35,7 +35,7 @@ class Trail(tx.Transformable):
         """Constructs and returns a trail from a given path.
 
         Args:
-            path (Path): A path object (``chalk.shape.Path``).
+            path (Path): A path object.
 
         Returns:
             Trail: A trail object.
@@ -48,11 +48,11 @@ class Trail(tx.Transformable):
         """Converts a trail to a path, given a point (as a reference).
 
         Args:
-            origin (Point, optional): A point object (``chalk.point.Point``).
+            origin (Point, optional): A point object.
                                       Defaults to ORIGIN.
 
         Returns:
-            Path: A path object (``chalk.shape.Path``).
+            Path: A path object.
         """
         points = [origin]
         for s in self.offsets:
@@ -63,8 +63,7 @@ class Trail(tx.Transformable):
         """Returns a primitive (shape) with strokes
 
         Returns:
-            Primitive: A primitive object with strokes
-                       (``chalk.core.Primitive.``).
+            Primitive: A primitive object with strokes.
         """
         return Primitive.from_shape(self.to_path())
 
@@ -73,7 +72,7 @@ class Trail(tx.Transformable):
         returns the resulting trail.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object.
 
         Returns:
             Trail: A trail object.
@@ -86,7 +85,7 @@ class Trail(tx.Transformable):
         This is the same as ``Trail.transform()`` method.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object.
 
         Returns:
             Trail: A trail object.

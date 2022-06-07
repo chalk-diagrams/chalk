@@ -21,7 +21,7 @@ Ident = tx.Identity()
 
 @dataclass
 class Diagram(tx.Transformable):
-    """Diagram class (``chalk.core.Diagram``)."""
+    """Diagram class."""
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Get the bounding box of a diagram."""
@@ -471,7 +471,7 @@ class Diagram(tx.Transformable):
         """Apply specified fill-color to the diagram.
 
         Args:
-            color (float): A color (``colour.Color``).
+            color (Color): A color object.
 
         Returns:
             Diagram: A diagram object.
@@ -594,7 +594,7 @@ class Primitive(Diagram):
         """Create and return a primitive from a shape.
 
         Args:
-            shape (Shape): A shape object (``chalk.shape.Shape``)
+            shape (Shape): A shape object.
 
         Returns:
             Primitive: A primitive object.
@@ -605,7 +605,7 @@ class Primitive(Diagram):
         """Applies a transform and returns a primitive.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object.
 
         Returns:
             Primitive: A primitive object.
@@ -617,7 +617,7 @@ class Primitive(Diagram):
         """Applies a style and returns a primitive.
 
         Args:
-            other_style (Style): A style object (``chalk.style.Style``)
+            other_style (Style): A style object.
 
         Returns:
             Primitive: A primitive object.
@@ -630,11 +630,11 @@ class Primitive(Diagram):
         """Apply a transform and return a bounding box.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object
                            Defaults to Ident.
 
         Returns:
-            BoundingBox: A bounding box object (``chalk.BoundingBox``)
+            BoundingBox: A bounding box object.
         """
         new_transform = tx.Compose(t, self.transform)
         return self.shape.get_bounding_box().apply_transform(new_transform)
@@ -643,7 +643,7 @@ class Primitive(Diagram):
         """Returns a list of primitives.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object
                            Defaults to Ident.
 
         Returns:

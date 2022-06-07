@@ -7,6 +7,8 @@ import cairo
 
 @dataclass
 class Transform:
+    """Transform class."""
+
     def __call__(self) -> cairo.Matrix:
         raise NotImplementedError
 
@@ -16,6 +18,8 @@ class Transform:
 
 @dataclass
 class Identity(Transform):
+    """Identity class."""
+
     def __call__(self) -> cairo.Matrix:
         return cairo.Matrix()
 
@@ -25,6 +29,8 @@ class Identity(Transform):
 
 @dataclass
 class Scale(Transform):
+    """Scale class."""
+
     αx: float
     αy: float
 
@@ -39,6 +45,8 @@ class Scale(Transform):
 
 @dataclass
 class Rotate(Transform):
+    """Rotate class."""
+
     θ: float
 
     def __call__(self) -> cairo.Matrix:
@@ -51,6 +59,8 @@ class Rotate(Transform):
 
 @dataclass
 class Translate(Transform):
+    """Translate class."""
+
     dx: float
     dy: float
 
@@ -65,6 +75,8 @@ class Translate(Transform):
 
 @dataclass
 class ShearX(Transform):
+    """ShearX class."""
+
     λ: float
 
     def __call__(self) -> cairo.Matrix:
@@ -77,6 +89,8 @@ class ShearX(Transform):
 
 @dataclass
 class ShearY(Transform):
+    """ShearY class."""
+
     λ: float
 
     def __call__(self) -> cairo.Matrix:
@@ -89,6 +103,8 @@ class ShearY(Transform):
 
 @dataclass
 class Compose(Transform):
+    """Compose class."""
+
     t: Transform
     u: Transform
 
@@ -104,6 +120,8 @@ TTrans = TypeVar("TTrans", bound="Transformable")
 
 
 class Transformable:
+    """Transformable class."""
+
     def apply_transform(self, t: Transform) -> TTrans:
         pass
 

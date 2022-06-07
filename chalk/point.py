@@ -8,8 +8,6 @@ from chalk import transform as tx
 class Point(tx.Transformable):
     """Point class.
 
-    This is derived from a ``chalk.transform.Transformable`` class.
-
     This is a point in 2D and so has ``(x,y)``
     coordinates, and no ``z``-coordinate.
     """
@@ -22,7 +20,7 @@ class Point(tx.Transformable):
         returns the transformed point.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object.
 
         Returns:
             Point: A point object.
@@ -34,7 +32,7 @@ class Point(tx.Transformable):
         """Adds a vector to a point.
 
         Args:
-            other (Vector): A vector object (``chalk.point.Vector``).
+            other (Vector): A vector object.
 
         Returns:
             Point: A point object.
@@ -49,7 +47,7 @@ class Point(tx.Transformable):
             other (Point): A point object.
 
         Returns:
-            Vector: A vector object (``chalk.point.Vector``).
+            Vector: A vector object.
         """
         return Vector(self.x - other.x, self.y - other.y)
 
@@ -57,8 +55,6 @@ class Point(tx.Transformable):
 @dataclass
 class Vector(tx.Transformable):
     """Vector class.
-
-    This is derived from a ``chalk.transform.Transformable`` class.
 
     This is a 2D vector.
     """
