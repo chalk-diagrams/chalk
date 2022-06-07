@@ -138,10 +138,10 @@ check: style docs type test clean
 #
 # Instruction: Contributors will need to run...
 #
-# - "make installextras": if installing for the first time or want to
+# - "make installplus": if installing for the first time or want to
 #                         update to the latest dev-requirements or
 #                         other extra dependencies.
-# - "make install"      : if only installing the local source (after
+# - "make install.e"  : if only installing the local source (after
 #                         making some changes) to the source code.
 #--------------------------------------------------------------------
 
@@ -237,21 +237,50 @@ pipinstalltest:
 
 ### Generate documentation with MkDocs
 
-pregendocs:
+## Pregendocs
+
+pregendocs.docs:
 	@echo "make a copy of doc folder inside docs ... ⏳"
 	cp -rf doc docs/doc
+
+.PHONY: pregendocs.examples
+pregendocs.examples:
+	@echo "make a copy of examples folder inside docs ... ⏳"
 	cp -rf examples/* docs/examples/
+
+.PHONY: pregendocs
+pregendocs.local: pregendocs.docs
+
+.PHONY: pregendocs
+pregendocs.remote: pregendocs.docs pregendocs.examples
+
+## Gendocs
 
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
 	# generate documentation
 	mkdocs serve
 
-postgendocs:
+## Postgendocs
+
+.PHONY: postgendocs.docs
+postgendocs.docs:
 	#echo "Cleanup docs... ⏳"
 	rm -rf docs/doc
 
-gendocsall: pregendocs gendocs postgendocs
+.PHONY: postgendocs.local
+postgendocs.local: postgendocs.docs
+
+.PHONY: postgendocs.remote
+postgendocs.remote: postgendocs.docs
+
+.PHONY: gendocsall.local
+gendocsall.local: pregendocs.local gendocs postgendocs.local
+
+# .PHONY: gendocsall.remote
+# gendocsall.remote: pregendocs.remote gendocs postgendocs.remote
+# 	@ # Use mkdocs-publish-ghpages.yml action instead of this make command
+
 
 ####------------------------------------------------------------####
 
