@@ -1,6 +1,6 @@
 
 # maintenance
-.PHONY: flake black test type interrogate darglint \
+.PHONY: isort flake black test type interrogate darglint \
 		clean cleanall style docs check
 
 # installation
