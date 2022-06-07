@@ -6,3 +6,4 @@ cairosvg
 Pillow
 latextools
 loguru
+typing-extensions

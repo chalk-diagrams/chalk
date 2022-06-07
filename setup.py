@@ -36,6 +36,7 @@ setup(
         "cairosvg",
         "Pillow",
         "loguru",
+        "typing-extensions",
     ],
     extras_require={"latex": ["latextools"]},
     long_description=README,
