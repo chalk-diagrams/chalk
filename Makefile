@@ -263,7 +263,9 @@ pregendocs.examples:
 pregendocs.local: pregendocs.doc
 
 # .PHONY: pregendocs.remote
-pregendocs.remote: pregendocs.doc pregendocs.examples
+pregendocs.remote: pregendocs.doc # pregendocs.examples
+	# It was observed that the build fails on github pages
+	# if pregendocs.examples is included as well.
 
 ## Gendocs
 
