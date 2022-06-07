@@ -52,7 +52,7 @@ class BoundingBox(Transformable):
         of the bounding box.
 
         Returns:
-            Point: A point object (``chalk.point.Point``).
+            Point: A point object.
         """
         return Point(self.right, self.top)
 
@@ -62,12 +62,12 @@ class BoundingBox(Transformable):
         of the bounding box.
 
         Returns:
-            Point: A point object (``chalk.point.Point``).
+            Point: A point object.
         """
         return Point(self.left, self.bottom)
 
     def cardinal(self, dir: str) -> Point:
-        """Returns the position of and edge or a corner of the bounding
+        """Returns the position of an edge or a corner of the bounding
         box based on a labeled direction (``dir``).
 
         Args:
@@ -89,7 +89,7 @@ class BoundingBox(Transformable):
             | ``SE`` | South East   | corner |
 
         Returns:
-            Point: A point object (``chalk.point.Point``).
+            Point: A point object.
 
         """
         return {
@@ -168,7 +168,7 @@ class BoundingBox(Transformable):
         of the bounding box.
 
         Returns:
-            Point: A point object (``chalk.point.Point``).
+            Point: A point object.
         """
         x = (self.left + self.right) / 2
         y = (self.top + self.bottom) / 2
@@ -178,7 +178,7 @@ class BoundingBox(Transformable):
         """Return a bounding box that encloses a given point.
 
         Args:
-            point (Point): A point object (``chalk.point.Point``).
+            point (Point): A point object.
 
         Returns:
             BoundingBox: A bounding box object.
@@ -194,7 +194,7 @@ class BoundingBox(Transformable):
         """Applies a transformation to the bounding box.
 
         Args:
-            t (Transform): A transform object (``chalk.transform.Transform``)
+            t (Transform): A transform object.
 
         Returns:
             BoundingBox: A bounding box object.
