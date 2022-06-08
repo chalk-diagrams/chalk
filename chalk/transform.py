@@ -2,14 +2,14 @@ import math
 from dataclasses import dataclass
 from typing import TypeVar
 
-import cairo
+from affine import Affine
 
 
 @dataclass
 class Transform:
     """Transform class."""
 
-    def __call__(self) -> cairo.Matrix:
+    def __call__(self) -> Affine:
         raise NotImplementedError
 
     def to_svg(self) -> str:
@@ -20,8 +20,8 @@ class Transform:
 class Identity(Transform):
     """Identity class."""
 
-    def __call__(self) -> cairo.Matrix:
-        return cairo.Matrix()
+    def __call__(self) -> Affine:
+        return Affine.identity()
 
     def to_svg(self) -> str:
         return "scale(1)"
@@ -34,10 +34,8 @@ class Scale(Transform):
     αx: float
     αy: float
 
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix()
-        matrix.scale(self.αx, self.αy)
-        return matrix
+    def __call__(self) -> Affine:
+        return Affine.scale(self.αx, self.αy)
 
     def to_svg(self) -> str:
         return f"scale({self.αx} {self.αy})"
@@ -49,8 +47,9 @@ class Rotate(Transform):
 
     θ: float
 
-    def __call__(self) -> cairo.Matrix:
-        return cairo.Matrix.init_rotate(self.θ)
+    def __call__(self) -> Affine:
+        t = (self.θ / math.pi) * 180
+        return Affine.rotation(t)
 
     def to_svg(self) -> str:
         t = (self.θ / math.pi) * 180
@@ -64,10 +63,8 @@ class Translate(Transform):
     dx: float
     dy: float
 
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix()
-        matrix.translate(self.dx, self.dy)
-        return matrix
+    def __call__(self) -> Affine:
+        return Affine.translation(self.dx, self.dy)
 
     def to_svg(self) -> str:
         return f"translate({self.dx} {self.dy})"
@@ -79,9 +76,8 @@ class ShearX(Transform):
 
     λ: float
 
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix(1, 0, self.λ, 1, 0, 0)  # type: ignore
-        return matrix
+    def __call__(self) -> Affine:
+        return Affine(1, 0, self.λ, 1, 0, 0)
 
     def to_svg(self) -> str:
         return f"matrix(1 0 {self.λ} 1 0 0)"
@@ -93,9 +89,8 @@ class ShearY(Transform):
 
     λ: float
 
-    def __call__(self) -> cairo.Matrix:
-        matrix = cairo.Matrix(1, self.λ, 0, 1, 0, 0)  # type: ignore
-        return matrix
+    def __call__(self) -> Affine:
+        return Affine(1, self.λ, 0, 1, 0, 0)
 
     def to_svg(self) -> str:
         return f"matrix(1 {self.λ} 0 1 0 0)"
@@ -108,9 +103,8 @@ class Compose(Transform):
     t: Transform
     u: Transform
 
-    def __call__(self) -> cairo.Matrix:
-        # return self.t().multiply(self.u())
-        return self.u().multiply(self.t())
+    def __call__(self) -> Affine:
+        return self.u() * self.t()
 
     def to_svg(self) -> str:
         return self.t.to_svg() + " " + self.u.to_svg()

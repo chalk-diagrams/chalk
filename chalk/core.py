@@ -3,19 +3,16 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
-import cairo
-import svgwrite
 from colour import Color
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
 
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Circle, Rectangle, Shape
+from chalk.shape import Circle, Shape
 from chalk.style import Style
 from chalk.utils import imgen
+Drawing = Any
+BaseElement = Any
 
-PyCairoContext = Any
 Ident = tx.Identity()
 
 
@@ -48,95 +45,16 @@ class Diagram(tx.Transformable):
         # render and display the diagram
         imgen(self, **kwargs)
 
-    def render(
-        self, path: str, height: int = 128, width: Optional[int] = None
-    ) -> None:
-        """Render the diagram to a PNG file.
-
-        Args:
-            path (str): Path of the .png file.
-            height (int, optional): Height of the rendered image.
-                                    Defaults to 128.
-            width (Optional[int], optional): Width of the rendered image.
-                                             Defaults to None.
-        """
-        pad = 0.05
-        box = self.get_bounding_box()
-
-        # infer width to preserve aspect ratio
-        width = width or int(height * box.width / box.height)
-
-        # determine scale to fit the largest axis in the target frame size
-        if box.width - width <= box.height - height:
-            α = height // ((1 + pad) * box.height)
-        else:
-            α = width // ((1 + pad) * box.width)
-
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        ctx = cairo.Context(surface)
-
-        ctx.scale(α, α)
-        ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
-
-        prims = self.to_list()
-
-        for prim in prims:
-            # apply transformation
-            matrix = prim.transform()
-            ctx.transform(matrix)
-
-            prim.shape.render(ctx)
-            prim.style.render(ctx)
-
-            # undo transformation
-            matrix.invert()
-            ctx.transform(matrix)
-
-        surface.write_to_png(path)
-
     def render_svg(
         self, path: str, height: int = 128, width: Optional[int] = None
     ) -> None:
-        """Render the diagram to an SVG file.
+        return RenderSVG()(path, height, width)
 
-        Args:
-            path (str): Path of the .svg file.
-            height (int, optional): Height of the rendered image.
-                                    Defaults to 128.
-            width (Optional[int], optional): Width of the rendered image.
-                                             Defaults to None.
-        """
-        pad = 0.05
-        box = self.get_bounding_box()
-
-        # infer width to preserve aspect ratio
-        width = width or int(height * box.width / box.height)
-
-        # determine scale to fit the largest axis in the target frame size
-        if box.width - width <= box.height - height:
-            α = height // ((1 + pad) * box.height)
-        else:
-            α = width // ((1 + pad) * box.width)
-        dwg = svgwrite.Drawing(
-            path,
-            size=(width, height),
-        )
-        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
-        outer = dwg.g(
-            transform=f"scale({α}) translate({x} {y})",
-            style="fill:white; stroke: black; stroke-width: 0.01;",
-        )
-        # Arrow marker
-        marker = dwg.marker(
-            id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
-        )
-        marker.add(dwg.polygon([(0, 0), (5, 1.75), (0, 3.5)]))
-        dwg.defs.add(marker)
-
-        dwg.add(outer)
-        outer.add(self.to_svg(dwg, Style.default()))
-        dwg.save()
-
+    def render(
+        self, path: str, height: int = 128, width: Optional[int] = None
+    ) -> None:
+        return RenderCairo()(path, height, width)
+    
     def _repr_svg_(self) -> str:
         f = tempfile.NamedTemporaryFile(delete=False)
         self.render_svg(f.name)

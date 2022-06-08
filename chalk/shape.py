@@ -29,7 +29,7 @@ class Shape:
         pass
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        return dwg.g()
+        pass
 
 
 @dataclass
@@ -48,45 +48,6 @@ class Circle(Shape):
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         return dwg.circle((ORIGIN.x, ORIGIN.y), self.radius)
-
-
-@dataclass
-class Rectangle(Shape):
-    """Rectangle class."""
-
-    width: float
-    height: float
-    radius: Optional[float] = None
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
-
-    def render(self, ctx: PyCairoContext) -> None:
-        x = left = ORIGIN.x - self.width / 2
-        y = top = ORIGIN.y - self.height / 2
-        if self.radius is None:
-            ctx.rectangle(left, top, self.width, self.height)
-        else:
-            r = self.radius
-            ctx.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
-            ctx.arc(x + self.width - r, y + r, r, 3 * math.pi / 2, 0)
-            ctx.arc(x + self.width - r, y + self.height - r, r, 0, math.pi / 2)
-            ctx.arc(x + r, y + self.height - r, r, math.pi / 2, math.pi)
-            ctx.close_path()
-
-    def render_svg(self, dwg: Drawing) -> BaseElement:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        return dwg.rect(
-            (left, top),
-            (self.width, self.height),
-            rx=self.radius,
-            ry=self.radius,
-        )
 
 
 @dataclass
@@ -278,21 +239,6 @@ class Image(Shape):
         return dwg.image(
             href=self.url_path, transform=f"translate({dx}, {dy})"
         )
-
-
-@dataclass
-class Spacer(Shape):
-    """Spacer class."""
-
-    width: float
-    height: float
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
 
 
 class Raw(Rect):  # type: ignore

@@ -20,7 +20,7 @@ def cover(d, a, b):
     b1 = d.get_subdiagram_bounding_box(a)
     b2 = d.get_subdiagram_bounding_box(b)
     new_bb = BoundingBox(b1.tl, b2.br)
-    return rectangle(new_bb.width, new_bb.height, 0.0) \
+    return rectangle(new_bb.width, new_bb.height) \
             .translate(new_bb.center.x, new_bb.center.y)
 
 def tile(d, m, n, name = ""):

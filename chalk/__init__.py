@@ -9,16 +9,7 @@ except ImportError:  # for Python<3.8
 
 from chalk.core import Diagram, Empty, Primitive
 from chalk.point import Point, Vector
-from chalk.shape import (
-    Arc,
-    Circle,
-    Image,
-    Latex,
-    Path,
-    Rectangle,
-    Spacer,
-    Text,
-)
+from chalk.shape import Arc, Circle, Image, Latex, Path, Spacer, Text
 from chalk.trail import Trail
 
 # Set library name the same as on PyPI
@@ -109,10 +100,8 @@ def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
 
-def rectangle(
-    width: float, height: float, radius: Optional[float] = None
-) -> Diagram:
-    return Primitive.from_shape(Rectangle(width, height, radius))
+def rectangle(width: float, height: float) -> Diagram:
+    return Primitive.from_shape(Path.from_list_of_tuples([(0, 0), (0, width), (height, width), (height, 0), (0, 0)]))
 
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:
