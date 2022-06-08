@@ -1,18 +1,3 @@
-<!--- BADGES: START --->
-[![GitHub - License](https://img.shields.io/github/license/danoneata/chalk?logo=github&style=flat&color=green)][#github-license]
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chalk-diagrams?logo=pypi&style=flat&color=blue)][#pypi-package]
-[![PyPI - Package Version](https://img.shields.io/pypi/v/chalk-diagrams?logo=pypi&style=flat&color=orange)][#pypi-package]
-[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/chalk-diagrams?logo=anaconda&style=flat)][#conda-forge-package]
-[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/chalk-diagrams?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
-[![Docs - GitHub.io](https://img.shields.io/static/v1?logo=github&style=flat&color=pink&label=docs&message=chalk-diagrams)][#docs-package]
-
-[#github-license]: https://github.com/danoneata/chalk/blob/master/LICENSE
-[#pypi-package]: https://pypi.org/project/chalk-diagrams/
-[#conda-forge-package]: https://anaconda.org/conda-forge/chalk-diagrams
-[#docs-package]: https://danoneata.github.io/chalk/
-<!--- BADGES: END --->
-
-
 <p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=300></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
