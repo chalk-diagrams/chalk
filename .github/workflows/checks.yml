@@ -18,22 +18,29 @@ jobs:
       run: |
         sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra
         python -m pip install --upgrade pip
-        pip install -r requirements/dev.txt
         pip install -U pip setuptools wheel
-        make install
-    - name: Format with black
+        make install.dev install.base install.e
+    - name: Format with [[ isort ]]
+      run: |
+        # stop the build if there are errors raised by isort
+        make black
+    - name: Format with [[ black ]]
       run: |
         # stop the build if there are errors raised by black
         make black
-    - name: Lint with flake8
+    - name: Lint with [[ flake8 ]]
       run: |
         # stop the build if there are Python syntax errors or undefined names
         make flake
-    - name: Doctest coverage check with interrogate
+    - name: Docstring linting -- type check against function/method signature with [[ darglint ]]
+      run: |
+        # stop the build if docstring type-mismatch detected
+        make darglint
+    - name: Doctest coverage check with [[ interrogate ]]
       run: |
         # stop the build if doctest threshold does not meet
         make interrogate
-    - name: Type check with mypy
+    - name: Type check with [[ mypy ]]
       run: |
         # stop the build if there are type errors
         make type

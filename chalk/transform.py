@@ -1,8 +1,8 @@
+import math
 from dataclasses import dataclass
 from typing import TypeVar
 
 import cairo
-import math
 
 
 @dataclass

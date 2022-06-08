@@ -30,7 +30,7 @@ mkdocs-enumerate-headings-plugin>=0.4.5
 ## API documentation building
 mkapi
 mkautodoc
-mkdocstrings>=0.16.2
+mkdocstrings[python]>=0.16.2
 mkdocs-gen-files>=0.3.3
 mkdocs-autorefs>=0.3.1
 

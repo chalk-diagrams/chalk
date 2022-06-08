@@ -10,11 +10,12 @@ on:
   # to select branches.
   push:
     branches:
-      - master
-      - main
+#       - master
+#       - main
+      - add_docs_website
 
 env:
-  PYTHON_VERSION: "3.7"
+  PYTHON_VERSION: "3.8"
   USER_SPECIFIED_BRANCH: ${{ github.event.inputs.branch }}
   REPO_OWNER: ${{ github.repository_owner }} # https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
 
@@ -31,7 +32,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Python dependencies for MkDocs
-        run: pip install -r requirements/docs.txt
+        run: |
+          echo "REPO_OWNER: ${{ env.REPO_OWNER }}"
+          python -m pip install -r requirements/docs.txt
+
+      - name: Install all other dependencies
+        run: |
+          python -m pip install -r requirements.txt
 
       - name: Deploy documentation
         env:
@@ -46,7 +53,10 @@ jobs:
             ); else USER_SPECIFIED_BRANCH=${GITHUB_REF##*/} ; fi && \
           echo "Current Git Branch: ${USER_SPECIFIED_BRANCH}"
 
+          # Install chalk from current branch
+          python -m pip install "."
+
           # Begin Deploying MkDocs
-          make pregendocs
+          make pregendocs.doc
           mkdocs gh-deploy --force
           mkdocs --version

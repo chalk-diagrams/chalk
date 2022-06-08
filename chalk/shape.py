@@ -1,20 +1,19 @@
 import math
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
 import cairo
-import PIL
-from io import BytesIO
 import cairosvg
-
-from chalk.bounding_box import BoundingBox
-from chalk.point import Point, Vector, ORIGIN
-from chalk import transform as tx
-import xml.etree.ElementTree as ET
-
+import PIL
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
+
+from chalk import transform as tx
+from chalk.bounding_box import BoundingBox
+from chalk.point import ORIGIN, Point, Vector
 
 PyCairoContext = Any
 

@@ -21,9 +21,10 @@ import os
 import sys
 import tempfile
 import time
-from typing import Optional, Any, Tuple, TypeVar, Union
-from PIL import Image as PILImage
+from typing import Any, Optional, Tuple, TypeVar, Union
+
 from colour import Color
+from PIL import Image as PILImage
 
 import chalk
 
@@ -98,9 +99,6 @@ def imgen(
         NotImplementedError: For non temporary file (``temporary=False``),
                              raises an error, as it has not been
                              implemented yet.
-
-    Returns:
-        Union[NoReturn, None]: Does not return anything.
 
     Usage:
 
@@ -283,7 +281,9 @@ def quick_probe(
                 file in. For example, you could use "examples/output" with
                 respect to the location of running a script.
                 Defaults to None.
-        verbose (bool): Set verbosity. Defaults to True.
+        verbose (bool, optional): Set verbosity. Defaults to True.
+        **kwargs (Any, optional): See the keyword arguments of
+                                  [``imgen()``][chalk.utils.imgen].
 
     Usage:
 

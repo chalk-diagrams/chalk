@@ -1,5 +1,6 @@
 import pathlib
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 LICENSE: str = "MIT"
 README: str = pathlib.Path("README.md").read_text(encoding="utf-8")
@@ -36,6 +37,7 @@ setup(
         "cairosvg",
         "Pillow",
         "loguru",
+        "typing-extensions",
     ],
     extras_require={"latex": ["latextools"]},
     long_description=README,

@@ -1,5 +1,4 @@
 import math
-
 from dataclasses import dataclass
 
 from chalk import transform as tx
