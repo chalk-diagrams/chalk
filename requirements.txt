@@ -5,3 +5,4 @@ svgwrite
 cairosvg
 Pillow
 latextools
+loguru

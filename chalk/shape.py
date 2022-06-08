@@ -21,6 +21,8 @@ PyCairoContext = Any
 
 @dataclass
 class Shape:
+    """Shape class."""
+
     def get_bounding_box(self) -> BoundingBox:
         pass
 
@@ -33,6 +35,8 @@ class Shape:
 
 @dataclass
 class Circle(Shape):
+    """Circle class."""
+
     radius: float
 
     def get_bounding_box(self) -> BoundingBox:
@@ -49,6 +53,8 @@ class Circle(Shape):
 
 @dataclass
 class Rectangle(Shape):
+    """Rectangle class."""
+
     width: float
     height: float
     radius: Optional[float] = None
@@ -86,6 +92,8 @@ class Rectangle(Shape):
 
 @dataclass
 class Path(Shape, tx.Transformable):
+    """Path class."""
+
     points: List[Point]
     arrow: bool = False
 
@@ -144,6 +152,8 @@ class Path(Shape, tx.Transformable):
 
 @dataclass
 class Arc(Shape):
+    """Arc class."""
+
     radius: float
     angle0: float
     angle1: float
@@ -174,6 +184,8 @@ class Arc(Shape):
 
 @dataclass
 class Text(Shape):
+    """Text class."""
+
     text: str
     font_size: Optional[float]
 
@@ -233,6 +245,8 @@ def from_pil(
 
 @dataclass
 class Image(Shape):
+    """Image class."""
+
     local_path: str
     url_path: Optional[str]
 
@@ -269,6 +283,8 @@ class Image(Shape):
 
 @dataclass
 class Spacer(Shape):
+    """Spacer class."""
+
     width: float
     height: float
 
@@ -281,7 +297,10 @@ class Spacer(Shape):
 
 
 class Raw(Rect):  # type: ignore
-    "A fake SVG node for importing latex"
+    """Shape class.
+
+    A fake SVG node for importing latex.
+    """
 
     def __init__(self, st: str):
         self.xml = ET.fromstring(st)
@@ -292,6 +311,8 @@ class Raw(Rect):  # type: ignore
 
 @dataclass
 class Latex(Shape):
+    """Latex class."""
+
     text: str
 
     def __post_init__(self) -> None:

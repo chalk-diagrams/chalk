@@ -35,6 +35,7 @@ setup(
         "svgwrite",
         "cairosvg",
         "Pillow",
+        "loguru",
     ],
     extras_require={"latex": ["latextools"]},
     long_description=README,

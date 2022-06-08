@@ -6,6 +6,9 @@
 # installation
 .PHONY: install installextras pipinstalltest
 
+# documentation
+.PHONY: pregendocs gendocs postgendocs gendocsall
+
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
 		hilbert koch tensor latex hex_variation images
@@ -29,9 +32,11 @@ TESTS_DIR := "tests"
 # % success threshold is under the following value
 INTERROGATE_FAIL_UNDER := 0  # ideally this should be 100
 
-# Specify paths of requirements.txt and dev_requirements.txt
-REQ_FILE := "requirements.txt"
-DEV_REQ_FILE := "requirements-dev.txt"
+# Specify paths of various dependency files
+REQ_FOLDER := "requirements"
+REQ_FILE := "requirements.txt"  # requirements.txt
+DEV_REQ_FILE := "dev.txt"  # requirements-dev.txt
+DOCS_REQ_FILE := "docs.txt"  # requirements-docs.txt
 
 ####------------------------------------------------------------####
 
@@ -127,7 +132,10 @@ install: clean
 
 installextras: install
 	@echo "📀 Installing $(PACKAGE_NAME) extra-dependencies from PyPI ... ⏳"
-	if [ -f $(DEV_REQ_FILE) ]; then python -m pip install -r $(DEV_REQ_FILE); fi
+	@echo "Installing from: $(DEV_REQ_FILE) ... ⏳"
+	if [ -f $(REQ_FOLDER)/$(DEV_REQ_FILE) ]; then python -m pip install -r $(REQ_FOLDER)/$(DEV_REQ_FILE); fi
+	@echo "Installing from: $(DOCS_REQ_FILE) ... ⏳"
+	@if [ -f $(REQ_FOLDER)/$(DOCS_REQ_FILE) ]; then python -m pip install -r $(REQ_FOLDER)/$(DOCS_REQ_FILE); fi
 
 ## Install from test.pypi.org
 #
@@ -148,6 +156,25 @@ pipinstalltest:
 	#      If no version is specified, the latest version is installed from TestPyPI.
 	@if [ $(VERSION) ]; then $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME)==$(VERSION); else $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME); fi;
 
+
+####------------------------------------------------------------####
+
+### Generate documentation with MkDocs
+
+pregendocs:
+	@echo "make a copy of doc folder inside docs ... ⏳"
+	cp -rf doc docs/doc
+
+gendocs:
+	@echo "🔥 Generate documentation with MkDocs ... ⏳"
+	# generate documentation
+	mkdocs serve
+
+postgendocs:
+	#echo "Cleanup docs... ⏳"
+	rm -rf docs/doc
+
+gendocsall: pregendocs gendocs postgendocs
 
 ####------------------------------------------------------------####
 
