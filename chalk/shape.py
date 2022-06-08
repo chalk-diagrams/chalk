@@ -97,6 +97,10 @@ class Path(Shape, tx.Transformable):
     arrow: bool = False
 
     @classmethod
+    def from_point(cls, point: Point):
+        return cls([point])
+
+    @classmethod
     def from_list_of_tuples(
         cls, coords: List[Tuple[float, float]], arrow: bool = False
     ) -> "Path":
