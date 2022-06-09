@@ -7,7 +7,9 @@ def help(f):
 
 # ### above
 
+# + tags=["hide_inp"]
 help(above)
+# -
 
 #
 
@@ -21,7 +23,9 @@ diagram.show_bounding_box().show_origin()
 
 # ### atop
 
+# + tags=["hide_inp"]
 help(atop)
+# -
 
 # Example 1 - Atop at origin
 
@@ -48,7 +52,9 @@ s + t
 
 # ### beside
 
+# + tags=["hide_inp"]
 help(beside)
+# -
 
 #
 
@@ -66,7 +72,9 @@ diagram.show_origin()
 
 # ### vcat
 
+# + tags=["hide_inp"]
 help(vcat)
+# -
 
 #
 
@@ -74,7 +82,9 @@ vcat([triangle(1), square(1), triangle(1)], 0.2)
 
 # ### concat
 
+# + tags=["hide_inp"]
 help(concat)
+# -
 
 #
 
@@ -83,7 +93,9 @@ concat([triangle(1), square(1), triangle(1)])
 
 # ### hcat
 
+# + tags=["hide_inp"]
 help(hcat)
+# -
 
 #
 

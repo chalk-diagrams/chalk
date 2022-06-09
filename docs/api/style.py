@@ -10,7 +10,9 @@ orange = Color("orange")
 
 # ### Diagram.fill_color
 
+# + tags=["hide_inp"]
 help(Diagram.fill_color)
+# -
 
 #
 
@@ -18,7 +20,9 @@ triangle(1).fill_color(blue)
 
 # ### Diagram.fill_opacity
 
+# + tags=["hide_inp"]
 help(Diagram.fill_opacity)
+# -
 
 #
 
@@ -27,7 +31,9 @@ triangle(1).fill_color(blue).fill_opacity(0.2)
 
 # ### Diagram.line_color
 
+# + tags=["hide_inp"]
 help(Diagram.line_color)
+# -
 
 #
 
@@ -35,7 +41,9 @@ triangle(1).line_color(blue)
 
 # ### Diagram.line_width
 
+# + tags=["hide_inp"]
 help(Diagram.line_width)
+# -
 
 #
 
@@ -44,7 +52,9 @@ triangle(1).line_width(0.05)
 
 # ### Diagram.dashing
 
+# + tags=["hide_inp"]
 help(Diagram.dashing)
+# -
 
 #
 
