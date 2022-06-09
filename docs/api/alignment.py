@@ -1,8 +1,13 @@
 from chalk import *
+def help(f):
+    import pydoc
+    from IPython.display import HTML
+    return HTML(pydoc.HTMLDoc().docroutine(f))
 
 # ### Diagram.show_origin
 
 help(Diagram.show_origin)
+
 
 #
 

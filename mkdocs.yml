@@ -30,6 +30,7 @@ watch:
 theme:
   name: material
   include_sidebar: true
+  custom_dir: docs/overrides
   #custom_dir: overrides
   palette:
     - media: "(prefers-color-scheme: light)"
