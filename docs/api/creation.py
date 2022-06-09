@@ -89,3 +89,7 @@ help(text)
 #
 
 text("hello", 0.2)
+
+#
+
+text("hello", 0.2).show_bounding_box()
