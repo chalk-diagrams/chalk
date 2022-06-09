@@ -1,10 +1,12 @@
 # Based on the following example from Diagrams
 # https://archives.haskell.org/projects.haskell.org/diagrams/gallery/Hanoi.html
 
+from PIL import Image as PILImage
 from typing import Dict, List, Tuple
 
 from colour import Color  # type: ignore
 from chalk import Diagram, rectangle, concat, hcat, vcat
+
 
 Disk = int
 Stack = List[Disk]  # disks on one peg
@@ -26,12 +28,14 @@ def draw_disk(n: Disk) -> Diagram:
         .line_color(colors[n])
         .line_width(0.05)
     )
+draw_disk(0)
 
 
 def draw_stack(s: Stack) -> Diagram:
     disks = vcat(map(draw_disk, s))
     post = rectangle(0.8, 6).fill_color(black)
     return post.align_b() + disks.align_b()
+draw_stack([0, 1])
 
 
 def draw_hanoi(state: Hanoi) -> Diagram:
@@ -39,7 +43,7 @@ def draw_hanoi(state: Hanoi) -> Diagram:
     return concat(
         draw_stack(stack).translate(7 * i, 0) for i, stack in enumerate(state)
     )
-
+draw_hanoi([[0], [1, 2], []])
 
 def solve_hanoi(num_disks: int) -> List[Move]:
     def solve_hanoi_1(num_disks, *, source, spare, target):
@@ -87,8 +91,9 @@ def draw_state_sequence(seq: List[Hanoi]) -> Diagram:
 
 diagram = draw_state_sequence(state_sequence(3))
 
-path = "examples/output/hanoi.png"
-diagram.render(path, height=700)
 
 path = "examples/output/hanoi.svg"
 diagram.render_svg(path, height=700)
+path = "examples/output/hanoi.png"
+diagram.render(path, height=700)
+PILImage.open(path)

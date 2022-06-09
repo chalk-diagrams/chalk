@@ -98,43 +98,12 @@ plugins:
   - minify:
       minify_html: true
   # - social # @insiders
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          rendering:
-            show_source: false
-            show_signature: true
-            show_root_heading: true
-            show_category_heading: false
-            show_signature_annotations: false
-            show_if_no_docstring: false
-            docstring_section_style: list
   - mkdocs-jupyter:
       include_source: true
       ignore_h1_titles: true
       execute: true
   - tooltips
-  - markmap:
-      base_path: docs
-      encoding: utf-8
-      file_extension: .mm.md
-      d3_version: 6.7.0
-      lib_version: 0.11.5
-      view_version: 0.2.6
-  - kroki:
-      ServerURL: https://kroki.io
-      EnableBlockDiag: true
-      Enablebpmn: true
-      EnableExcalidraw: true
-      EnableMermaid: true
-      DownloadImages: false
-      DownloadDir: docs/assets/kroki_generated
-  - pdf-export:
-      verbose: true
-      media_type: print # 'print' or 'pdf-export'
-      enabled_if_env: MKDOCS_ENABLE_PDF_EXPORT
-
+  - mkdocstrings
 
 ### Extensions
 markdown_extensions:
@@ -347,7 +316,11 @@ nav:
     - Connections: api/names.py
     - Utils: api/utils.md
   - Examples:
+    - Hanoi: examples/hanoi.py
     - Koch: examples/koch.py
+    - LeNet: examples/lenet.py
+    - Squares: examples/squares.py
+    - Tensor: examples/tensor.py
   - About:
     - about/index.md
     - License: about/license.md

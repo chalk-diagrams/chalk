@@ -1,14 +1,13 @@
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 import math
 from chalk import *
-
+    
 
 # ### circle
 
 help(circle)
 
-#
+# ::: chalk.circle
+
 
 circle(1) + circle(0.5)
 

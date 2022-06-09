@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
+from PIL import Image as PILImage
 from chalk import *
 from colour import Color
 from chalk.bounding_box import BoundingBox
@@ -9,11 +12,12 @@ black = Color("#000000")
 white = Color("#ffffff")
 grey = Color("#bbbbbb")
 
-def label(te):
-    "Label text"
-    return text(te, 2).fill_color(black).line_color(white).pad_t(1).pad_b(3)
 
 # Some general functions
+
+def label(te):
+    "Create text."
+    return text(te, 2).fill_color(black).line_color(white).pad_t(1).pad_b(3)
 
 def cover(d, a, b):
     "Draw a bounding_box around a subdiagram"
@@ -53,6 +57,7 @@ def stack(n, size, l, top, bot):
     m = matrix(n, size, size).fill_color(Color("#dddddd"))
     r = rectangle(size, size).fill_color(grey).line_width(lw)
     return (label(top) / (back(r, l) + m) / label(bot)).center_xy()
+stack("a", 32, 0, "", "")
 
 def network(n, size, top, bot):
     "Draw a network layer"
@@ -93,6 +98,8 @@ connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)] + \
      ("dense2", "dense3")]
  
 d += concat([connect_all(d, *b) for b in connect])
+d
 
 d.render("examples/output/lenet.png", 500)
 d.render_svg("examples/output/lenet.svg", 400)
+PILImage.open("examples/output/lenet.png")

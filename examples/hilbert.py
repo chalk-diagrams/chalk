@@ -1,3 +1,9 @@
+# Based on the following example from Diagrams
+# https://archives.haskell.org/projects.haskell.org/diagrams/gallery/Hilbert.html
+
+import sys
+sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
+from PIL import Image as PILImage
 from chalk import *
 from chalk.transform import *
 from chalk.trail import unit_x, unit_y
@@ -17,4 +23,4 @@ def hilbert(n):
 d = hilbert(5).stroke().line_width(0.05)
 d.render_svg("examples/output/hilbert.svg", 500)
 d.render("examples/output/hilbert.png", 500)
-          
+PILImage.open("examples/output/hilbert.png")

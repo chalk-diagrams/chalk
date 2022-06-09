@@ -242,38 +242,13 @@ pipinstalltest:
 	#      If no version is specified, the latest version is installed from TestPyPI.
 	@if [ $(VERSION) ]; then $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME)==$(VERSION); else $(PIPINSTALL_PYPITEST) $(PACKAGE_NAME); fi;
 
-
-####------------------------------------------------------------####
-
-### Generate documentation with MkDocs
-
-## Pregendocs
-
-# .PHONY: pregendocs.doc
-pregendocs.doc:
-	@echo "make a copy of doc folder inside docs ... ⏳"
-	cp -rf doc docs/doc
-
-# .PHONY: pregendocs.examples
-pregendocs.examples:
-	@echo "make a copy of examples folder inside docs ... ⏳"
-	cp -rf examples/* docs/examples/
-
-# .PHONY: pregendocs.local
-pregendocs.local: pregendocs.doc
-
-# .PHONY: pregendocs.remote
-pregendocs.remote: pregendocs.doc # pregendocs.examples
-	# It was observed that the build fails on github pages
-	# if pregendocs.examples is included as well.
-
 ## Gendocs
 
 # .PHONY: gendocs
 gendocs:
 	@echo "🔥 Generate documentation with MkDocs ... ⏳"
 	# generate documentation
-	mkdocs serve
+	mkdocs serve --dirtyreload
 
 ## Postgendocs
 

@@ -1,3 +1,4 @@
+from PIL import Image as PILImage
 import math
 import random
 
@@ -23,18 +24,18 @@ def make_square():
     color = colors[i]
 
     return square(0.75).line_color(color).rotate(θ)
-
+make_square()
 
 def make_group(num_squares=4):
     return concat(make_square() for _ in range(num_squares))
-
+make_group()
 
 disps = range(4)
 diagram = concat(make_group().translate(x, y) for x, y in product(disps, disps))
 diagram = diagram.line_width(0.02)
 
-path = "examples/output/squares.png"
-diagram.render(path, height=256)
-
 path = "examples/output/squares.svg"
 diagram.render_svg(path, height=256)
+path = "examples/output/squares.png"
+diagram.render(path, height=256)
+PILImage.open(path)

@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 import math
 from chalk import *
 
