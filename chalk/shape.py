@@ -97,7 +97,7 @@ class Path(Shape, tx.Transformable):
     arrow: bool = False
 
     @classmethod
-    def from_point(cls, point: Point):
+    def from_point(cls, point: Point) -> "Path":
         return cls([point])
 
     @classmethod

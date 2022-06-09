@@ -1,7 +1,9 @@
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 import math
 from chalk import *
+def help(f):
+    import pydoc
+    from IPython.display import HTML
+    return HTML(pydoc.HTMLDoc().docroutine(f))
 
 # ### Trail
 
