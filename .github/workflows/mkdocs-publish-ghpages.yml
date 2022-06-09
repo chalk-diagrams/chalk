@@ -57,6 +57,5 @@ jobs:
           python -m pip install "."
 
           # Begin Deploying MkDocs
-          make pregendocs.doc
           mkdocs gh-deploy --force
           mkdocs --version

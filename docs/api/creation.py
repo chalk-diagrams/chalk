@@ -4,14 +4,10 @@ def help(f):
     import pydoc
     from IPython.display import HTML
     return HTML(pydoc.HTMLDoc().docroutine(f))
-    
 
 # ### circle
 
 help(circle)
-
-# ::: chalk.circle
-
 
 circle(1) + circle(0.5)
 
