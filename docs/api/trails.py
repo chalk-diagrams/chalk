@@ -11,7 +11,7 @@ def help(f):
 # Trails are a sequence of vectors.
 
 trail = Trail([Vector(1, 0), Vector(1, 1), Vector(0, 1)])
-
+print(trail2)
 
 # ### Trail.rotate
 
@@ -20,7 +20,7 @@ help(Trail.rotate)
 # Trails can be transformed
 
 trail2 = trail.rotate_by(0.2)
-
+print(trail2)
 
 # ### Trail.__add__
 
@@ -29,6 +29,7 @@ help(Trail.__add__)
 # Trails addition extends the trail.
 
 trail = trail + trail2
+print(trail)
 
 # ### Trail.stroke
 
