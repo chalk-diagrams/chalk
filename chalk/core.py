@@ -22,7 +22,7 @@ Ident = tx.Identity()
 @dataclass
 class Diagram(tx.Transformable):
     """Diagram class."""
-
+    
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Get the bounding box of a diagram."""
         raise NotImplementedError
@@ -146,19 +146,6 @@ class Diagram(tx.Transformable):
         return svg
 
     def atop(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.atop(b)``
-        places ``a`` and ``b`` such that none of them move.
-        This is equivalent to **union** operation of two the
-        shapes.
-
-        💡 ``a.atop(b)`` is equivalent to ``a + b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         new_box = box1.union(box2)
@@ -167,18 +154,6 @@ class Diagram(tx.Transformable):
     __add__ = atop
 
     def beside(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.beside(b)``
-        places ``b`` on the right side of ``a``. This moves
-        ``b`` up to touch ``a``.
-
-        💡 ``a.beside(b)`` is equivalent to ``a | b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dx = box1.right - box2.left
@@ -189,18 +164,6 @@ class Diagram(tx.Transformable):
     __or__ = beside
 
     def above(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.above(b)``
-        places ``b`` under ``a``. This moves ``b`` up to
-        touch ``a``.
-
-        💡 ``a.above(b)`` is equivalent to ``a / b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dy = box1.bottom - box2.top

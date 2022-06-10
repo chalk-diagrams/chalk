@@ -30,6 +30,7 @@ watch:
 theme:
   name: material
   include_sidebar: true
+  custom_dir: docs/overrides
   #custom_dir: overrides
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -98,37 +99,12 @@ plugins:
   - minify:
       minify_html: true
   # - social # @insiders
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          rendering:
-            show_source: true
   - mkdocs-jupyter:
       include_source: true
       ignore_h1_titles: true
       execute: true
   - tooltips
-  - markmap:
-      base_path: docs
-      encoding: utf-8
-      file_extension: .mm.md
-      d3_version: 6.7.0
-      lib_version: 0.11.5
-      view_version: 0.2.6
-  - kroki:
-      ServerURL: https://kroki.io
-      EnableBlockDiag: true
-      Enablebpmn: true
-      EnableExcalidraw: true
-      EnableMermaid: true
-      DownloadImages: false
-      DownloadDir: docs/assets/kroki_generated
-  - pdf-export:
-      verbose: true
-      media_type: print # 'print' or 'pdf-export'
-      enabled_if_env: MKDOCS_ENABLE_PDF_EXPORT
-
+  - mkdocstrings
 
 ### Extensions
 markdown_extensions:
@@ -196,7 +172,7 @@ markdown_extensions:
   # Uncomment these 2 lines during development to more easily add highlights
   - pymdownx.highlight:
       use_pygments: true # this uses pygments
-      linenums: true # Set "linenums" to true for enabling
+      linenums: false # Set "linenums" to true for enabling
                       #     code-block line-numbering
                       #     globally.
                       # None: only enable line-numbering on a per code-block basis.
@@ -269,15 +245,15 @@ markdown_extensions:
 
 
 ### Customization
-extra:
+# extra:
   # version:
   #   default: latest
   #   provider: mike
   # disqus: !ENV REPO_OWNER
-  alternate:
-  - name: en - English
-    link: /
-    lang: en
+  #alternate:
+  #- name: en - English
+  #  link: /
+  #  lang: en
 
 
 
@@ -332,29 +308,20 @@ extra_javascript:
 nav:
   - Home: index.md
   - API:
-    - bounding_box: api/bounding_box.md
-    - core:
-      # the docs for each class was broken down to
-      # avoid long list of methods in the toc
-      - api/core/index.md
-      - ApplyName: "api/core/core.ApplyName.md"
-      - ApplyStyle: "api/core/core.ApplyStyle.md"
-      - ApplyTransform: "api/core/core.ApplyTransform.md"
-      - Compose: "api/core/core.Compose.md"
-      - Diagram: "api/core/core.Diagram.md"
-      - Empty: "api/core/core.Empty.md"
-      - Primitive: "api/core/core.Primitive.md"
-    - point:
-      # the docs for each class was broken down to
-      # avoid long list of methods in the toc
-      - api/point/index.md
-      - Point: api/point/point.Point.md
-      - Vector: api/point/point.Vector.md
-    - shape: api/shape.md
-    - style: api/style.md
-    - trail: api/trail.md
-    - transform: api/transform.md
-    - utils: api/utils.md
+    - Creation: api/creation.py
+    - Alignment: api/alignment.py
+    - Combinators: api/combinators.py
+    - Transformations: api/transformations.py
+    - Style: api/style.py
+    - Trails: api/trails.py
+    - Connections: api/names.py
+    - Utils: api/utils.md
+  - Examples:
+    - Hanoi: examples/hanoi.py
+    - Koch: examples/koch.py
+    - LeNet: examples/lenet.py
+    - Squares: examples/squares.py
+    - Tensor: examples/tensor.py
   - About:
     - about/index.md
     - License: about/license.md
