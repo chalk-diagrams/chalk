@@ -10,9 +10,7 @@ on:
   # to select branches.
   push:
     branches:
-#       - master
-#       - main
-      - add_docs_website
+       - master
 
 env:
   PYTHON_VERSION: "3.8"
