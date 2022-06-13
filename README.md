@@ -156,4 +156,6 @@ python examples/squares.py
 - [Dan Oneață](http://doneata.bitbucket.io/)
 - [Alexander Rush](http://rush-nlp.com/)
 
-Special thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
+Special thanks to:
+- [Sugato Ray](https://github.com/sugatoray/), for his significant contributions and suggestions;
+- [Ionuț G. Stan](http://igstan.ro/), for providing many useful insights and comments.
