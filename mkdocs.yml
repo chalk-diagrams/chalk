@@ -322,6 +322,7 @@ nav:
     - LeNet: examples/lenet.py
     - Squares: examples/squares.py
     - Tensor: examples/tensor.py
+    - Tree: examples/tree.py
   - About:
     - about/index.md
     - License: about/license.md

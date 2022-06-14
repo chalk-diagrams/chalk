@@ -1,8 +1,6 @@
 # Based on the following example from Diagrams
 # https://archives.haskell.org/projects.haskell.org/diagrams/gallery/Hilbert.html
 
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 from PIL import Image as PILImage
 from chalk import *
 from chalk.transform import *

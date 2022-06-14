@@ -163,6 +163,15 @@ class Diagram(tx.Transformable):
 
     __or__ = beside
 
+    def beside_merge(self, other: "Diagram") -> "Diagram":
+        box1 = self.get_bounding_box()
+        box2 = other.get_bounding_box()
+        dx = box1.right - box2.left
+        off = (box2.center.x - box1.center.x) / 2
+        t = tx.Translate(dx - off, 0)
+        new_box = box1.union(box2.apply_transform(t))
+        return Compose(new_box, self, ApplyTransform(t, other))
+
     def above(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
@@ -204,6 +213,17 @@ class Diagram(tx.Transformable):
         box = self.get_bounding_box()
         c = box.center
         t = tx.Translate(-c.x, -c.y)
+        return ApplyTransform(t, self)
+
+    def center_x(self) -> "Diagram":
+        """Center a diagram only on x
+
+        Returns:
+            Diagram: A diagram object.
+        """
+        box = self.get_bounding_box()
+        c = box.center
+        t = tx.Translate(-c.x, 0)
         return ApplyTransform(t, self)
 
     def align_t(self) -> "Diagram":
