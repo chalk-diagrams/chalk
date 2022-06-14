@@ -18,8 +18,8 @@
 
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
-		hilbert koch tensor latex hex_variation images
-
+		hilbert koch tensor latex hex_variation images \
+                tree
 ####------------------------------------------------------------####
 
 # libname is either same as PACKAGE_NAME or
@@ -311,5 +311,8 @@ latex:
 hex_variation:
 	python examples/hex_variation.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation
+tree:
+	python examples/tree.py
+
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation tree
 	@echo "🎁 Generate all examples ... ⏳"
