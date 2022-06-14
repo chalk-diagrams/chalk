@@ -1,9 +1,15 @@
+# + tags=["hide_inp"]
 import math
 from chalk import *
 def help(f):
     import pydoc
     from IPython.display import HTML
     return HTML(pydoc.HTMLDoc().docroutine(f))
+# -
+
+
+# Any Diagram (or other object in Chalk) can be transformed by affine transfomation.
+# These produce a new diagram in the standard manner.
 
 # ### scale
 
@@ -67,5 +73,3 @@ help(Diagram.rotate_by)
 #
 
 triangle(1) | triangle(1).rotate_by(0.2)
-
-

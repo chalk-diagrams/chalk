@@ -308,7 +308,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - API:
-    - Creation: api/creation.py
+    - Diagrams: api/creation.py
     - Alignment: api/alignment.py
     - Combinators: api/combinators.py
     - Transformations: api/transformations.py

@@ -1,10 +1,16 @@
+# + tags=["hide_inp"]
 import math
 from chalk import *
 def help(f):
     import pydoc
     from IPython.display import HTML
     return HTML(pydoc.HTMLDoc().docroutine(f))
+# -
 
+# Chalk supports basic methods for complex
+# connected layouts and diagrams. Individual elements
+# can be assigned names, and then be referenced in
+# their subdiagram locations. 
 
 # ### Diagram.named
 

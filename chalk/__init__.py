@@ -43,12 +43,12 @@ def make_path(
 def circle(radius: float) -> Diagram:
     """
     Draw a circle.
-    
+
     Args:
        radius (float): Radius.
-        
+
     Returns:
-       Diagram 
+       Diagram
 
     """
     return Primitive.from_shape(Circle(radius))
@@ -172,12 +172,12 @@ def text(t: str, size: Optional[float]) -> Diagram:
     Draw some text.
 
     Args:
-       t (str): The text string. 
+       t (str): The text string.
        size (Optional[float]): Size of the text.
 
-    Returns: 
+    Returns:
        Diagram
-    
+
     """
     return Primitive.from_shape(Text(t, font_size=size))
 
@@ -187,10 +187,9 @@ def latex(t: str) -> Diagram:
 
 
 def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
-    """Given two diagrams ``a`` and ``b``, ``a.atop(b)``
-    places ``a`` and ``b`` such that none of them move.
-    This is equivalent to **union** operation of two the
-    shapes.
+    """
+    Places `diagram2` atop `diagram1`. This is done such that their
+    origins align.
 
     💡 ``a.atop(b)`` is equivalent to ``a + b``.
 
@@ -205,13 +204,13 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
 
 
 def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
-    """Given two diagrams ``a`` and ``b``, ``a.beside(b)``
-    places ``b`` on the right side of ``a``. This moves
-    ``b`` up to touch ``a``.
+    """
+    Places `diagram2` beside `diagram1`.
 
     💡 ``a.beside(b)`` is equivalent to ``a | b``.
 
-    The origin of the diagram remains at the origin of ``a``.
+    This is done by translating `diagram2` rightward.
+    The origin of `diagram1` remains.
 
     Args:
         diagram1 (Diagram): Left diagram object.
@@ -234,13 +233,13 @@ def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
 
 
 def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
-    """Given two diagrams ``a`` and ``b``, ``a.above(b)``
-    places ``b`` under ``a``. This moves ``b`` up to
-    touch ``a``.
+    """
+    Places `diagram1` above `diagram2`.
 
     💡 ``a.above(b)`` is equivalent to ``a / b``.
 
-    The origin of the diagram remains at the origin of ``a``.
+    This is done by translating `diagram2` downward.
+    The origin of `diagram1` remains.
 
     Args:
         diagram1 (Diagram): Top diagram object.
@@ -254,13 +253,13 @@ def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
 
 def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
-    Concat diagrams atop of each other with `atop`.
+    Concat diagrams atop of each other with atop.
 
-    Args: 
-        diagrams (Iterable[Diagram]): Diagrams to concat. 
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to concat.
 
     Returns:
-        Diagram: New diagram 
+        Diagram: New diagram
 
     """
     return reduce(atop, diagrams, empty())
@@ -276,12 +275,12 @@ def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     """
     Stack diagrams next to each other with `besides`.
 
-    Args: 
-        diagrams (Iterable[Diagram]): Diagrams to stack. 
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to stack.
         sep (Optional[float]): Padding between diagrams.
 
     Returns:
-        Diagram: New diagram 
+        Diagram: New diagram
 
     """
     diagrams = iter(diagrams)
@@ -299,10 +298,10 @@ def vstrut(height: Optional[float]) -> Diagram:
 
 def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     """
-    Stack diagrams above each other with `above`. 
+    Stack diagrams above each other with `above`.
 
-    Args: 
-        diagrams (Iterable[Diagram]): Diagrams to stack. 
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to stack.
         sep (Optional[float]): Padding between diagrams.
 
     Returns:

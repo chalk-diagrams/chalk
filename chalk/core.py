@@ -22,7 +22,7 @@ Ident = tx.Identity()
 @dataclass
 class Diagram(tx.Transformable):
     """Diagram class."""
-    
+
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Get the bounding box of a diagram."""
         raise NotImplementedError
@@ -210,7 +210,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its top edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.top)
@@ -220,7 +220,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its bottom edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.bottom)
@@ -230,7 +230,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its right edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(-box.right, 0)
@@ -250,7 +250,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its top-left edges.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         return self.align_t().align_l()
 
@@ -491,10 +491,10 @@ class Diagram(tx.Transformable):
         return Compose(new_box, self, ApplyTransform(t, other))
 
     def show_origin(self) -> "Diagram":
-        """Show a ``red`` dot at the origin of a diagram.
+        """Add a red dot at the origin of a diagram for debugging.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         origin_size = min(box.height, box.width) / 50
@@ -504,10 +504,10 @@ class Diagram(tx.Transformable):
         return self + origin
 
     def show_bounding_box(self) -> "Diagram":
-        """Show ``red`` bounding box of a diagram.
+        """Add red bounding box to diagram for debugging.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         origin = Primitive(

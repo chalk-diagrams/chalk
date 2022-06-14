@@ -7,6 +7,12 @@ def help(f):
     return HTML(pydoc.HTMLDoc().docroutine(f))
 # -
 
+
+# Diagrams form the core of the chalk library. Elementary diagrams can
+# be created using shapes and paths. Diagrams can be rendered to SVGs
+# or PNGs.
+
+
 # ### circle
 
 # + tags=["hide_inp"]
@@ -14,7 +20,7 @@ help(circle)
 # -
 
 
-circle(1) + circle(0.5)
+circle(1)
 
 # ### arc
 
@@ -31,16 +37,6 @@ arc(1, 0, quarter)
 
 arc(1, 0, quarter) + arc(1, 2 * quarter, 3 * quarter) 
 
-
-# ### arc_between
-
-# + tags=["hide_inp"]
-help(arc_between)
-# -
-
-#
-
-arc_between((0, 0), (1, 0), 1)
 
 # ### polygon
 
@@ -106,6 +102,24 @@ help(text)
 
 text("hello", 0.2)
 
+
+# ### arc_between
+
+# + tags=["hide_inp"]
+help(arc_between)
+# -
+
 #
 
-text("hello", 0.2).show_bounding_box()
+arc_between((0, 0), (1, 0), 1)
+
+
+# ### Diagram.render
+
+# + tags=["hide_inp"]
+help(Diagram.render)
+# -
+
+circle(1).render("circle.png")
+from IPython.display import Image
+Image("circle.png")

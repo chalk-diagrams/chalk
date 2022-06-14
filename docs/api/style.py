@@ -1,10 +1,17 @@
+# + tags=["hide_inp"]
 import math
 from chalk import *
-from colour import Color
 def help(f):
     import pydoc
     from IPython.display import HTML
     return HTML(pydoc.HTMLDoc().docroutine(f))
+# -
+
+
+# Diagrams can be styled using standard vector graphic style
+# primitives. Colors use the Python colour library.
+
+from colour import Color
 blue = Color("blue")
 orange = Color("orange")
 
