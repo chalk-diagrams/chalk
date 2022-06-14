@@ -206,17 +206,6 @@ class Diagram(tx.Transformable):
         t = tx.Translate(-c.x, -c.y)
         return ApplyTransform(t, self)
 
-    def center_x(self) -> "Diagram":
-        """Center a diagram only on x
-
-        Returns:
-            Diagram: A diagram object.
-        """
-        box = self.get_bounding_box()
-        c = box.center
-        t = tx.Translate(-c.x, 0)
-        return ApplyTransform(t, self)
-
     def align_t(self) -> "Diagram":
         """Align a diagram with its top edge.
 
