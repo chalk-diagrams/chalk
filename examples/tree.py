@@ -14,7 +14,6 @@ random.seed(10)
 def flip(p=0.4):
     return random.random() > p
 
-
 def sample_tree(n=1):
     "Sample a most right-branching tree"
     if n > 20:
@@ -23,9 +22,10 @@ def sample_tree(n=1):
         return (flip(),
                 sample_tree(n+1) if flip(0.55)  else None,
                 sample_tree(n+1) if flip(0.2) else None)
-    
-def draw_tree(tree, name="", ysep=8, xsep=0):
-    node = circle(1).named(name)
+
+
+def draw_tree(tree, name="", ysep=15, xsep=1):
+    node = circle(5).named(name)
     if tree is None:
         node = node.fill_color(blue)
         return name, node
@@ -45,12 +45,12 @@ def draw_tree(tree, name="", ysep=8, xsep=0):
 
 
 _, d =  draw_tree((True, (True, None, None), (False, (True, None, None), None)))
-d.line_width(0.05)
+d.line_width(0.1)
 
 _, d = draw_tree(sample_tree())
-d = d.line_width(0.05)
+d = d.line_width(0.8)
 
-d.render_svg("examples/output/tree.svg", height=500)
-d.render("examples/output/tree.png", height=500)
+d.render_svg("examples/output/tree.svg", 1200)
+d.render("examples/output/tree.png", 1200)
 PILImage.open("examples/output/tree.png")
 
