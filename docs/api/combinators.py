@@ -1,9 +1,17 @@
+# + tags=["hide_inp"]
 import math
 from chalk import *
 def help(f):
     import pydoc
     from IPython.display import HTML
     return HTML(pydoc.HTMLDoc().docroutine(f))
+# -
+
+
+# Complex diagrams can be created by combining simpler diagrams
+# through placement combinators. These place diagrams above, atop or
+# besides other diagrams. Relative location is determined by the bounding box
+# and origins of the diagrams.
 
 # ### above
 
