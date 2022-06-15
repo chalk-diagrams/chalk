@@ -96,7 +96,7 @@ class Vector(tx.Transformable):
         dy = r * math.sin(angle)
         return cls(dx, dy)
 
-    def cross(self, other):
+    def cross(self, other: "Vector") -> float:
         return self.dx * other.dy - self.dy * other.dx
 
     def apply_transform(self, t: tx.Transform):  # type:ignore
@@ -109,7 +109,11 @@ class Vector(tx.Transformable):
         Returns:
             Vector: A vector object.
         """
-        new_dx, new_dy = t().transform_point(self.dx, self.dy)
+        matrix = t()
+        # Undo translation: since vectors do not have an origin, translation
+        # is a no-op when applied to them.
+        matrix.translate(-matrix.x0, -matrix.y0)
+        new_dx, new_dy = matrix.transform_point(self.dx, self.dy)
         return Vector(new_dx, new_dy)
 
     def rotate(self, by: float) -> "Vector":

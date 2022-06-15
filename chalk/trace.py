@@ -39,10 +39,13 @@ class Trace(Transformable):
 
     def apply_transform(self, t: Transform) -> "Trace":  # type: ignore
         def wrapped(p: Point, d: Vector) -> List[SignedDistance]:
-            import pdb
-
-            pdb.set_trace()
-
+            def t1():
+                tt = t()
+                tt.invert()
+                return tt
+            p1 = p.apply_transform(t1)
+            d1 = d.apply_transform(t1)
+            return self(p1, d1)
         return Trace(wrapped)
 
 
