@@ -97,7 +97,7 @@ class Vector(tx.Transformable):
         return cls(dx, dy)
 
     def cross(self, other):
-        return 0
+        return self.dx * other.dy - self.dy * other.dx
 
     def apply_transform(self, t: tx.Transform):  # type:ignore
         """Applies a transformation on a vector

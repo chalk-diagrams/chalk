@@ -17,6 +17,7 @@ from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
 from chalk.point import Point, Vector, ORIGIN
 from chalk.trace import Trace, SignedDistance
+from chalk.segment import Segment
 
 
 PyCairoContext = Any
@@ -113,7 +114,9 @@ class Path(Shape, tx.Transformable):
 
     @property
     def segments(self) -> List[Segment]:
-        return [Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])] 
+        return [
+            Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])
+        ]
 
     @staticmethod
     def hrule(length: float) -> "Path":

@@ -9,10 +9,14 @@ SignedDistance = float
 
 
 class Trace(Transformable):
-    def __init__(self, f: Callable[[Point, Vector], List[SignedDistance]]) -> None:
+    def __init__(
+        self, f: Callable[[Point, Vector], List[SignedDistance]]
+    ) -> None:
         self.f = f
 
-    def __call__(self, point: Point, direction: Vector) -> List[SignedDistance]:
+    def __call__(
+        self, point: Point, direction: Vector
+    ) -> List[SignedDistance]:
         return self.f(point, direction)
 
     @classmethod
@@ -21,7 +25,8 @@ class Trace(Transformable):
 
     def __add__(self, other: "Trace") -> "Trace":
         return Trace(
-            lambda point, direction: self(point, direction) + other(point, direction)
+            lambda point, direction: self(point, direction)
+            + other(point, direction)
         )
 
     @staticmethod
@@ -34,7 +39,9 @@ class Trace(Transformable):
 
     def apply_transform(self, t: Transform) -> "Trace":  # type: ignore
         def wrapped(p: Point, d: Vector) -> List[SignedDistance]:
-            import pdb; pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
 
         return Trace(wrapped)
 
