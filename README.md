@@ -6,7 +6,7 @@ Haskell's [diagrams](https://diagrams.github.io/),
 Scala's [doodle](https://github.com/creativescala/doodle/) and
 Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific Languages](http://www.cs.ox.ac.uk/publications/publication7583-abstract.html).
 
-The documentation is available at [https://danoneata.github.io/chalk/]().
+The documentation is available at [https://danoneata.github.io/chalk/](https://danoneata.github.io/chalk/).
 
 ⚠️ The library is still very much work in progress and subject to change.
 
