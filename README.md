@@ -6,6 +6,8 @@ Haskell's [diagrams](https://diagrams.github.io/),
 Scala's [doodle](https://github.com/creativescala/doodle/) and
 Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific Languages](http://www.cs.ox.ac.uk/publications/publication7583-abstract.html).
 
+The documentation is available at [https://danoneata.github.io/chalk/](https://danoneata.github.io/chalk/).
+
 ⚠️ The library is still very much work in progress and subject to change.
 
 ## Installation
@@ -139,8 +141,11 @@ their output is illustrated below:
 <td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
 <td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
 </tr>
+<tr>
+<td align="center"><img src="doc/imgs/tree.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tree.py">tree.py</a></code></td>
+<td align="center"><img src="doc/imgs/lattice.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lattice.py">lattice.py</a></code></td>
+</tr>
 <!--<tr>
-<td align="center"><img src="doc/imgs/latex.svg"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/latex.py">latex.py</a></code></td>
 </tr>
 -->
 </table>
@@ -156,4 +161,6 @@ python examples/squares.py
 - [Dan Oneață](http://doneata.bitbucket.io/)
 - [Alexander Rush](http://rush-nlp.com/)
 
-Special thanks to [Ionuț G. Stan](http://igstan.ro/) for providing many useful insights and comments!
+Special thanks to:
+- [Sugato Ray](https://github.com/sugatoray/), for his significant contributions and suggestions;
+- [Ionuț G. Stan](http://igstan.ro/), for providing many useful insights and comments.

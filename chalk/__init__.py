@@ -32,10 +32,32 @@ def make_path(
 
 
 def circle(radius: float) -> Diagram:
+    """
+    Draw a circle.
+
+    Args:
+       radius (float): Radius.
+
+    Returns:
+       Diagram
+
+    """
     return Primitive.from_shape(Circle(radius))
 
 
 def arc(radius: float, angle0: float, angle1: float) -> Diagram:
+    """
+    Draw an arc.
+
+    Args:
+      radius (float): Circle radius.
+      angle0 (float): Starting cutoff in radians.
+      angle1 (float): Finishing cutoff in radians.
+
+    Returns:
+      Diagram
+
+    """
     return Primitive.from_shape(Arc(radius, angle0, angle1))
 
 
@@ -81,6 +103,17 @@ def arc_between(
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
+    """
+    Draw a polygon.
+
+    Args:
+       sides (int): Number of sides.
+       radius (float): Internal radius.
+       rotation: (int): Rotation in radians
+
+    Returns:
+       Diagram
+    """
     return Primitive.from_shape(Path.polygon(sides, radius, rotation))
 
 
@@ -100,8 +133,21 @@ def triangle(width: float) -> Diagram:
     return regular_polygon(3, width)
 
 
-def rectangle(width: float, height: float) -> Diagram:
-    return Primitive.from_shape(Path.from_list_of_tuples([(0, 0), (0, width), (height, width), (height, 0), (0, 0)]))
+def rectangle(
+    width: float, height: float, radius: Optional[float] = None
+) -> Diagram:
+    """
+    Draw a rectangle.
+
+    Args:
+        width (float): Width
+        height (float): Height
+        radius (Optional[float]): Radius for rounded corners.
+
+    Returns:
+        Diagrams
+    """
+    return Primitive.from_shape(Rectangle(width, height, radius))
 
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:
@@ -113,6 +159,17 @@ def square(side: float) -> Diagram:
 
 
 def text(t: str, size: Optional[float]) -> Diagram:
+    """
+    Draw some text.
+
+    Args:
+       t (str): The text string.
+       size (Optional[float]): Size of the text.
+
+    Returns:
+       Diagram
+
+    """
     return Primitive.from_shape(Text(t, font_size=size))
 
 
@@ -121,10 +178,38 @@ def latex(t: str) -> Diagram:
 
 
 def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+    """
+    Places `diagram2` atop `diagram1`. This is done such that their
+    origins align.
+
+    💡 ``a.atop(b)`` is equivalent to ``a + b``.
+
+    Args:
+        diagram1 (Diagram): Base diagram object.
+        diagram2 (Diagram): Diagram placed atop.
+
+    Returns:
+        Diagram: New diagram object.
+    """
     return diagram1.atop(diagram2)
 
 
 def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+    """
+    Places `diagram2` beside `diagram1`.
+
+    💡 ``a.beside(b)`` is equivalent to ``a | b``.
+
+    This is done by translating `diagram2` rightward.
+    The origin of `diagram1` remains.
+
+    Args:
+        diagram1 (Diagram): Left diagram object.
+        diagram2 (Diagram): Right diagram object.
+
+    Returns:
+        Diagram: New diagram object.
+    """
     return diagram1.beside(diagram2)
 
 
@@ -139,10 +224,35 @@ def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
 
 
 def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+    """
+    Places `diagram1` above `diagram2`.
+
+    💡 ``a.above(b)`` is equivalent to ``a / b``.
+
+    This is done by translating `diagram2` downward.
+    The origin of `diagram1` remains.
+
+    Args:
+        diagram1 (Diagram): Top diagram object.
+        diagram2 (Diagram): Bottom diagram object.
+
+    Returns:
+        Diagram: New diagram object.
+    """
     return diagram1.above(diagram2)
 
 
 def concat(diagrams: Iterable[Diagram]) -> Diagram:
+    """
+    Concat diagrams atop of each other with atop.
+
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to concat.
+
+    Returns:
+        Diagram: New diagram
+
+    """
     return reduce(atop, diagrams, empty())
 
 
@@ -153,6 +263,17 @@ def hstrut(width: Optional[float]) -> Diagram:
 
 
 def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+    """
+    Stack diagrams next to each other with `besides`.
+
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to stack.
+        sep (Optional[float]): Padding between diagrams.
+
+    Returns:
+        Diagram: New diagram
+
+    """
     diagrams = iter(diagrams)
     start = next(diagrams, None)
     if start is None:
@@ -167,6 +288,17 @@ def vstrut(height: Optional[float]) -> Diagram:
 
 
 def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+    """
+    Stack diagrams above each other with `above`.
+
+    Args:
+        diagrams (Iterable[Diagram]): Diagrams to stack.
+        sep (Optional[float]): Padding between diagrams.
+
+    Returns:
+        Diagrams
+
+    """
     diagrams = iter(diagrams)
     start = next(diagrams, None)
     if start is None:

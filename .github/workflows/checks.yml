@@ -23,7 +23,7 @@ jobs:
     - name: Format with [[ isort ]]
       run: |
         # stop the build if there are errors raised by isort
-        make black
+        make isort
     - name: Format with [[ black ]]
       run: |
         # stop the build if there are errors raised by black

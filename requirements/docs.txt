@@ -6,7 +6,7 @@ mdx-include>=1.4.1
 markdown-include>=0.6.0
 mdx_truly_sane_lists>=1.2
 pygments
-
+jupyter
 
 ## Navigation & page building
 #  source: https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#navigation--page-building
@@ -42,6 +42,7 @@ mkdocs-bibtex>=1.0.0
 
 ## Code execution, variables & templating
 #  source: https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#code-execution-variables--templating
+pydoc-markdown==4.6.3
 mkdocs-jupyter>=0.18.2
 mkdocs-markdownextradata-plugin>=0.2.4
 mkdocs-markmap>=2.1.2

@@ -10,9 +10,7 @@ on:
   # to select branches.
   push:
     branches:
-#       - master
-#       - main
-      - add_docs_website
+       - master
 
 env:
   PYTHON_VERSION: "3.8"
@@ -34,11 +32,12 @@ jobs:
       - name: Install Python dependencies for MkDocs
         run: |
           echo "REPO_OWNER: ${{ env.REPO_OWNER }}"
-          python -m pip install -r requirements/docs.txt
+          ls
+          pip install -r requirements/docs.txt
 
       - name: Install all other dependencies
         run: |
-          python -m pip install -r requirements.txt
+          pip install -r requirements.txt
 
       - name: Deploy documentation
         env:
@@ -57,6 +56,5 @@ jobs:
           python -m pip install "."
 
           # Begin Deploying MkDocs
-          make pregendocs.doc
           mkdocs gh-deploy --force
           mkdocs --version

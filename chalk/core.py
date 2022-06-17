@@ -64,19 +64,6 @@ class Diagram(tx.Transformable):
         return svg
 
     def atop(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.atop(b)``
-        places ``a`` and ``b`` such that none of them move.
-        This is equivalent to **union** operation of two the
-        shapes.
-
-        💡 ``a.atop(b)`` is equivalent to ``a + b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         new_box = box1.union(box2)
@@ -85,18 +72,6 @@ class Diagram(tx.Transformable):
     __add__ = atop
 
     def beside(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.beside(b)``
-        places ``b`` on the right side of ``a``. This moves
-        ``b`` up to touch ``a``.
-
-        💡 ``a.beside(b)`` is equivalent to ``a | b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dx = box1.right - box2.left
@@ -107,18 +82,6 @@ class Diagram(tx.Transformable):
     __or__ = beside
 
     def above(self, other: "Diagram") -> "Diagram":
-        """Given two diagrams ``a`` and ``b``, ``a.above(b)``
-        places ``b`` under ``a``. This moves ``b`` up to
-        touch ``a``.
-
-        💡 ``a.above(b)`` is equivalent to ``a / b``.
-
-        Args:
-            other (Diagram): Another diagram object.
-
-        Returns:
-            Diagram: A diagram object.
-        """
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
         dy = box1.bottom - box2.top
@@ -165,7 +128,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its top edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.top)
@@ -175,7 +138,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its bottom edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(0, -box.bottom)
@@ -185,7 +148,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its right edge.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         t = tx.Translate(-box.right, 0)
@@ -205,7 +168,7 @@ class Diagram(tx.Transformable):
         """Align a diagram with its top-left edges.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         return self.align_t().align_l()
 
@@ -446,10 +409,10 @@ class Diagram(tx.Transformable):
         return Compose(new_box, self, ApplyTransform(t, other))
 
     def show_origin(self) -> "Diagram":
-        """Show a ``red`` dot at the origin of a diagram.
+        """Add a red dot at the origin of a diagram for debugging.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         origin_size = min(box.height, box.width) / 50
@@ -459,10 +422,10 @@ class Diagram(tx.Transformable):
         return self + origin
 
     def show_bounding_box(self) -> "Diagram":
-        """Show ``red`` bounding box of a diagram.
+        """Add red bounding box to diagram for debugging.
 
         Returns:
-            Diagram: A diagram object.
+            Diagram
         """
         box = self.get_bounding_box()
         origin = Primitive(
