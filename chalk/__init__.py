@@ -9,7 +9,16 @@ except ImportError:  # for Python<3.8
 
 from chalk.core import Diagram, Empty, Primitive
 from chalk.point import Point, Vector
-from chalk.shape import Arc, Circle, Image, Latex, Path, Spacer, Text
+from chalk.shape import (
+    Arc,
+    Circle,
+    Image,
+    Latex,
+    Path,
+    Rectangle,
+    Spacer,
+    Text,
+)
 from chalk.trail import Trail
 
 # Set library name the same as on PyPI

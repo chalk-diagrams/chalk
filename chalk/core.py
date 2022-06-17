@@ -3,16 +3,19 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
+import cairo
+import svgwrite
 from colour import Color
+from svgwrite import Drawing
+from svgwrite.base import BaseElement
 
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Circle, Shape
+from chalk.shape import Circle, Rectangle, Shape
 from chalk.style import Style
 from chalk.utils import imgen
-Drawing = Any
-BaseElement = Any
 
+PyCairoContext = Any
 Ident = tx.Identity()
 
 
@@ -45,16 +48,124 @@ class Diagram(tx.Transformable):
         # render and display the diagram
         imgen(self, **kwargs)
 
-    def render_svg(
-        self, path: str, height: int = 128, width: Optional[int] = None
-    ) -> None:
-        return RenderSVG()(path, height, width)
-
     def render(
         self, path: str, height: int = 128, width: Optional[int] = None
     ) -> None:
-        return RenderCairo()(path, height, width)
-    
+        """Render the diagram to a PNG file.
+
+        Args:
+            path (str): Path of the .png file.
+            height (int, optional): Height of the rendered image.
+                                    Defaults to 128.
+            width (Optional[int], optional): Width of the rendered image.
+                                             Defaults to None.
+        """
+        pad = 0.05
+        box = self.get_bounding_box()
+
+        # infer width to preserve aspect ratio
+        width = width or int(height * box.width / box.height)
+
+        # determine scale to fit the largest axis in the target frame size
+        if box.width - width <= box.height - height:
+            α = height // ((1 + pad) * box.height)
+        else:
+            α = width // ((1 + pad) * box.width)
+
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+        ctx = cairo.Context(surface)
+
+        ctx.scale(α, α)
+        ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
+
+        prims = self.to_list()
+
+        for prim in prims:
+            # apply transformation
+            matrix = prim.transform.to_cairo()
+            ctx.transform(matrix)
+
+            prim.shape.render(ctx)
+            prim.style.render(ctx)
+
+            # undo transformation
+            matrix.invert()
+            ctx.transform(matrix)
+
+        surface.write_to_png(path)
+
+    def render_svg(
+        self, path: str, height: int = 128, width: Optional[int] = None
+    ) -> None:
+        """Render the diagram to an SVG file.
+
+        Args:
+            path (str): Path of the .svg file.
+            height (int, optional): Height of the rendered image.
+                                    Defaults to 128.
+            width (Optional[int], optional): Width of the rendered image.
+                                             Defaults to None.
+        """
+        pad = 0.05
+        box = self.get_bounding_box()
+
+        # infer width to preserve aspect ratio
+        width = width or int(height * box.width / box.height)
+
+        # determine scale to fit the largest axis in the target frame size
+        if box.width - width <= box.height - height:
+            α = height // ((1 + pad) * box.height)
+        else:
+            α = width // ((1 + pad) * box.width)
+        dwg = svgwrite.Drawing(
+            path,
+            size=(width, height),
+        )
+        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+        outer = dwg.g(
+            transform=f"scale({α}) translate({x} {y})",
+            style="fill:white; stroke: black; stroke-width: 0.01;",
+        )
+        # Arrow marker
+        marker = dwg.marker(
+            id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
+        )
+        marker.add(dwg.polygon([(0, 0), (5, 1.75), (0, 3.5)]))
+        dwg.defs.add(marker)
+
+        dwg.add(outer)
+        outer.add(self.to_svg(dwg, Style.default()))
+        dwg.save()
+
+
+    def render_pdf(
+        self, path: str, height: int = 128, width: Optional[int] = None
+    ) -> None:
+        pad = 0.05
+        box = self.get_bounding_box()
+
+        # infer width to preserve aspect ratio
+        width = width or int(height * box.width / box.height)
+
+        # determine scale to fit the largest axis in the target frame size
+        if box.width - width <= box.height - height:
+            α = height // ((1 + pad) * box.height)
+        else:
+            α = width // ((1 + pad) * box.width)
+        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+        
+        import pylatex
+
+        # create document
+        doc = pylatex.Document(documentclass="standalone")
+        
+        # add our sample drawings
+        with doc.create(pylatex.TikZ()) as pic:
+            pic.append(self.scale(α).translate(x, y).reflect_y().to_tikz(pylatex, Style.default()))
+        doc.generate_tex(path)
+        doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
+
+        
     def _repr_svg_(self) -> str:
         f = tempfile.NamedTemporaryFile(delete=False)
         self.render_svg(f.name)
@@ -456,6 +567,9 @@ class Diagram(tx.Transformable):
         """Convert a diagram to SVG image."""
         raise NotImplementedError
 
+    def to_tikz(self, pylatex, style) -> BaseElement:
+        """Convert a diagram to SVG image."""
+        raise NotImplementedError
 
 @dataclass
 class Primitive(Diagram):
@@ -537,7 +651,6 @@ class Primitive(Diagram):
         style = self.style.merge(other_style).to_svg()
         transform = self.transform.to_svg()
         inner = self.shape.render_svg(dwg)
-
         if not style and not transform:
             return inner
         else:
@@ -547,6 +660,21 @@ class Primitive(Diagram):
             g.add(inner)
             return g
 
+    def to_tikz(self, pylatex, other_style: Style) -> BaseElement:
+        """Convert a diagram to SVG image."""
+        style = self.style.merge(other_style).to_tikz(pylatex)
+        transform = self.transform.to_tikz()
+        inner = self.shape.render_tikz(pylatex, style)
+        if not style and not transform:
+            return inner
+        else:
+            options = {}
+            options["cm"] = self.transform.to_tikz()
+            s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
+            if not style:
+                style = ";"
+            s.append(inner)
+            return s
 
 @dataclass
 class Empty(Diagram):
@@ -563,6 +691,10 @@ class Empty(Diagram):
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         """Converts to SVG image."""
         return dwg.g()
+
+    def to_tikz(self, pylatex, style: Style) -> BaseElement:
+        """Converts to SVG image."""
+        return pylatex.TikZScope()
 
 
 @dataclass
@@ -597,6 +729,12 @@ class Compose(Diagram):
         g.add(self.diagram2.to_svg(dwg, style))
         return g
 
+    def to_tikz(self, pylatex, style: Style) -> BaseElement:
+        """Converts to tikz image."""
+        s = pylatex.TikZScope()
+        s.append(self.diagram1.to_tikz(pylatex, style))
+        s.append(self.diagram2.to_tikz(pylatex, style))
+        return s
 
 @dataclass
 class ApplyTransform(Diagram):
@@ -630,7 +768,15 @@ class ApplyTransform(Diagram):
         g.add(self.diagram.to_svg(dwg, style))
         return g
 
+    def to_tikz(self, pylatex, style: Style) -> BaseElement:
+        options = {}
+        styles = style.to_tikz(pylatex)
+        options["cm"] = cm=self.transform.to_tikz()
+        s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
+        s.append(self.diagram.to_tikz(pylatex, style))
+        return s
 
+    
 @dataclass
 class ApplyStyle(Diagram):
     """ApplyStyle class."""
@@ -657,6 +803,9 @@ class ApplyStyle(Diagram):
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         """Converts to SVG image."""
         return self.diagram.to_svg(dwg, self.style.merge(style))
+
+    def to_tikz(self, pylatex, style: Style) -> BaseElement:
+        return self.diagram.to_tikz(pylatex, self.style.merge(style))
 
 
 @dataclass
@@ -688,3 +837,9 @@ class ApplyName(Diagram):
         g = dwg.g()
         g.add(self.diagram.to_svg(dwg, style))
         return g
+
+    def to_tikz(self, pylatex, style: Style) -> BaseElement:
+        s = pylatex.TikZScope()
+        s.append(self.diagram.to_tikz(pylatex, style))
+        return s
+

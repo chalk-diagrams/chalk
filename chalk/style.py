@@ -72,7 +72,10 @@ class Style:
             ctx.set_dash(self.dashing[0], self.dashing[1])
 
         ctx.stroke()
-
+        
+    def to_tikz(self) -> str:
+        return ""
+        
     def to_svg(self) -> str:
         """Converts to SVG.
 
@@ -93,4 +96,29 @@ class Style:
                 f"stroke-dasharray: {' '.join(map(str, self.dashing[0]))};"
             )
 
+        return style
+
+    def to_tikz(self, pylatex) -> str:
+        """Converts to SVG.
+
+        Returns:
+            str: A string notation of the SVG.
+        """
+        style = {}
+        def tikz_color(color):
+            r, g, b = color.rgb
+            return f"{{rgb,1:red,{r}; green,{g}; blue,{b}}}"
+        
+        if self.fill_color is not None:
+            style["fill"] = tikz_color(self.fill_color)
+        if self.line_color is not None:
+            style["color"] = tikz_color(self.line_color)
+        if self.line_width is not None:
+            style["line width"] = f"{self.line_width}"
+        # if self.fill_opacity is not None:
+        #     style += f"fill-opacity: {self.fill_opacity};"
+        # if self.dashing is not None:
+        #     style += (
+        #         f"stroke-dasharray: {' '.join(map(str, self.dashing[0]))};"
+        #     )
         return style

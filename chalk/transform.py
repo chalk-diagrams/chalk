@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, Any
 
 from affine import Affine
 
@@ -12,8 +12,21 @@ class Transform:
     def __call__(self) -> Affine:
         raise NotImplementedError
 
+    def to_cairo(self) -> Any:
+        import cairo
+        def convert(a, b, c, d, e, f):
+            return cairo.Matrix(a, d, b, e, c, f)
+        return convert(*self()[:6])
+
     def to_svg(self) -> str:
-        raise NotImplementedError
+        def convert(a, b, c, d, e, f):
+            return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
+        return convert(*self()[:6])
+
+    def to_tikz(self) -> str:
+        def convert(a, b, c, d, e, f):
+            return f"{{{a}, {b}, {d}, {e}, ({c}, {f})}}"
+        return convert(*self()[:6])
 
 
 @dataclass
@@ -22,9 +35,6 @@ class Identity(Transform):
 
     def __call__(self) -> Affine:
         return Affine.identity()
-
-    def to_svg(self) -> str:
-        return "scale(1)"
 
 
 @dataclass
@@ -37,9 +47,6 @@ class Scale(Transform):
     def __call__(self) -> Affine:
         return Affine.scale(self.αx, self.αy)
 
-    def to_svg(self) -> str:
-        return f"scale({self.αx} {self.αy})"
-
 
 @dataclass
 class Rotate(Transform):
@@ -51,11 +58,7 @@ class Rotate(Transform):
         t = (self.θ / math.pi) * 180
         return Affine.rotation(t)
 
-    def to_svg(self) -> str:
-        t = (self.θ / math.pi) * 180
-        return f"rotate({t})"
-
-
+    
 @dataclass
 class Translate(Transform):
     """Translate class."""
@@ -65,9 +68,6 @@ class Translate(Transform):
 
     def __call__(self) -> Affine:
         return Affine.translation(self.dx, self.dy)
-
-    def to_svg(self) -> str:
-        return f"translate({self.dx} {self.dy})"
 
 
 @dataclass
@@ -79,10 +79,6 @@ class ShearX(Transform):
     def __call__(self) -> Affine:
         return Affine(1, 0, self.λ, 1, 0, 0)
 
-    def to_svg(self) -> str:
-        return f"matrix(1 0 {self.λ} 1 0 0)"
-
-
 @dataclass
 class ShearY(Transform):
     """ShearY class."""
@@ -92,8 +88,6 @@ class ShearY(Transform):
     def __call__(self) -> Affine:
         return Affine(1, self.λ, 0, 1, 0, 0)
 
-    def to_svg(self) -> str:
-        return f"matrix(1 {self.λ} 0 1 0 0)"
 
 
 @dataclass
@@ -105,9 +99,6 @@ class Compose(Transform):
 
     def __call__(self) -> Affine:
         return self.u() * self.t()
-
-    def to_svg(self) -> str:
-        return self.t.to_svg() + " " + self.u.to_svg()
 
 
 TTrans = TypeVar("TTrans", bound="Transformable")
