@@ -170,10 +170,13 @@ class Path(Shape, tx.Transformable):
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
 
-    def render_tikz(self, pylatex, style):    
-        return pylatex.TikZDraw([pylatex.TikZCoordinate(p.x, p.y)
-                                 for p in self.points
-                                 ],
+    def render_tikz(self, pylatex, style):
+        pts = []
+        for p in self.points:
+            pts.append(pylatex.TikZCoordinate(p.x, p.y))
+            pts.append("--")
+                                 
+        return pylatex.TikZDraw(pts[:-1],
                                 options = pylatex.TikZOptions(**style))
 
 @dataclass
@@ -207,6 +210,17 @@ class Arc(Shape):
         )
         return path
 
+    def render_tikz(self, pylatex, style):
+        start = 180 * (self.angle0 / math.pi)
+        end = 180 * (self.angle1 / math.pi)
+        return pylatex.TikZDraw([pylatex.TikZCoordinate(self.radius * math.cos(self.angle0),
+                                                        self.radius * math.sin(self.angle0)),
+                                 'arc'
+                                 ],
+                                options=pylatex.TikZOptions(radius=self.radius,
+                                                            **{"start angle": start,
+                                                               "end angle": end},
+                                                            **style))
 
 @dataclass
 class Text(Shape):

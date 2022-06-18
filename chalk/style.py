@@ -112,11 +112,12 @@ class Style:
         if self.fill_color is not None:
             style["fill"] = tikz_color(self.fill_color)
         if self.line_color is not None:
-            style["color"] = tikz_color(self.line_color)
+            style["draw"] = tikz_color(self.line_color)
         if self.line_width is not None:
-            style["line width"] = f"{self.line_width}"
-        # if self.fill_opacity is not None:
-        #     style += f"fill-opacity: {self.fill_opacity};"
+            style["line width"] = self.line_width * 2
+        if self.fill_opacity is not None:
+            style["fill opacity"] = self.fill_opacity
+
         # if self.dashing is not None:
         #     style += (
         #         f"stroke-dasharray: {' '.join(map(str, self.dashing[0]))};"

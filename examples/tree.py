@@ -51,7 +51,8 @@ _, d = draw_tree(sample_tree())
 d = d.line_width(0.8)
 
 d.render_svg("examples/output/tree.svg", 1200)
-d.render_pdf("examples/output/tree.pdf", 1200)
 d.render("examples/output/tree.png", 1200)
 PILImage.open("examples/output/tree.png")
+
+
 

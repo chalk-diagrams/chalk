@@ -161,7 +161,8 @@ class Diagram(tx.Transformable):
         
         # add our sample drawings
         with doc.create(pylatex.TikZ()) as pic:
-            pic.append(self.scale(α).translate(x, y).reflect_y().to_tikz(pylatex, Style.default()))
+            for x in self.scale(α).translate(x, y).reflect_y().to_tikz(pylatex, Style.default()):
+                pic.append(x)
         doc.generate_tex(path)
         doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
 
@@ -666,15 +667,13 @@ class Primitive(Diagram):
         transform = self.transform.to_tikz()
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
-            return inner
+            return [inner]
         else:
             options = {}
             options["cm"] = self.transform.to_tikz()
             s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
-            if not style:
-                style = ";"
             s.append(inner)
-            return s
+            return [s]
 
 @dataclass
 class Empty(Diagram):
@@ -694,7 +693,7 @@ class Empty(Diagram):
 
     def to_tikz(self, pylatex, style: Style) -> BaseElement:
         """Converts to SVG image."""
-        return pylatex.TikZScope()
+        return []
 
 
 @dataclass
@@ -731,10 +730,10 @@ class Compose(Diagram):
 
     def to_tikz(self, pylatex, style: Style) -> BaseElement:
         """Converts to tikz image."""
-        s = pylatex.TikZScope()
-        s.append(self.diagram1.to_tikz(pylatex, style))
-        s.append(self.diagram2.to_tikz(pylatex, style))
-        return s
+        # s = pylatex.TikZScope()
+        # s.append(self.diagram1.to_tikz(pylatex, style))
+        # s.append(self.diagram2.to_tikz(pylatex, style))
+        return self.diagram1.to_tikz(pylatex, style) + self.diagram2.to_tikz(pylatex, style)
 
 @dataclass
 class ApplyTransform(Diagram):
@@ -773,8 +772,9 @@ class ApplyTransform(Diagram):
         styles = style.to_tikz(pylatex)
         options["cm"] = cm=self.transform.to_tikz()
         s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
-        s.append(self.diagram.to_tikz(pylatex, style))
-        return s
+        for x in self.diagram.to_tikz(pylatex, style):
+            s.append(x)
+        return [s]
 
     
 @dataclass
@@ -839,7 +839,5 @@ class ApplyName(Diagram):
         return g
 
     def to_tikz(self, pylatex, style: Style) -> BaseElement:
-        s = pylatex.TikZScope()
-        s.append(self.diagram.to_tikz(pylatex, style))
-        return s
+        return self.diagram.to_tikz(pylatex, style)
 

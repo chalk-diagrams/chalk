@@ -106,7 +106,7 @@ class Vector(tx.Transformable):
         Returns:
             Vector: A vector object.
         """
-        new_dx, new_dy = t().transform_point(self.dx, self.dy)
+        new_dx, new_dy = t() * (self.dx, self.dy)
         return Vector(new_dx, new_dy)
 
     def rotate(self, by: float) -> "Vector":

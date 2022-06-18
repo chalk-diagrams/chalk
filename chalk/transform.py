@@ -25,7 +25,7 @@ class Transform:
 
     def to_tikz(self) -> str:
         def convert(a, b, c, d, e, f):
-            return f"{{{a}, {b}, {d}, {e}, ({c}, {f})}}"
+            return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
         return convert(*self()[:6])
 
 
@@ -77,7 +77,7 @@ class ShearX(Transform):
     λ: float
 
     def __call__(self) -> Affine:
-        return Affine(1, 0, self.λ, 1, 0, 0)
+        return Affine(1, self.λ, 0, 0, 1, 0)
 
 @dataclass
 class ShearY(Transform):
@@ -86,7 +86,7 @@ class ShearY(Transform):
     λ: float
 
     def __call__(self) -> Affine:
-        return Affine(1, self.λ, 0, 1, 0, 0)
+        return Affine(1, 0, 0, self.λ, 1, 0)
 
 
 
@@ -98,7 +98,7 @@ class Compose(Transform):
     u: Transform
 
     def __call__(self) -> Affine:
-        return self.u() * self.t()
+        return self.t() * self.u()
 
 
 TTrans = TypeVar("TTrans", bound="Transformable")
