@@ -56,11 +56,12 @@ class Circle(Shape):
         return dwg.circle((ORIGIN.x, ORIGIN.y), self.radius)
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        return pylatex.TikZDraw([pylatex.TikZCoordinate(0, 0),
-                                 'circle'
-                                 ],
-                                options=pylatex.TikZOptions(radius=self.radius,
-                                                            **style.to_tikz(pylatex)))
+        return pylatex.TikZDraw(
+            [pylatex.TikZCoordinate(0, 0), "circle"],
+            options=pylatex.TikZOptions(
+                radius=self.radius, **style.to_tikz(pylatex)
+            ),
+        )
 
 
 @dataclass
@@ -104,13 +105,16 @@ class Rectangle(Shape):
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         left = ORIGIN.x - self.width / 2
         top = ORIGIN.y - self.height / 2
-        return pylatex.TikZDraw([pylatex.TikZCoordinate(left, top),
-                                 'rectangle',
-                                 pylatex.TikZCoordinate(left+self.width, top+self.height)
-                                 ], options=pylatex.TikZOptions(**style.to_tikz(pylatex)))
+        return pylatex.TikZDraw(
+            [
+                pylatex.TikZCoordinate(left, top),
+                "rectangle",
+                pylatex.TikZCoordinate(left + self.width, top + self.height),
+            ],
+            options=pylatex.TikZOptions(**style.to_tikz(pylatex)),
+        )
 
 
-    
 @dataclass
 class Path(Shape, tx.Transformable):
     """Path class."""
@@ -179,9 +183,11 @@ class Path(Shape, tx.Transformable):
         for p in self.points:
             pts.append(pylatex.TikZCoordinate(p.x, p.y))
             pts.append("--")
-                                 
-        return pylatex.TikZDraw(pts[:-1],
-                                options = pylatex.TikZOptions(**style.to_tikz(pylatex)))
+
+        return pylatex.TikZDraw(
+            pts[:-1], options=pylatex.TikZOptions(**style.to_tikz(pylatex))
+        )
+
 
 @dataclass
 class Arc(Shape):
@@ -217,14 +223,21 @@ class Arc(Shape):
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         start = 180 * (self.angle0 / math.pi)
         end = 180 * (self.angle1 / math.pi)
-        return pylatex.TikZDraw([pylatex.TikZCoordinate(self.radius * math.cos(self.angle0),
-                                                        self.radius * math.sin(self.angle0)),
-                                 'arc'
-                                 ],
-                                options=pylatex.TikZOptions(radius=self.radius,
-                                                            **{"start angle": start,
-                                                               "end angle": end},
-                                                            **style.to_tikz(pylatex)))
+        return pylatex.TikZDraw(
+            [
+                pylatex.TikZCoordinate(
+                    self.radius * math.cos(self.angle0),
+                    self.radius * math.sin(self.angle0),
+                ),
+                "arc",
+            ],
+            options=pylatex.TikZOptions(
+                radius=self.radius,
+                **{"start angle": start, "end angle": end},
+                **style.to_tikz(pylatex),
+            ),
+        )
+
 
 @dataclass
 class Text(Shape):
@@ -267,6 +280,14 @@ class Text(Shape):
             style=f"""text-align:center; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
                       font-size:{self.font_size}px""",
+        )
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        return pylatex.TikZNode(
+            text=self.text,
+            options=pylatex.TikZOptions(
+                font="\\small\\sffamily", scale=7 * style.scale
+            ),
         )
 
 

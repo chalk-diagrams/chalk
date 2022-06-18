@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from typing import TypeVar, Any
+from typing import Any, TypeVar
 
 from affine import Affine
 
@@ -14,18 +14,26 @@ class Transform:
 
     def to_cairo(self) -> Any:
         import cairo
-        def convert(a, b, c, d, e, f): # type: ignore
-            return cairo.Matrix(a, d, b, e, c, f) # type: ignore
-        return convert(*self()[:6]) # type: ignore
+
+        def convert(a, b, c, d, e, f):  # type: ignore
+            return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
+
+        return convert(*self()[:6])  # type: ignore
 
     def to_svg(self) -> str:
-        def convert(a: float, b: float, c: float, d: float, e: float, f: float) -> str:
+        def convert(
+            a: float, b: float, c: float, d: float, e: float, f: float
+        ) -> str:
             return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
+
         return convert(*self()[:6])
 
     def to_tikz(self) -> str:
-        def convert(a: float, b: float, c: float, d: float, e: float, f: float) -> str:
+        def convert(
+            a: float, b: float, c: float, d: float, e: float, f: float
+        ) -> str:
             return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
+
         return convert(*self()[:6])
 
 
@@ -58,7 +66,7 @@ class Rotate(Transform):
         t = (self.θ / math.pi) * 180
         return Affine.rotation(t)
 
-    
+
 @dataclass
 class Translate(Transform):
     """Translate class."""
@@ -79,6 +87,7 @@ class ShearX(Transform):
     def __call__(self) -> Affine:
         return Affine(1, self.λ, 0, 0, 1, 0)
 
+
 @dataclass
 class ShearY(Transform):
     """ShearY class."""
@@ -87,7 +96,6 @@ class ShearY(Transform):
 
     def __call__(self) -> Affine:
         return Affine(1, 0, 0, self.λ, 1, 0)
-
 
 
 @dataclass

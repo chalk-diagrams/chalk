@@ -65,7 +65,6 @@ def network(n, size, top, bot):
 draw = make_path([(-10, -10), (10, -10 ), (-10, 10)]).line_width(0.9).line_color(blue).fill_opacity(0)
 
 # Draw the main diagram.
-def hstrut(width=0.2): return hrule(width).line_width(0)
 h = hstrut(6.5)
 d = ((stack("a", 32, 0, "", "") + draw) | (label("conv") / h) |
      stack("b", 28, 6, "", "C1") | (label("pool") / h) |

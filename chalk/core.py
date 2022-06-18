@@ -139,7 +139,6 @@ class Diagram(tx.Transformable):
         outer.add(self.to_svg(dwg, Style.default()))
         dwg.save()
 
-
     def render_pdf(self, path: str, height: int = 128) -> None:
         # Hack: Convert roughly from px to pt. Assume 300 dpi.
         heightpt = height / 4.3
@@ -148,7 +147,7 @@ class Diagram(tx.Transformable):
         except ImportError:
             print("Render PDF requires pylatex installation.")
             return
-        
+
         pad = 0.05
         box = self.get_bounding_box()
 
@@ -161,17 +160,22 @@ class Diagram(tx.Transformable):
         else:
             α = width // ((1 + pad) * box.width)
         x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
-        
+
         # create document
         doc = pylatex.Document(documentclass="standalone")
-        
+
         # add our sample drawings
         with doc.create(pylatex.TikZ()) as pic:
-            for x in self.scale(α).translate(x, y).reflect_y().to_tikz(pylatex, Style.default()):
+            for x in (
+                self.scale(α)
+                .translate(x, y)
+                .reflect_y()
+                .to_tikz(pylatex, Style.default())
+            ):
                 pic.append(x)
+        doc.generate_tex(path.replace(".pdf", "") + ".tex")
         doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
 
-        
     def _repr_svg_(self) -> str:
         f = tempfile.NamedTemporaryFile(delete=False)
         self.render_svg(f.name)
@@ -577,6 +581,7 @@ class Diagram(tx.Transformable):
         """Convert a diagram to SVG image."""
         raise NotImplementedError
 
+
 @dataclass
 class Primitive(Diagram):
     """Primitive class.
@@ -666,11 +671,14 @@ class Primitive(Diagram):
             g.add(inner)
             return g
 
-    def to_tikz(self, pylatex: PyLatexElement, other_style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, other_style: Style
+    ) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
 
         transform = self.transform.to_tikz()
         style = self.style.merge(other_style)
+        style.scale = max(self.style.scale, other_style.scale)
         style = style.scale_style(self.transform()[0])
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
@@ -681,6 +689,7 @@ class Primitive(Diagram):
             s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
             s.append(inner)
             return [s]
+
 
 @dataclass
 class Empty(Diagram):
@@ -698,7 +707,9 @@ class Empty(Diagram):
         """Converts to SVG image."""
         return dwg.g()
 
-    def to_tikz(self, pylatex: PyLatexElement, style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, style: Style
+    ) -> List[PyLatexElement]:
         """Converts to SVG image."""
         return []
 
@@ -735,9 +746,14 @@ class Compose(Diagram):
         g.add(self.diagram2.to_svg(dwg, style))
         return g
 
-    def to_tikz(self, pylatex: PyLatexElement, style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, style: Style
+    ) -> List[PyLatexElement]:
         """Converts to tikz image."""
-        return self.diagram1.to_tikz(pylatex, style) + self.diagram2.to_tikz(pylatex, style)
+        return self.diagram1.to_tikz(pylatex, style) + self.diagram2.to_tikz(
+            pylatex, style
+        )
+
 
 @dataclass
 class ApplyTransform(Diagram):
@@ -771,7 +787,9 @@ class ApplyTransform(Diagram):
         g.add(self.diagram.to_svg(dwg, style))
         return g
 
-    def to_tikz(self, pylatex: PyLatexElement, style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, style: Style
+    ) -> List[PyLatexElement]:
         options = {}
         style = style.scale_style(self.transform()[0])
         options["cm"] = self.transform.to_tikz()
@@ -780,7 +798,7 @@ class ApplyTransform(Diagram):
             s.append(x)
         return [s]
 
-    
+
 @dataclass
 class ApplyStyle(Diagram):
     """ApplyStyle class."""
@@ -808,7 +826,9 @@ class ApplyStyle(Diagram):
         """Converts to SVG image."""
         return self.diagram.to_svg(dwg, self.style.merge(style))
 
-    def to_tikz(self, pylatex: PyLatexElement, style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, style: Style
+    ) -> List[PyLatexElement]:
         return self.diagram.to_tikz(pylatex, self.style.merge(style))
 
 
@@ -842,6 +862,7 @@ class ApplyName(Diagram):
         g.add(self.diagram.to_svg(dwg, style))
         return g
 
-    def to_tikz(self, pylatex: PyLatexElement, style: Style) -> List[PyLatexElement]:
+    def to_tikz(
+        self, pylatex: PyLatexElement, style: Style
+    ) -> List[PyLatexElement]:
         return self.diagram.to_tikz(pylatex, style)
-
