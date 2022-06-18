@@ -17,7 +17,7 @@ from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
 from chalk.point import Point, Vector, ORIGIN
 from chalk.trace import Trace, SignedDistance
-from chalk.segment import Segment
+from chalk.segment import Line, Segment, line_circle_intersection
 
 
 PyCairoContext = Any
@@ -52,6 +52,13 @@ class Circle(Shape):
         tl = Point(-self.radius, -self.radius)
         br = Point(+self.radius, +self.radius)
         return BoundingBox(tl, br)
+
+    def get_trace(self) -> Trace:
+        def f(p: Point, v: Vector) -> List[SignedDistance]:
+            line = Line(p, v)
+            return sorted(line_circle_intersection(line, self.radius))
+
+        return Trace(f)
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(ORIGIN.x, ORIGIN.y, self.radius, 0, 2 * math.pi)
