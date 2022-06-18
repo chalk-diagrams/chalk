@@ -286,7 +286,7 @@ class Text(Shape):
         return pylatex.TikZNode(
             text=self.text,
             options=pylatex.TikZOptions(
-                font="\\small\\sffamily", scale=7 * style.scale
+                font="\\small\\sffamily", scale=7 * (1 if style.scale is None else style.scale)
             ),
         )
 

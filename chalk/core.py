@@ -678,7 +678,6 @@ class Primitive(Diagram):
 
         transform = self.transform.to_tikz()
         style = self.style.merge(other_style)
-        style.scale = max(self.style.scale, other_style.scale)
         style = style.scale_style(self.transform()[0])
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
