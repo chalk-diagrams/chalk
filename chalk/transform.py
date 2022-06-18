@@ -14,17 +14,17 @@ class Transform:
 
     def to_cairo(self) -> Any:
         import cairo
-        def convert(a, b, c, d, e, f):
-            return cairo.Matrix(a, d, b, e, c, f)
-        return convert(*self()[:6])
+        def convert(a, b, c, d, e, f): # type: ignore
+            return cairo.Matrix(a, d, b, e, c, f) # type: ignore
+        return convert(*self()[:6]) # type: ignore
 
     def to_svg(self) -> str:
-        def convert(a, b, c, d, e, f):
+        def convert(a: float, b: float, c: float, d: float, e: float, f: float) -> str:
             return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
         return convert(*self()[:6])
 
     def to_tikz(self) -> str:
-        def convert(a, b, c, d, e, f):
+        def convert(a: float, b: float, c: float, d: float, e: float, f: float) -> str:
             return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
         return convert(*self()[:6])
 

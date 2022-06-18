@@ -314,5 +314,5 @@ hex_variation:
 tree:
 	python examples/tree.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor latex hex_variation tree
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation tree
 	@echo "🎁 Generate all examples ... ⏳"

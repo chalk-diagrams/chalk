@@ -43,8 +43,8 @@ try:
     prnt_success = logger.success
     prnt_warning = logger.warning
 except ImportError:
-    prnt_success = print  # type: ignore
-    prnt_warning = print  # type: ignore
+    prnt_success = print
+    prnt_warning = print
 
 Diagram = TypeVar("Diagram")
 

@@ -99,4 +99,4 @@ diagram.render(path, height=700)
 PILImage.open(path)
 
 path = "examples/output/hanoi.pdf"
-diagram.render_pdf(path, height=100)
+diagram.render_pdf(path, height=700)

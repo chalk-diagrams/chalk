@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 from PIL import Image as PILImage
 from chalk import *
 from colour import Color
@@ -104,4 +102,4 @@ d.render("examples/output/lenet.png", 500)
 d.render_svg("examples/output/lenet.svg", 400)
 PILImage.open("examples/output/lenet.png")
 
-d.render_pdf("examples/output/lenet.pdf", 50)
+d.render_pdf("examples/output/lenet.pdf", 400)
