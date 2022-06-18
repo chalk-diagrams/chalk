@@ -23,8 +23,8 @@ from chalk.trail import Trail
 
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
-__libname__: str = "chalk-diagrams"  # custom dunder attribute
-__version__ = metadata.version(__libname__)
+# __libname__: str = "chalk-diagrams"  # custom dunder attribute
+# __version__ = metadata.version(__libname__)
 
 
 ignore = [Trail, Vector]

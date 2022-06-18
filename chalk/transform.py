@@ -17,6 +17,27 @@ class Transform:
 
 
 @dataclass
+class TransformMatrix(Transform):
+    matrix: cairo.Matrix
+
+    def __call__(self) -> cairo.Matrix:
+        return self.matrix
+
+    def to_svg(self) -> str:
+        raise NotImplementedError
+
+
+# TODO Should we instead invert the transformation by defining an `invert`
+# method for each subclass of Transform? I believe this would be cleaner and
+# should allow us to avoid the `TransformMatrix` class. But I will not do it
+# for the moment as Sasha already suggested refactoring the `Transform` class.
+def invert(t: Transform) -> Transform:
+    matrix = t()
+    matrix.invert()
+    return TransformMatrix(matrix)
+
+
+@dataclass
 class Identity(Transform):
     """Identity class."""
 

@@ -28,7 +28,12 @@ class Shape:
     """Shape class."""
 
     def get_bounding_box(self) -> BoundingBox:
-        pass
+        raise NotImplementedError
+
+    def get_trace(self) -> Trace:
+        # default trace based on bounding box
+        box = self.get_bounding_box()
+        return Path.rectangle(box.width, box.height).get_trace()
 
     def render(self, ctx: PyCairoContext) -> None:
         pass
@@ -69,6 +74,10 @@ class Rectangle(Shape):
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
         return BoundingBox(tl, br)
+
+    def get_trace(self) -> Trace:
+        # FIXME For rounded corners the following trace is not accurate
+        return Path.rectangle(self.width, self.height).get_trace()
 
     def render(self, ctx: PyCairoContext) -> None:
         x = left = ORIGIN.x - self.width / 2
@@ -127,6 +136,16 @@ class Path(Shape, tx.Transformable):
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
 
     @staticmethod
+    def rectangle(width: float, height: float) -> "Path":
+        # Should I reuse the `polygon` function to define `rectangle`?
+        # polygon(4, 1, math.pi / 4).scale_x(width).scale_y(height)
+        x = width / 2
+        y = height / 2
+        return Path.from_list_of_tuples(
+            [(-x, y), (x, y), (x, -y), (-x, -y), (-x, y)]
+        )
+
+    @staticmethod
     def polygon(sides: int, radius: float, rotation: float = 0) -> "Path":
         coords = []
         n = sides + 1
@@ -148,11 +167,11 @@ class Path(Shape, tx.Transformable):
             box = box.enclose(p)
         return box
 
-    def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
-        return Path([p.apply_transform(t) for p in self.points])
-
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)
+
+    def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
+        return Path([p.apply_transform(t) for p in self.points])
 
     def render(self, ctx: PyCairoContext) -> None:
         p, *rest = self.points

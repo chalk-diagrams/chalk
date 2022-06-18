@@ -14,6 +14,7 @@ from chalk.bounding_box import BoundingBox
 from chalk.shape import Circle, Rectangle, Shape
 from chalk.style import Style
 from chalk.utils import imgen
+from chalk.trace import Trace
 
 PyCairoContext = Any
 Ident = tx.Identity()
@@ -25,6 +26,10 @@ class Diagram(tx.Transformable):
 
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Get the bounding box of a diagram."""
+        raise NotImplementedError
+
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        """Get the trace of a diagram."""
         raise NotImplementedError
 
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
@@ -602,6 +607,10 @@ class Primitive(Diagram):
         new_transform = tx.Compose(t, self.transform)
         return self.shape.get_bounding_box().apply_transform(new_transform)
 
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        new_transform = tx.Compose(t, self.transform)
+        return self.shape.get_trace().apply_transform(new_transform)
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         """Returns a list of primitives.
 
@@ -638,6 +647,9 @@ class Empty(Diagram):
         """Returns the bounding box of a diagram."""
         return BoundingBox.empty()
 
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        return Trace.empty()
+
     def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
         return []
@@ -658,6 +670,10 @@ class Compose(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Returns the bounding box of a diagram."""
         return self.box.apply_transform(t)
+
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        # TODO Should we cache the trace?
+        return self.diagram1.get_trace(t) + self.diagram2.get_trace(t)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
@@ -692,6 +708,11 @@ class ApplyTransform(Diagram):
         t_new = tx.Compose(t, self.transform)
         return self.diagram.get_bounding_box(t_new)
 
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        """Returns the bounding box of a diagram."""
+        t_new = tx.Compose(t, self.transform)
+        return self.diagram.get_trace(t_new)
+
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
@@ -724,6 +745,10 @@ class ApplyStyle(Diagram):
         """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
 
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        """Returns the bounding box of a diagram."""
+        return self.diagram.get_trace(t)
+
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
     ) -> Optional[BoundingBox]:
@@ -751,6 +776,10 @@ class ApplyName(Diagram):
     def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
         """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
+
+    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+        """Returns the bounding box of a diagram."""
+        return self.diagram.get_trace(t)
 
     def get_subdiagram_bounding_box(
         self, name: str, t: tx.Transform = Ident
