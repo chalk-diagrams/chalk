@@ -174,10 +174,11 @@ class Diagram(tx.Transformable):
             .pad_b(y)
             .center_xy()
         )
-        bb = diagram.get_bounding_box()
-        prim = Primitive.from_shape(Spacer(bb.width, bb.height))
-        prim.bounding_box = bb
-        diagram = diagram + prim
+        box = diagram.get_bounding_box()
+        padding = Primitive.from_shape(
+            Spacer(box.width, box.height)
+        ).translate(box.center.x, box.center.y)
+        diagram = diagram + padding
         with doc.create(pylatex.TikZ()) as pic:
             for x in diagram.to_tikz(pylatex, Style.default()):
                 pic.append(x)
