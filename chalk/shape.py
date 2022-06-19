@@ -283,10 +283,17 @@ class Text(Shape):
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        opts = {}
+        opts["font"] = "\\small\\sffamily"
+        opts["scale"] = 3.5 * (1 if self.font_size is None else self.font_size) * (1 if style.scale is None else style.scale)
+        styles = style.to_tikz(pylatex)
+        if styles["fill"] is not None:
+            opts["text"] = styles["fill"]
         return pylatex.TikZNode(
             text=self.text,
+            # Scale parameters based on observations
             options=pylatex.TikZOptions(
-                font="\\small\\sffamily", scale=7 * (1 if style.scale is None else style.scale)
+                **opts
             ),
         )
 
@@ -359,6 +366,17 @@ class Spacer(Shape):
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
         return BoundingBox(tl, br)
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        return pylatex.TikZPath(
+            [
+                pylatex.TikZCoordinate(left, top),
+                "rectangle",
+                pylatex.TikZCoordinate(left + self.width, top + self.height),
+            ]
+        )
 
 
 class Raw(Rect):  # type: ignore

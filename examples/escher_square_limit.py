@@ -7,7 +7,7 @@ import math
 
 from toolz import take, iterate  # type: ignore
 
-from chalk import concat, make_path, square
+from chalk import concat, make_path, square, strut
 
 
 # fmt: off
@@ -83,7 +83,7 @@ markings = {
 # fmt: on
 
 names = "pqrs"
-blank = square(1).line_width(0)
+blank = strut(1, 1)
 θ = -math.pi / 2
 
 
@@ -131,4 +131,4 @@ pseudolimit.render_svg(output_path, height=512)
 
 
 output_path = "examples/output/escher-square-limit.pdf"
-pseudolimit.render_pdf(output_path, height=100)
+pseudolimit.render_pdf(output_path, height=512)

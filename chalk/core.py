@@ -11,7 +11,7 @@ from svgwrite.base import BaseElement
 
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.shape import Circle, Rectangle, Shape
+from chalk.shape import Circle, Rectangle, Shape, Spacer
 from chalk.style import Style
 from chalk.utils import imgen
 
@@ -141,7 +141,7 @@ class Diagram(tx.Transformable):
 
     def render_pdf(self, path: str, height: int = 128) -> None:
         # Hack: Convert roughly from px to pt. Assume 300 dpi.
-        heightpt = height / 4.3
+        heightpt = height / 4.7
         try:
             import pylatex
         except ImportError:
@@ -163,14 +163,17 @@ class Diagram(tx.Transformable):
 
         # create document
         doc = pylatex.Document(documentclass="standalone")
-
+                               # document_options= pylatex.TikZOptions(margin=f"{{{x}pt {x}pt {y}pt {y}pt}}"))
         # add our sample drawings
+        diagram = self.scale(α).reflect_y().pad_l(x).pad_r(x).pad_t(y).pad_b(y).center_xy()
+        bb = diagram.get_bounding_box()
+        prim = Primitive.from_shape(Spacer(bb.width, bb.height))
+        prim.bounding_box = bb
+        diagram = diagram + prim
         with doc.create(pylatex.TikZ()) as pic:
             for x in (
-                self.scale(α)
-                .translate(x, y)
-                .reflect_y()
-                .to_tikz(pylatex, Style.default())
+                    diagram
+                    .to_tikz(pylatex, Style.default())
             ):
                 pic.append(x)
         doc.generate_tex(path.replace(".pdf", "") + ".tex")
@@ -678,7 +681,7 @@ class Primitive(Diagram):
 
         transform = self.transform.to_tikz()
         style = self.style.merge(other_style)
-        style = style.scale_style(self.transform()[0])
+        style = style.scale_style(max(self.transform()[0], self.transform()[4]))
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
             return [inner]
@@ -790,7 +793,7 @@ class ApplyTransform(Diagram):
         self, pylatex: PyLatexElement, style: Style
     ) -> List[PyLatexElement]:
         options = {}
-        style = style.scale_style(self.transform()[0])
+        style = style.scale_style(max(self.transform()[0], self.transform()[4]))
         options["cm"] = self.transform.to_tikz()
         s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
         for x in self.diagram.to_tikz(pylatex, style):
