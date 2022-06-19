@@ -141,7 +141,7 @@ class Diagram(tx.Transformable):
 
     def render_pdf(self, path: str, height: int = 128) -> None:
         # Hack: Convert roughly from px to pt. Assume 300 dpi.
-        heightpt = height / 4.7
+        heightpt = height / 4.3
         try:
             import pylatex
         except ImportError:
@@ -152,7 +152,7 @@ class Diagram(tx.Transformable):
         box = self.get_bounding_box()
 
         # infer width to preserve aspect ratio
-        width = (heightpt * (box.width / box.height))
+        width = heightpt * (box.width / box.height)
         # determine scale to fit the largest axis in the target frame size
         if box.width - width <= box.height - heightpt:
             α = heightpt // ((1 + pad) * box.height)
@@ -164,15 +164,7 @@ class Diagram(tx.Transformable):
         doc = pylatex.Document(documentclass="standalone")
         # document_options= pylatex.TikZOptions(margin=f"{{{x}pt {x}pt {y}pt {y}pt}}"))
         # add our sample drawings
-        print(x, y)
-        diagram = (
-            self.scale(α)
-            .reflect_y()
-            .pad_l(x)
-            .pad_r(x)
-            .pad_t(y)
-            .pad_b(y)
-        )
+        diagram = self.scale(α).reflect_y().pad_l(x).pad_r(x).pad_t(y).pad_b(y)
         box = diagram.get_bounding_box()
         padding = Primitive.from_shape(
             Spacer(box.width, box.height)
