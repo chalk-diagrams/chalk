@@ -152,19 +152,19 @@ class Diagram(tx.Transformable):
         box = self.get_bounding_box()
 
         # infer width to preserve aspect ratio
-        width = int(heightpt * box.width / box.height)
-
+        width = (heightpt * (box.width / box.height))
         # determine scale to fit the largest axis in the target frame size
         if box.width - width <= box.height - heightpt:
             α = heightpt // ((1 + pad) * box.height)
         else:
             α = width // ((1 + pad) * box.width)
-        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+        x, y = pad * heightpt, pad * width
 
         # create document
         doc = pylatex.Document(documentclass="standalone")
         # document_options= pylatex.TikZOptions(margin=f"{{{x}pt {x}pt {y}pt {y}pt}}"))
         # add our sample drawings
+        print(x, y)
         diagram = (
             self.scale(α)
             .reflect_y()
@@ -172,7 +172,6 @@ class Diagram(tx.Transformable):
             .pad_r(x)
             .pad_t(y)
             .pad_b(y)
-            .center_xy()
         )
         box = diagram.get_bounding_box()
         padding = Primitive.from_shape(
