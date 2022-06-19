@@ -285,16 +285,18 @@ class Text(Shape):
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         opts = {}
         opts["font"] = "\\small\\sffamily"
-        opts["scale"] = 3.5 * (1 if self.font_size is None else self.font_size) * (1 if style.scale is None else style.scale)
+        opts["scale"] = (
+            3.5
+            * (1 if self.font_size is None else self.font_size)
+            * (1 if style.scale is None else style.scale)
+        )
         styles = style.to_tikz(pylatex)
         if styles["fill"] is not None:
             opts["text"] = styles["fill"]
         return pylatex.TikZNode(
             text=self.text,
             # Scale parameters based on observations
-            options=pylatex.TikZOptions(
-                **opts
-            ),
+            options=pylatex.TikZOptions(**opts),
         )
 
 

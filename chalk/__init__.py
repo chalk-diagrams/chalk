@@ -264,6 +264,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
     return reduce(atop, diagrams, empty())
 
+
 def strut(width: float, height: float) -> Diagram:
     return Primitive.from_shape(Spacer(width, height))
 
