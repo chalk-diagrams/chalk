@@ -39,3 +39,6 @@ diagram.render_svg(path, height=256)
 path = "examples/output/squares.png"
 diagram.render(path, height=256)
 PILImage.open(path)
+
+path = "examples/output/squares.pdf"
+diagram.render_pdf(path, height=100)

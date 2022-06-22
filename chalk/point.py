@@ -25,7 +25,7 @@ class Point(tx.Transformable):
         Returns:
             Point: A point object.
         """
-        new_x, new_y = t().transform_point(self.x, self.y)
+        new_x, new_y = t() * (self.x, self.y)
         return Point(new_x, new_y)
 
     def __add__(self, other: "Vector") -> "Point":
@@ -106,7 +106,7 @@ class Vector(tx.Transformable):
         Returns:
             Vector: A vector object.
         """
-        new_dx, new_dy = t().transform_point(self.dx, self.dy)
+        new_dx, new_dy = t() * (self.dx, self.dy)
         return Vector(new_dx, new_dy)
 
     def rotate(self, by: float) -> "Vector":

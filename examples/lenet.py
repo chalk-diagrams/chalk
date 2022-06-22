@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/srush/Projects/diagrams/venv/lib/python3.9/site-packages")
 from PIL import Image as PILImage
 from chalk import *
 from colour import Color
@@ -24,7 +22,7 @@ def cover(d, a, b):
     b1 = d.get_subdiagram_bounding_box(a)
     b2 = d.get_subdiagram_bounding_box(b)
     new_bb = BoundingBox(b1.tl, b2.br)
-    return rectangle(new_bb.width, new_bb.height, 0.0) \
+    return rectangle(new_bb.width, new_bb.height) \
             .translate(new_bb.center.x, new_bb.center.y)
 
 def tile(d, m, n, name = ""):
@@ -67,7 +65,6 @@ def network(n, size, top, bot):
 draw = make_path([(-10, -10), (10, -10 ), (-10, 10)]).line_width(0.9).line_color(blue).fill_opacity(0)
 
 # Draw the main diagram.
-def hstrut(width=0.2): return hrule(width).line_width(0)
 h = hstrut(6.5)
 d = ((stack("a", 32, 0, "", "") + draw) | (label("conv") / h) |
      stack("b", 28, 6, "", "C1") | (label("pool") / h) |
@@ -103,3 +100,5 @@ d
 d.render("examples/output/lenet.png", 500)
 d.render_svg("examples/output/lenet.svg", 400)
 PILImage.open("examples/output/lenet.png")
+
+d.render_pdf("examples/output/lenet.pdf", 400)

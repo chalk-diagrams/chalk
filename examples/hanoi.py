@@ -97,3 +97,6 @@ diagram.render_svg(path, height=700)
 path = "examples/output/hanoi.png"
 diagram.render(path, height=700)
 PILImage.open(path)
+
+path = "examples/output/hanoi.pdf"
+diagram.render_pdf(path, height=700)
