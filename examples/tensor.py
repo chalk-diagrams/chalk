@@ -10,9 +10,9 @@ black = Color("black")
 
 
 def draw_cube():
-    up = Vector(0, -1)
-    hyp = (up * 0.5).shear_x(-1)
-    right = Vector(1, 0)
+    up = Vec2(0, -1)
+    hyp = tx.shear_x(-1) * (up * 0.5)
+    right = Vec2(1, 0)
     
     # Faces
     face_m = rectangle(1, 1).align_tl()

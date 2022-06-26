@@ -2,7 +2,9 @@ import math
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from chalk.point import Point, Vector
+from planar import Point, Vec2
+from planar.py import Line, LineSegment
+
 from chalk.trace import Trace
 
 
@@ -12,7 +14,7 @@ class Segment:
     q: Point
 
     def get_trace(self) -> Trace:
-        def f(point: Point, direction: Vector) -> List[float]:
+        def f(point: Point, direction: Vec2) -> List[float]:
             line = Line(point, direction)
             inter = sorted(line_segment(line, self))
             return inter
@@ -23,14 +25,7 @@ class Segment:
         return Line(self.p, self.q - self.p)
 
 
-@dataclass
-class Line:
-    p: Point
-    v: Vector
-
-
-def line_line_intersection(
-    line1: Line, line2: Line
+def line_line_intersection(line1: Line, line2: Line
 ) -> Optional[Tuple[float, float]]:
     """Given two lines
 
@@ -43,10 +38,10 @@ def line_line_intersection(
     line₁ t₁ = line₂ t₂
 
     """
-    u = line2.p - line1.p
-    x1 = line1.v.cross(line2.v)
-    x2 = u.cross(line1.v)
-    x3 = u.cross(line2.v)
+    u =  (line2.offset * line2.normal) - (line1.offset * line1.normal)
+    x1 = line1.direction.cross(line2.direction)
+    x2 = u.cross(line1.direction)
+    x3 = u.cross(line2.direction)
     if x1 == 0 and x2 != 0:
         # parallel
         return None
@@ -97,9 +92,11 @@ def line_circle_intersection(line: Line, circle_radius: float) -> List[float]:
     This is a quadratic equation, whose solutions are well known.
 
     """
-    a = line.v.dx**2 + line.v.dy**2
-    b = 2 * (line.p.x * line.v.dx + line.p.y * line.v.dy)
-    c = line.p.x**2 + line.p.y**2 - circle_radius**2
+    p = line.normal * line.offset
+
+    a = line.direction.x**2 + line.direction.y**2
+    b = 2 * (p.x * line.direction.x + p.y * line.direction.y)
+    c = p.x**2 + p.y**2 - circle_radius**2
 
     Δ = b**2 - 4 * a * c
     eps = 1e-6  # rounding error tolerance

@@ -2,111 +2,42 @@ import math
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from affine import Affine
+from planar import Affine, Vec2
 
+def to_cairo(affine: Affine) -> Any:
+    import cairo
 
-@dataclass
-class Transform:
-    """Transform class."""
+    def convert(a, b, c, d, e, f):  # type: ignore
+        return cairo.Matrix(a, b, d, e, c, f)  # type: ignore
 
-    def __call__(self) -> Affine:
-        raise NotImplementedError
+    return convert(*affine[:6])  # type: ignore
 
-    def to_cairo(self) -> Any:
-        import cairo
+def to_svg(affine: Affine) -> str:
+    def convert(
+        a: float, b: float, c: float, d: float, e: float, f: float
+    ) -> str:
+        return f"matrix({a}, {b}, {d}, {e}, {c}, {f})"
 
-        def convert(a, b, c, d, e, f):  # type: ignore
-            return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
+    return convert(*affine[:6])
 
-        return convert(*self()[:6])  # type: ignore
+def to_tikz(affine: Affine) -> str:
+    def convert(
+        a: float, b: float, c: float, d: float, e: float, f: float
+    ) -> str:
+        return f"{{{a}, {b}, {d}, {e}, ({c}, {f})}}"
 
-    def to_svg(self) -> str:
-        def convert(
-            a: float, b: float, c: float, d: float, e: float, f: float
-        ) -> str:
-            return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
+    return convert(*affine[:6])
+    
 
-        return convert(*self()[:6])
+def rotate_radians(θ: float) -> Affine:
+    t = (θ / math.pi) * 180
+    return Affine.rotation(t)
 
-    def to_tikz(self) -> str:
-        def convert(
-            a: float, b: float, c: float, d: float, e: float, f: float
-        ) -> str:
-            return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
+def shear_x(λ: float) -> Affine:
+    return Affine(1, 0, 0, λ, 1, 0)
 
-        return convert(*self()[:6])
-
-
-@dataclass
-class Identity(Transform):
-    """Identity class."""
-
-    def __call__(self) -> Affine:
-        return Affine.identity()
-
-
-@dataclass
-class Scale(Transform):
-    """Scale class."""
-
-    αx: float
-    αy: float
-
-    def __call__(self) -> Affine:
-        return Affine.scale(self.αx, self.αy)
-
-
-@dataclass
-class Rotate(Transform):
-    """Rotate class."""
-
-    θ: float
-
-    def __call__(self) -> Affine:
-        t = (self.θ / math.pi) * 180
-        return Affine.rotation(t)
-
-
-@dataclass
-class Translate(Transform):
-    """Translate class."""
-
-    dx: float
-    dy: float
-
-    def __call__(self) -> Affine:
-        return Affine.translation(self.dx, self.dy)
-
-
-@dataclass
-class ShearX(Transform):
-    """ShearX class."""
-
-    λ: float
-
-    def __call__(self) -> Affine:
-        return Affine(1, self.λ, 0, 0, 1, 0)
-
-
-@dataclass
-class ShearY(Transform):
-    """ShearY class."""
-
-    λ: float
-
-    def __call__(self) -> Affine:
-        return Affine(1, 0, 0, self.λ, 1, 0)
-
-
-@dataclass
-class Compose(Transform):
-    """Compose class."""
-
-    t: Transform
-    u: Transform
-
-    def __call__(self) -> Affine:
-        return self.t() * self.u()
+def shear_y(λ: float) -> Affine:
+    return Affine(1, λ, 0, 0, 1, 0)
 
 
 TTrans = TypeVar("TTrans", bound="Transformable")
@@ -115,40 +46,43 @@ TTrans = TypeVar("TTrans", bound="Transformable")
 class Transformable:
     """Transformable class."""
 
-    def apply_transform(self, t: Transform) -> TTrans:
+    def apply_transform(self, t: Affine) -> TTrans:
         pass
 
+    def __rmul__(self, t: Affine) -> TTrans:
+        return self.apply_transform(t)
+
     def scale(self: TTrans, α: float) -> TTrans:
-        return self.apply_transform(Scale(α, α))
+        return Affine.scale(Vec2(α, α)) * self
 
     def scale_x(self: TTrans, α: float) -> TTrans:
-        return self.apply_transform(Scale(α, 1))
+        return Affine.scale(Vec2(α, 1)) * self
 
     def scale_y(self: TTrans, α: float) -> TTrans:
-        return self.apply_transform(Scale(1, α))
+        return Affine.scale(Vec2(1, α)) * self
 
     def rotate(self: TTrans, θ: float) -> TTrans:
-        return self.apply_transform(Rotate(θ))
+        return rotate_radians(θ) * self
 
     def rotate_by(self: TTrans, turns: float) -> TTrans:
         """Rotate by fractions of a circle (turn)."""
         θ = 2 * math.pi * turns
-        return self.apply_transform(Rotate(θ))
+        return rotate_radians(θ) * self
 
     def reflect_x(self: TTrans) -> TTrans:
-        return self.apply_transform(Scale(-1, +1))
+        return Affine.scale(Vec2(-1, +1)) * self
 
     def reflect_y(self: TTrans) -> TTrans:
-        return self.apply_transform(Scale(+1, -1))
+        return Affine.scale(Vec2(+1, -1)) * self
 
     def shear_x(self: TTrans, λ: float) -> TTrans:
-        return self.apply_transform(ShearX(λ))
+        return shear_x(λ) * self
 
     def shear_y(self: TTrans, λ: float) -> TTrans:
-        return self.apply_transform(ShearY(λ))
+        return shear_y(λ) * self
 
     def translate(self: TTrans, dx: float, dy: float) -> TTrans:
-        return self.apply_transform(Translate(dx, dy))
+        return Affine.translation(Vec2(dx, dy)) * self
 
     def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
-        return self.apply_transform(Translate(vector.dx, vector.dy))
+        return Affine.translation(vector) * self

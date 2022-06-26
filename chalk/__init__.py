@@ -7,8 +7,8 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from chalk.core import Diagram, Empty, Primitive
-from chalk.point import Point, Vector
+from chalk.core import Diagram, Empty, Primitive, unit_x, unit_y
+from planar import Point, Vec2, BoundingBox, Affine
 from chalk.shape import (
     Arc,
     Circle,
@@ -21,13 +21,14 @@ from chalk.shape import (
 )
 from chalk.trail import Trail
 
+
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
 __libname__: str = "chalk-diagrams"  # custom dunder attribute
 __version__ = metadata.version(__libname__)
 
 
-ignore = [Trail, Vector]
+ignore = [Trail, Vec2]
 
 
 def empty() -> Diagram:
@@ -319,6 +320,45 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
 
 
+def cardinal(self, dir: str) -> Point:
+    """Returns the position of an edge or a corner of the bounding
+    box based on a labeled direction (``dir``).
+
+    Args:
+        dir (str): Direction of the edge or the corner.
+
+    Choose `dir` from the following table.
+
+    Click to expand:
+
+        | `dir`  |   Directon   |  Type  |
+        |:-------|:-------------|:------:|
+        | ``N``  | North        | edge   |
+        | ``S``  | South        | edge   |
+        | ``W``  | West         | edge   |
+        | ``E``  | East         | edge   |
+        | ``NW`` | North West   | corner |
+        | ``NE`` | North East   | corner |
+        | ``SW`` | South West   | corner |
+        | ``SE`` | South East   | corner |
+
+    Returns:
+        Point: A point object.
+
+    """
+    return {
+        "N": unit_y * self.min_point,
+        "S": unit_y * self.max_point,
+        "W": unit_x * self.min_point,
+        "E": unit_x * self.max_point,
+        "NW": self.min_point,
+        "NE": unit_y * self.min_point + unit_x * self.max_point,
+        "SW": unit_y * self.max_point + unit_x * self.min_point,
+        "SE": self.max_point,
+        "C": self.center,
+    }[dir]
+
+
 def connect(diagram: Diagram, name1: str, name2: str) -> Diagram:
     return connect_outer(diagram, name1, "C", name2, "C")
 
@@ -335,5 +375,5 @@ def connect_outer(
     bb2 = diagram.get_subdiagram_bounding_box(name2)
     assert bb1 is not None, f"Name {name1} not found"
     assert bb2 is not None, f"Name {name2} not found"
-    points = [bb1.cardinal(c1), bb2.cardinal(c2)]
+    points = [cardinal(bb1, c1), cardinal(bb2, c2)]
     return Primitive.from_shape(Path(points, arrow))

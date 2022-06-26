@@ -1,228 +1,235 @@
-from dataclasses import dataclass
+# from dataclasses import dataclass
 
-from chalk.point import ORIGIN, Point
-from chalk.transform import Transform, Transformable
+# from chalk.point import ORIGIN
+# from chalk.transform import Transformable
+# from planar import BoundingBox, Point
 
 
-@dataclass
-class BoundingBox(Transformable):
-    """BoundingBox class."""
+# def box_tl(box: BoundingBox) -> Point:
+#     return box.min_point
 
-    tl: Point
-    br: Point
+# def box_br(box: BoundingBox) -> Point:
+#     return box.max_point
 
-    @classmethod
-    def from_limits(
-        cls, left: float, top: float, right: float, bottom: float
-    ) -> "BoundingBox":
-        """Returns a bounding box from limits
-        (``left``, ``top``, ``right``, ``bottom``).
+# @dataclass
+# class BoundingBox(Transformable):
+#     """BoundingBox class."""
 
-        Args:
-            left (float): Position of left edge.
-            top (float): Position of top edge.
-            right (float): Position of right edge.
-            bottom (float): Position of bottom edge.
+#     tl: Point
+#     br: Point
 
-        Returns:
-            BoundingBox: A bounding box object.
-        """
-        tl = Point(left, top)
-        br = Point(right, bottom)
-        return cls(tl, br)
+#     @classmethod
+#     def from_limits(
+#         cls, left: float, top: float, right: float, bottom: float
+#     ) -> "BoundingBox":
+#         """Returns a bounding box from limits
+#         (``left``, ``top``, ``right``, ``bottom``).
 
-    @classmethod
-    def empty(cls) -> "BoundingBox":
-        """Returns an empty bounding box.
+#         Args:
+#             left (float): Position of left edge.
+#             top (float): Position of top edge.
+#             right (float): Position of right edge.
+#             bottom (float): Position of bottom edge.
 
-        The bounding box will have the following
-        specifications:
+#         Returns:
+#             BoundingBox: A bounding box object.
+#         """
+#         tl = Point(left, top)
+#         br = Point(right, bottom)
+#         return cls(tl, br)
 
-        - top-left corner: `(0,0)`
-        - bottom-right corner: `(0,0)`
+#     @classmethod
+#     def empty(cls) -> "BoundingBox":
+#         """Returns an empty bounding box.
 
-        Returns:
-            BoundingBox: A bounding box object.
-        """
-        return cls(ORIGIN, ORIGIN)
+#         The bounding box will have the following
+#         specifications:
 
-    @property
-    def tr(self) -> Point:
-        """Returns the position of the top-right corner
-        of the bounding box.
+#         - top-left corner: `(0,0)`
+#         - bottom-right corner: `(0,0)`
 
-        Returns:
-            Point: A point object.
-        """
-        return Point(self.right, self.top)
+#         Returns:
+#             BoundingBox: A bounding box object.
+#         """
+#         return cls(ORIGIN, ORIGIN)
 
-    @property
-    def bl(self) -> Point:
-        """Returns the position of the bottom-left corner
-        of the bounding box.
+#     @property
+#     def tr(self) -> Point:
+#         """Returns the position of the top-right corner
+#         of the bounding box.
 
-        Returns:
-            Point: A point object.
-        """
-        return Point(self.left, self.bottom)
+#         Returns:
+#             Point: A point object.
+#         """
+#         return Point(self.right, self.top)
 
-    def cardinal(self, dir: str) -> Point:
-        """Returns the position of an edge or a corner of the bounding
-        box based on a labeled direction (``dir``).
+#     @property
+#     def bl(self) -> Point:
+#         """Returns the position of the bottom-left corner
+#         of the bounding box.
 
-        Args:
-            dir (str): Direction of the edge or the corner.
+#         Returns:
+#             Point: A point object.
+#         """
+#         return Point(self.left, self.bottom)
 
-        Choose `dir` from the following table.
+#     def cardinal(self, dir: str) -> Point:
+#         """Returns the position of an edge or a corner of the bounding
+#         box based on a labeled direction (``dir``).
 
-        Click to expand:
+#         Args:
+#             dir (str): Direction of the edge or the corner.
 
-            | `dir`  |   Directon   |  Type  |
-            |:-------|:-------------|:------:|
-            | ``N``  | North        | edge   |
-            | ``S``  | South        | edge   |
-            | ``W``  | West         | edge   |
-            | ``E``  | East         | edge   |
-            | ``NW`` | North West   | corner |
-            | ``NE`` | North East   | corner |
-            | ``SW`` | South West   | corner |
-            | ``SE`` | South East   | corner |
+#         Choose `dir` from the following table.
 
-        Returns:
-            Point: A point object.
+#         Click to expand:
 
-        """
-        return {
-            "N": Point(self.left + self.width / 2, self.top),
-            "S": Point(self.left + self.width / 2, self.bottom),
-            "W": Point(self.left, self.top + self.height / 2),
-            "E": Point(self.right, self.top + self.height / 2),
-            "NW": Point(self.left, self.top),
-            "NE": Point(self.right, self.top),
-            "SW": Point(self.left, self.bottom),
-            "SE": Point(self.right, self.bottom),
-            "C": self.center,
-        }[dir]
+#             | `dir`  |   Directon   |  Type  |
+#             |:-------|:-------------|:------:|
+#             | ``N``  | North        | edge   |
+#             | ``S``  | South        | edge   |
+#             | ``W``  | West         | edge   |
+#             | ``E``  | East         | edge   |
+#             | ``NW`` | North West   | corner |
+#             | ``NE`` | North East   | corner |
+#             | ``SW`` | South West   | corner |
+#             | ``SE`` | South East   | corner |
 
-    @property
-    def width(self) -> float:
-        """Returns width of the bounding box.
+#         Returns:
+#             Point: A point object.
 
-        Returns:
-            float: The width.
-        """
-        return self.br.x - self.tl.x
+#         """
+#         return {
+#             "N": Point(self.left + self.width / 2, self.top),
+#             "S": Point(self.left + self.width / 2, self.bottom),
+#             "W": Point(self.left, self.top + self.height / 2),
+#             "E": Point(self.right, self.top + self.height / 2),
+#             "NW": Point(self.left, self.top),
+#             "NE": Point(self.right, self.top),
+#             "SW": Point(self.left, self.bottom),
+#             "SE": Point(self.right, self.bottom),
+#             "C": self.center,
+#         }[dir]
 
-    @property
-    def height(self) -> float:
-        """Returns height of the bounding box.
+#     @property
+#     def width(self) -> float:
+#         """Returns width of the bounding box.
 
-        Returns:
-            float: The height.
-        """
-        return self.br.y - self.tl.y
+#         Returns:
+#             float: The width.
+#         """
+#         return self.br.x - self.tl.x
 
-    @property
-    def left(self) -> float:
-        """Returns ``x`` position of the left-edge
-        of the bounding box.
+#     @property
+#     def height(self) -> float:
+#         """Returns height of the bounding box.
 
-        Returns:
-            float: The x-coordinate of the left edge.
-        """
-        return self.tl.x
+#         Returns:
+#             float: The height.
+#         """
+#         return self.br.y - self.tl.y
 
-    @property
-    def top(self) -> float:
-        """Returns ``y`` position of the top-edge
-        of the bounding box.
+#     @property
+#     def left(self) -> float:
+#         """Returns ``x`` position of the left-edge
+#         of the bounding box.
 
-        Returns:
-            float: The y-coordinate of the top edge.
-        """
-        return self.tl.y
+#         Returns:
+#             float: The x-coordinate of the left edge.
+#         """
+#         return self.tl.x
 
-    @property
-    def right(self) -> float:
-        """Returns ``x`` position of the right-edge
-        of the bounding box.
+#     @property
+#     def top(self) -> float:
+#         """Returns ``y`` position of the top-edge
+#         of the bounding box.
 
-        Returns:
-            float: The x-coordinate of the right edge.
-        """
-        return self.br.x
+#         Returns:
+#             float: The y-coordinate of the top edge.
+#         """
+#         return self.tl.y
 
-    @property
-    def bottom(self) -> float:
-        """Returns ``y`` position of the bottom-edge
-        of the bounding box.
+#     @property
+#     def right(self) -> float:
+#         """Returns ``x`` position of the right-edge
+#         of the bounding box.
 
-        Returns:
-            float: The y-coordinate of the bottom edge.
-        """
-        return self.br.y
+#         Returns:
+#             float: The x-coordinate of the right edge.
+#         """
+#         return self.br.x
 
-    @property
-    def center(self) -> Point:
-        """Returns position of the center
-        of the bounding box.
+#     @property
+#     def bottom(self) -> float:
+#         """Returns ``y`` position of the bottom-edge
+#         of the bounding box.
 
-        Returns:
-            Point: A point object.
-        """
-        x = (self.left + self.right) / 2
-        y = (self.top + self.bottom) / 2
-        return Point(x, y)
+#         Returns:
+#             float: The y-coordinate of the bottom edge.
+#         """
+#         return self.br.y
 
-    def enclose(self, point: Point) -> "BoundingBox":
-        """Return a bounding box that encloses a given point.
+#     @property
+#     def center(self) -> Point:
+#         """Returns position of the center
+#         of the bounding box.
 
-        Args:
-            point (Point): A point object.
+#         Returns:
+#             Point: A point object.
+#         """
+#         x = (self.left + self.right) / 2
+#         y = (self.top + self.bottom) / 2
+#         return Point(x, y)
 
-        Returns:
-            BoundingBox: A bounding box object.
-        """
-        return BoundingBox.from_limits(
-            min(self.left, point.x),
-            min(self.top, point.y),
-            max(self.right, point.x),
-            max(self.bottom, point.y),
-        )
+#     def enclose(self, point: Point) -> "BoundingBox":
+#         """Return a bounding box that encloses a given point.
 
-    def apply_transform(self, t: Transform) -> "BoundingBox":  # type: ignore
-        """Applies a transformation to the bounding box.
+#         Args:
+#             point (Point): A point object.
 
-        Args:
-            t (Transform): A transform object.
+#         Returns:
+#             BoundingBox: A bounding box object.
+#         """
+#         return BoundingBox.from_limits(
+#             min(self.left, point.x),
+#             min(self.top, point.y),
+#             max(self.right, point.x),
+#             max(self.bottom, point.y),
+#         )
 
-        Returns:
-            BoundingBox: A bounding box object.
-        """
-        tl = self.tl.apply_transform(t)
-        return (
-            BoundingBox(tl, tl)
-            .enclose(self.tr.apply_transform(t))
-            .enclose(self.bl.apply_transform(t))
-            .enclose(self.br.apply_transform(t))
-        )
+#     def apply_transform(self, t: Affine) -> "BoundingBox":  # type: ignore
+#         """Applies a transformation to the bounding box.
 
-    def union(self, other: "BoundingBox") -> "BoundingBox":
-        """Returns the union (merged bounding box) of this
-        bounding box with another one.
+#         Args:
+#             t (Transform): A transform object.
 
-        For two bounding boxes, ``a`` and ``b``, ``a.union(b)``
-        will return another bounding box that minimally-contains
-        both bounding boxes.
+#         Returns:
+#             BoundingBox: A bounding box object.
+#         """
+#         tl = t * self.tl
+#         return (
+#             BoundingBox(tl, tl)
+#             .enclose(t * self.tr)
+#             .enclose(t * self.bl)
+#             .enclose(t * self.br)
+#         )
 
-        Args:
-            other (BoundingBox): Another bounding box object.
+#     def union(self, other: "BoundingBox") -> "BoundingBox":
+#         """Returns the union (merged bounding box) of this
+#         bounding box with another one.
 
-        Returns:
-            BoundingBox: A bounding box object.
-        """
-        left = min(self.left, other.left)
-        top = min(self.top, other.top)
-        right = max(self.right, other.right)
-        bottom = max(self.bottom, other.bottom)
-        return BoundingBox.from_limits(left, top, right, bottom)
+#         For two bounding boxes, ``a`` and ``b``, ``a.union(b)``
+#         will return another bounding box that minimally-contains
+#         both bounding boxes.
+
+#         Args:
+#             other (BoundingBox): Another bounding box object.
+
+#         Returns:
+#             BoundingBox: A bounding box object.
+#         """
+#         left = min(self.left, other.left)
+#         top = min(self.top, other.top)
+#         right = max(self.right, other.right)
+#         bottom = max(self.bottom, other.bottom)
+#         return BoundingBox.from_limits(left, top, right, bottom)

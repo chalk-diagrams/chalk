@@ -36,7 +36,7 @@ def draw_tree(tree, name="", ysep=15, xsep=1):
     rname, r = draw_tree(tree[2], name + "r")
 
     # Position node an origin and subtrees to both sides.
-    off = (l.get_bounding_box().right - r.get_bounding_box().left + xsep) / 2    
+    off = (l.get_bounding_box().max_point.x - r.get_bounding_box().min_point.x + xsep) / 2    
     x = node / vstrut(ysep) /  (l | hstrut(xsep) | r).translate(-off, 0)
 
     # Connect to children

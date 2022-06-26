@@ -1,20 +1,20 @@
 from functools import reduce
 from typing import Callable, Iterable, List, Optional
 
-from chalk.point import Point, Vector
-from chalk.transform import Transform, Transformable
+from planar import Point, Vec2
+from chalk.transform import Affine, Transformable
 
 SignedDistance = float
 
 
 class Trace(Transformable):
     def __init__(
-        self, f: Callable[[Point, Vector], List[SignedDistance]]
+        self, f: Callable[[Point, Vec2], List[SignedDistance]]
     ) -> None:
         self.f = f
 
     def __call__(
-        self, point: Point, direction: Vector
+        self, point: Point, direction: Vec2
     ) -> List[SignedDistance]:
         return self.f(point, direction)
 
@@ -36,16 +36,14 @@ class Trace(Transformable):
     def concat(traces: Iterable["Trace"]) -> "Trace":
         return reduce(Trace.mappend, traces, Trace.empty())
 
-    def apply_transform(self, t: Transform) -> "Trace":  # type: ignore
-        def wrapped(p: Point, d: Vector) -> List[SignedDistance]:
-            t1 = t().invert()
-            p1 = p.apply_transform(t1)
-            d1 = d.apply_transform(t1)
-            return self(p1, d1)
+    def apply_transform(self, t: Affine) -> "Trace":  # type: ignore
+        def wrapped(p: Point, d: Vec2) -> List[SignedDistance]:
+            t1 = ~t
+            return self(t1 * p, t1 * d)
 
         return Trace(wrapped)
 
-    def trace_v(self, p: Point, v: Vector) -> Optional[Vector]:
+    def trace_v(self, p: Point, v: Vec2) -> Optional[Vec2]:
         dists = self(p, v)
         if dists:
             s, *_ = sorted(dists)
@@ -53,7 +51,7 @@ class Trace(Transformable):
         else:
             return None
 
-    def trace_p(self, p: Point, v: Vector) -> Optional[Point]:
+    def trace_p(self, p: Point, v: Vec2) -> Optional[Point]:
         u = self.trace_v(p, v)
         return p + u if u else None
 

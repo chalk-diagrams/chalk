@@ -1,7 +1,7 @@
 from PIL import Image as PILImage
 from chalk import *
 from colour import Color
-from chalk.bounding_box import BoundingBox
+from chalk import BoundingBox
 
 # Colors
 papaya = Color("#ff9700")
@@ -21,7 +21,7 @@ def cover(d, a, b):
     "Draw a bounding_box around a subdiagram"
     b1 = d.get_subdiagram_bounding_box(a)
     b2 = d.get_subdiagram_bounding_box(b)
-    new_bb = BoundingBox(b1.tl, b2.br)
+    new_bb = BoundingBox([b1.min_point, b2.max_point])
     return rectangle(new_bb.width, new_bb.height) \
             .translate(new_bb.center.x, new_bb.center.y)
 

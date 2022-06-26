@@ -4,7 +4,7 @@ colour
 svgwrite
 cairosvg
 Pillow
-affine
+planar
 latextools
 loguru
 typing-extensions

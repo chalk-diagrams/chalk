@@ -10,10 +10,9 @@ import PIL
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
+from planar import Point, Vec2, BoundingBox, Vec2Array
 
 from chalk import transform as tx
-from chalk.bounding_box import BoundingBox
-from chalk.point import ORIGIN, Point, Vector
 from chalk.segment import Line, Segment, line_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
@@ -22,6 +21,7 @@ PyLatex = Any
 PyLatexElement = Any
 PyCairoContext = Any
 
+ORIGIN = Point(0, 0)
 
 @dataclass
 class Shape:
@@ -54,10 +54,10 @@ class Circle(Shape):
     def get_bounding_box(self) -> BoundingBox:
         tl = Point(-self.radius, -self.radius)
         br = Point(+self.radius, +self.radius)
-        return BoundingBox(tl, br)
+        return BoundingBox([tl, br])
 
     def get_trace(self) -> Trace:
-        def f(p: Point, v: Vector) -> List[SignedDistance]:
+        def f(p: Point, v: Vec2) -> List[SignedDistance]:
             line = Line(p, v)
             return sorted(line_circle_intersection(line, self.radius))
 
@@ -91,7 +91,7 @@ class Rectangle(Shape):
         top = ORIGIN.y - self.height / 2
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
+        return BoundingBox([tl, br])
 
     def get_trace(self) -> Trace:
         # FIXME For rounded corners the following trace is not accurate
@@ -137,7 +137,7 @@ class Rectangle(Shape):
 class Path(Shape, tx.Transformable):
     """Path class."""
 
-    points: List[Point]
+    points: Vec2Array
     arrow: bool = False
 
     @classmethod
@@ -149,7 +149,7 @@ class Path(Shape, tx.Transformable):
         cls, coords: List[Tuple[float, float]], arrow: bool = False
     ) -> "Path":
         points = [Point(x, y) for x, y in coords]
-        return cls(points, arrow)
+        return cls(Vec2Array(points), arrow)
 
     @property
     def segments(self) -> List[Segment]:
@@ -192,16 +192,13 @@ class Path(Shape, tx.Transformable):
         )
 
     def get_bounding_box(self) -> BoundingBox:
-        box = BoundingBox(self.points[0], self.points[0])
-        for p in self.points:
-            box = box.enclose(p)
-        return box
+        return BoundingBox.from_points(self.points)
 
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)
 
-    def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
-        return Path([p.apply_transform(t) for p in self.points])
+    def apply_transform(self, t: tx.Affine) -> "Path":  # type: ignore
+        return Path(t * p)
 
     def render(self, ctx: PyCairoContext) -> None:
         p, *rest = self.points
@@ -241,18 +238,18 @@ class Arc(Shape):
     def get_bounding_box(self) -> BoundingBox:
         self.render(self.ctx)
         l, t, r, b = self.ctx.path_extents()
-        return BoundingBox(Point(l, t), Point(r, b))
+        return BoundingBox([Point(l, t), Point(r, b)])
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        u = Vector.from_polar(self.radius, self.angle0)
-        v = Vector.from_polar(self.radius, self.angle1)
+        u = Vec2.polar(self.angle0 * (180 / math.pi), self.radius)
+        v = Vec2.polar(self.angle1 * (180 / math.pi), self.radius)
         path = dwg.path(fill="none")
         path.push(
             "M {} {} A {} {} 0 0 1 {} {}".format(
-                u.dx, u.dy, self.radius, self.radius, v.dx, v.dy
+                u.x, u.y, self.radius, self.radius, v.x, v.y
             )
         )
         return path
@@ -296,7 +293,7 @@ class Text(Shape):
         top = extents.y_bearing
         tl = Point(left, top)
         br = Point(left + extents.x_advance, top + extents.height)
-        self.bb = BoundingBox(tl, br)
+        self.bb = BoundingBox([tl, br])
 
         return self.bb
 
@@ -404,7 +401,7 @@ class Spacer(Shape):
         top = ORIGIN.y - self.height / 2
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
+        return BoundingBox([tl, br])
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         left = ORIGIN.x - self.width / 2

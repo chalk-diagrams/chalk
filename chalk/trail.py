@@ -1,12 +1,12 @@
 from typing import List
 
-from chalk import transform as tx
+from planar import Point, Vec2, Vec2Array, Affine
+from chalk.transform import Transformable
 from chalk.core import Primitive
-from chalk.point import ORIGIN, Point, Vector
 from chalk.shape import Path
 
 
-class Trail(tx.Transformable):
+class Trail(Transformable):
     """Trail class.
 
     This is derived from a ``chalk.transform.Transformable`` class.
@@ -14,10 +14,11 @@ class Trail(tx.Transformable):
     [TODO]: Need more explanation on what this class is for (preferably
     with illustrations/figures).
     """
-
-    def __init__(self, offsets: List[Vector]):
-        self.offsets = offsets
-
+    offsets : Vec2Array
+    
+    def __init__(self, offsets: Vec2Array):
+        self.offsets = Vec2Array(offsets)
+        
     def __add__(self, other: "Trail") -> "Trail":
         """Adds another trail to this one and
         returns the resulting trail.
@@ -28,7 +29,9 @@ class Trail(tx.Transformable):
         Returns:
             Trail: A trail object.
         """
-        return Trail(self.offsets + other.offsets)
+        new_vec = Vec2Array(self.offsets)
+        new_vec.extend(other.offsets)
+        return Trail(new_vec)
 
     @classmethod
     def from_path(cls, path: Path) -> "Trail":
@@ -44,7 +47,7 @@ class Trail(tx.Transformable):
         offsets = [t - s for s, t in zip(pts, pts[1:])]
         return cls(offsets)
 
-    def to_path(self, origin: Point = ORIGIN) -> Path:
+    def to_path(self, origin: Point = Point(0, 0)) -> Path:
         """Converts a trail to a path, given a point (as a reference).
 
         Args:
@@ -67,19 +70,7 @@ class Trail(tx.Transformable):
         """
         return Primitive.from_shape(self.to_path())
 
-    def transform(self, t: tx.Transform) -> "Trail":
-        """Applies a transform on the trail and
-        returns the resulting trail.
-
-        Args:
-            t (Transform): A transform object.
-
-        Returns:
-            Trail: A trail object.
-        """
-        return Trail([p.apply_transform(t) for p in self.offsets])
-
-    def apply_transform(self, t: tx.Transform) -> "Trail":  # type: ignore
+    def apply_transform(self, t: Affine) -> "Trail":  # type: ignore
         """Applies a given transform.
 
         This is the same as ``Trail.transform()`` method.
@@ -90,8 +81,8 @@ class Trail(tx.Transformable):
         Returns:
             Trail: A trail object.
         """
-        return self.transform(t)
+        return Trail(t * self.offsets)
 
 
-unit_x = Trail([Vector(1, 0)])
-unit_y = Trail([Vector(0, 1)])
+unit_x = Trail([Vec2(1, 0)])
+unit_y = Trail([Vec2(0, 1)])
