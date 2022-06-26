@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 
+from affine import Affine
 from chalk import transform as tx
 
 
@@ -96,6 +97,9 @@ class Vector(tx.Transformable):
         dy = r * math.sin(angle)
         return cls(dx, dy)
 
+    def cross(self, other: "Vector") -> float:
+        return self.dx * other.dy - self.dy * other.dx
+
     def apply_transform(self, t: tx.Transform):  # type:ignore
         """Applies a transformation on a vector
         and returns the transformed vector.
@@ -106,7 +110,11 @@ class Vector(tx.Transformable):
         Returns:
             Vector: A vector object.
         """
-        new_dx, new_dy = t() * (self.dx, self.dy)
+        # Undo translation: since vectors do not have an origin, translation
+        # is a no-op when applied to them.
+        aff = t()
+        aff = aff * Affine.translation(-aff.c, -aff.c)
+        new_dx, new_dy = aff * (self.dx, self.dy)
         return Vector(new_dx, new_dy)
 
     def rotate(self, by: float) -> "Vector":

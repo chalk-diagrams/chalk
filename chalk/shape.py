@@ -14,7 +14,9 @@ from svgwrite.shapes import Rect
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
 from chalk.point import ORIGIN, Point, Vector
+from chalk.segment import Line, Segment, line_circle_intersection
 from chalk.style import Style
+from chalk.trace import SignedDistance, Trace
 
 PyLatex = Any
 PyLatexElement = Any
@@ -26,7 +28,12 @@ class Shape:
     """Shape class."""
 
     def get_bounding_box(self) -> BoundingBox:
-        pass
+        raise NotImplementedError
+
+    def get_trace(self) -> Trace:
+        # default trace based on bounding box
+        box = self.get_bounding_box()
+        return Path.rectangle(box.width, box.height).get_trace()
 
     def render(self, ctx: PyCairoContext) -> None:
         pass
@@ -48,6 +55,13 @@ class Circle(Shape):
         tl = Point(-self.radius, -self.radius)
         br = Point(+self.radius, +self.radius)
         return BoundingBox(tl, br)
+
+    def get_trace(self) -> Trace:
+        def f(p: Point, v: Vector) -> List[SignedDistance]:
+            line = Line(p, v)
+            return sorted(line_circle_intersection(line, self.radius))
+
+        return Trace(f)
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(ORIGIN.x, ORIGIN.y, self.radius, 0, 2 * math.pi)
@@ -78,6 +92,10 @@ class Rectangle(Shape):
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
         return BoundingBox(tl, br)
+
+    def get_trace(self) -> Trace:
+        # FIXME For rounded corners the following trace is not accurate
+        return Path.rectangle(self.width, self.height).get_trace()
 
     def render(self, ctx: PyCairoContext) -> None:
         x = left = ORIGIN.x - self.width / 2
@@ -133,6 +151,12 @@ class Path(Shape, tx.Transformable):
         points = [Point(x, y) for x, y in coords]
         return cls(points, arrow)
 
+    @property
+    def segments(self) -> List[Segment]:
+        return [
+            Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])
+        ]
+
     @staticmethod
     def hrule(length: float) -> "Path":
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
@@ -140,6 +164,16 @@ class Path(Shape, tx.Transformable):
     @staticmethod
     def vrule(length: float) -> "Path":
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
+
+    @staticmethod
+    def rectangle(width: float, height: float) -> "Path":
+        # Should I reuse the `polygon` function to define `rectangle`?
+        # polygon(4, 1, math.pi / 4).scale_x(width).scale_y(height)
+        x = width / 2
+        y = height / 2
+        return Path.from_list_of_tuples(
+            [(-x, y), (x, y), (x, -y), (-x, -y), (-x, y)]
+        )
 
     @staticmethod
     def polygon(sides: int, radius: float, rotation: float = 0) -> "Path":
@@ -162,6 +196,9 @@ class Path(Shape, tx.Transformable):
         for p in self.points:
             box = box.enclose(p)
         return box
+
+    def get_trace(self) -> Trace:
+        return Trace.concat(segment.get_trace() for segment in self.segments)
 
     def apply_transform(self, t: tx.Transform) -> "Path":  # type: ignore
         return Path([p.apply_transform(t) for p in self.points])
