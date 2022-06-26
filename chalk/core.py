@@ -13,8 +13,8 @@ from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
 from chalk.shape import Circle, Rectangle, Shape, Spacer
 from chalk.style import Style
-from chalk.utils import imgen
 from chalk.trace import Trace
+from chalk.utils import imgen
 
 PyCairoContext = Any
 PyLatex = Any

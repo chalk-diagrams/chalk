@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 
+from affine import Affine
 from chalk import transform as tx
 
 
@@ -112,8 +113,7 @@ class Vector(tx.Transformable):
         # Undo translation: since vectors do not have an origin, translation
         # is a no-op when applied to them.
         aff = t()
-        aff.c = 0
-        aff.f = 0
+        aff = aff * Affine.translation(-aff.c, -aff.c)
         new_dx, new_dy = aff * (self.dx, self.dy)
         return Vector(new_dx, new_dy)
 

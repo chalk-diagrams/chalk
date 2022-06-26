@@ -1,24 +1,22 @@
 import math
-
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
-import PIL
 import cairo
 import cairosvg
-import xml.etree.ElementTree as ET
-
+import PIL
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
 
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
-from chalk.point import Point, Vector, ORIGIN
+from chalk.point import ORIGIN, Point, Vector
 from chalk.segment import Line, Segment, line_circle_intersection
 from chalk.style import Style
-from chalk.trace import Trace, SignedDistance
+from chalk.trace import SignedDistance, Trace
 
 PyLatex = Any
 PyLatexElement = Any

@@ -2,8 +2,7 @@ from functools import reduce
 from typing import Callable, Iterable, List, Optional
 
 from chalk.point import Point, Vector
-from chalk.transform import Transform, Transformable, invert as invert_tx
-
+from chalk.transform import Transform, Transformable
 
 SignedDistance = float
 
@@ -39,7 +38,7 @@ class Trace(Transformable):
 
     def apply_transform(self, t: Transform) -> "Trace":  # type: ignore
         def wrapped(p: Point, d: Vector) -> List[SignedDistance]:
-            t1 = invert_tx(t)
+            t1 = t().invert()
             p1 = p.apply_transform(t1)
             d1 = d.apply_transform(t1)
             return self(p1, d1)
