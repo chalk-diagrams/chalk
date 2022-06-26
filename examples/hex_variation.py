@@ -22,7 +22,6 @@ def hexagon_tile():
         # + polygon(6, 1)
     )
 
-
 def rotated_hexagon_tile(n):
     return hexagon_tile().rotate(n * 2 * math.pi / 3)
 
@@ -46,3 +45,4 @@ def hex_variation(num_tiles):
 dia = hex_variation(12).line_width(0.02).rotate_by(1 / 4)
 dia.render("examples/output/hex-variation.png", height=512)
 dia.render_svg("examples/output/hex-variation.svg", height=512)
+dia.render_pdf("examples/output/hex-variation.pdf", height=512)

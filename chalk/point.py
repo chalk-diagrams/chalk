@@ -25,7 +25,7 @@ class Point(tx.Transformable):
         Returns:
             Point: A point object.
         """
-        new_x, new_y = t().transform_point(self.x, self.y)
+        new_x, new_y = t() * (self.x, self.y)
         return Point(new_x, new_y)
 
     def __add__(self, other: "Vector") -> "Point":
@@ -109,11 +109,12 @@ class Vector(tx.Transformable):
         Returns:
             Vector: A vector object.
         """
-        matrix = t()
         # Undo translation: since vectors do not have an origin, translation
         # is a no-op when applied to them.
-        matrix.translate(-matrix.x0, -matrix.y0)
-        new_dx, new_dy = matrix.transform_point(self.dx, self.dy)
+        aff = t()
+        aff.c = 0
+        aff.f = 0
+        new_dx, new_dy = aff * (self.dx, self.dy)
         return Vector(new_dx, new_dy)
 
     def rotate(self, by: float) -> "Vector":

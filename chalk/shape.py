@@ -16,10 +16,12 @@ from svgwrite.shapes import Rect
 from chalk import transform as tx
 from chalk.bounding_box import BoundingBox
 from chalk.point import Point, Vector, ORIGIN
-from chalk.trace import Trace, SignedDistance
 from chalk.segment import Line, Segment, line_circle_intersection
+from chalk.style import Style
+from chalk.trace import Trace, SignedDistance
 
-
+PyLatex = Any
+PyLatexElement = Any
 PyCairoContext = Any
 
 
@@ -40,6 +42,9 @@ class Shape:
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         return dwg.g()
+
+    def render_tikz(self, p: PyLatex, style: Style) -> PyLatexElement:
+        return p.TikZScope()
 
 
 @dataclass
@@ -65,6 +70,14 @@ class Circle(Shape):
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         return dwg.circle((ORIGIN.x, ORIGIN.y), self.radius)
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        return pylatex.TikZDraw(
+            [pylatex.TikZCoordinate(0, 0), "circle"],
+            options=pylatex.TikZOptions(
+                radius=self.radius, **style.to_tikz(pylatex)
+            ),
+        )
 
 
 @dataclass
@@ -107,6 +120,18 @@ class Rectangle(Shape):
             (self.width, self.height),
             rx=self.radius,
             ry=self.radius,
+        )
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        return pylatex.TikZDraw(
+            [
+                pylatex.TikZCoordinate(left, top),
+                "rectangle",
+                pylatex.TikZCoordinate(left + self.width, top + self.height),
+            ],
+            options=pylatex.TikZOptions(**style.to_tikz(pylatex)),
         )
 
 
@@ -192,6 +217,16 @@ class Path(Shape, tx.Transformable):
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
 
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        pts = []
+        for p in self.points:
+            pts.append(pylatex.TikZCoordinate(p.x, p.y))
+            pts.append("--")
+
+        return pylatex.TikZDraw(
+            pts[:-1], options=pylatex.TikZOptions(**style.to_tikz(pylatex))
+        )
+
 
 @dataclass
 class Arc(Shape):
@@ -223,6 +258,24 @@ class Arc(Shape):
             )
         )
         return path
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        start = 180 * (self.angle0 / math.pi)
+        end = 180 * (self.angle1 / math.pi)
+        return pylatex.TikZDraw(
+            [
+                pylatex.TikZCoordinate(
+                    self.radius * math.cos(self.angle0),
+                    self.radius * math.sin(self.angle0),
+                ),
+                "arc",
+            ],
+            options=pylatex.TikZOptions(
+                radius=self.radius,
+                **{"start angle": start, "end angle": end},
+                **style.to_tikz(pylatex),
+            ),
+        )
 
 
 @dataclass
@@ -266,6 +319,23 @@ class Text(Shape):
             style=f"""text-align:center; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
                       font-size:{self.font_size}px""",
+        )
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        opts = {}
+        opts["font"] = "\\small\\sffamily"
+        opts["scale"] = str(
+            3.5
+            * (1 if self.font_size is None else self.font_size)
+            * (1 if style.scale is None else style.scale)
+        )
+        styles = style.to_tikz(pylatex)
+        if styles["fill"] is not None:
+            opts["text"] = styles["fill"]
+        return pylatex.TikZNode(
+            text=self.text,
+            # Scale parameters based on observations
+            options=pylatex.TikZOptions(**opts),
         )
 
 
@@ -337,6 +407,17 @@ class Spacer(Shape):
         tl = Point(left, top)
         br = Point(left + self.width, top + self.height)
         return BoundingBox(tl, br)
+
+    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
+        left = ORIGIN.x - self.width / 2
+        top = ORIGIN.y - self.height / 2
+        return pylatex.TikZPath(
+            [
+                pylatex.TikZCoordinate(left, top),
+                "rectangle",
+                pylatex.TikZCoordinate(left + self.width, top + self.height),
+            ]
+        )
 
 
 class Raw(Rect):  # type: ignore

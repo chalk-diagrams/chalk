@@ -50,3 +50,5 @@ d = (background + floret + logo).center_xy() + mask
 
 d.pad_b(-1).render("examples/output/logo.png", 500)
 d.pad_b(-1).render_svg("examples/output/logo.svg", 500)
+
+d.render_pdf("examples/output/logo.pdf", 50)

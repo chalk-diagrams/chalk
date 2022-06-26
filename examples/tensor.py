@@ -15,12 +15,14 @@ def draw_cube():
     right = Vector(1, 0)
     
     # Faces
-    face_m = rectangle(1, 1).align_tl().show_origin()
+    face_m = rectangle(1, 1).align_tl()
     face_t = rectangle(1, 0.5).shear_x(-1).align_bl()
     face_r = rectangle(0.5, 1).shear_y(-1).align_tr()
     
     return (face_m + face_t).align_tr() + face_r, (up, hyp, right)
 draw_cube()[0]
+draw_cube()[0].render("examples/output/cube.png", 50)
+draw_cube()[0].render_pdf("examples/output/cube.pdf", 50)
 
 def draw_tensor(depth, rows, columns):
     "Draw a tensor"
@@ -50,3 +52,8 @@ path = "examples/output/tensor.png"
 m.render(path, 500)
 PILImage.open(path)
 
+# Needed for recursion 
+import sys
+sys.setrecursionlimit(10000)
+
+m.render_pdf("examples/output/tensor.pdf", 50)

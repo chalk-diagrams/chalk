@@ -20,5 +20,6 @@ def hilbert(n):
 
 d = hilbert(5).stroke().line_width(0.05)
 d.render_svg("examples/output/hilbert.svg", 500)
+d.render_pdf("examples/output/hilbert.pdf", 100)
 d.render("examples/output/hilbert.png", 500)
 PILImage.open("examples/output/hilbert.png")
