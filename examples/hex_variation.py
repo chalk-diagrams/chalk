@@ -25,10 +25,6 @@ def hexagon_tile():
 def rotated_hexagon_tile(n):
     return hexagon_tile().rotate(n * 2 * math.pi / 3)
 
-
-hexagon_tile().render_svg("examples/output/start.svg", height=512)
-rotated_hexagon_tile(1.0).render_svg("examples/output/rot.svg", height=512)
-
 def center_position(x, y):
     if x % 2 == 0:
         return (2 - h1) * x, 2 * y * h
@@ -46,9 +42,7 @@ def hex_variation(num_tiles):
 
 
 dia = hex_variation(12).line_width(0.05).show_bounding_box()
-print(dia.get_bounding_box())
 dia = dia.rotate_by(1 / 4)
-print(dia.get_bounding_box())
 dia.render("examples/output/hex-variation.png", height=512)
 dia.render_svg("examples/output/hex-variation.svg", height=512)
 dia.render_pdf("examples/output/hex-variation.pdf", height=512)

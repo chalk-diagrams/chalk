@@ -81,7 +81,7 @@ class Trail(Transformable):
         Returns:
             Trail: A trail object.
         """
-        return Trail(t * self.offsets)
+        return Trail(apply_affine(t, self.offsets))
 
 
 unit_x = Trail([Vec2(1, 0)])

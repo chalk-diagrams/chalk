@@ -2,7 +2,7 @@ from functools import reduce
 from typing import Callable, Iterable, List, Optional
 
 from planar import Point, Vec2
-from chalk.transform import Affine, Transformable
+from chalk.transform import Affine, Transformable, apply_affine, remove_translation
 
 SignedDistance = float
 
@@ -39,11 +39,12 @@ class Trace(Transformable):
     def apply_transform(self, t: Affine) -> "Trace":  # type: ignore
         def wrapped(p: Point, d: Vec2) -> List[SignedDistance]:
             t1 = ~t
-            return self(t1 * p, t1 * d)
+            return self(apply_affine(t1, p), apply_affine(remove_translation(t1), d))
 
         return Trace(wrapped)
 
     def trace_v(self, p: Point, v: Vec2) -> Optional[Vec2]:
+        v = v.scaled_to(1)
         dists = self(p, v)
         if dists:
             s, *_ = sorted(dists)
@@ -52,6 +53,7 @@ class Trace(Transformable):
             return None
 
     def trace_p(self, p: Point, v: Vec2) -> Optional[Point]:
+        v = v.scaled_to(1)
         u = self.trace_v(p, v)
         return p + u if u else None
 

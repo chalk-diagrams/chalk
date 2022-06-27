@@ -197,7 +197,7 @@ class Diagram(tx.Transformable):
     def atop(self, other: "Diagram") -> "Diagram":
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
-        new_box = BoundingBox.from_shapes([box1, box2])
+        new_box = BoundingBox.from_shapes([b for b in [box1, box2] if b is not None])
         return Compose(new_box, self, other)
     
     __add__ = atop
@@ -207,7 +207,7 @@ class Diagram(tx.Transformable):
         box2 = other.get_bounding_box()
         d = box1.max_point - box2.min_point
         t = Affine.translation(direction * d)
-        new_box = BoundingBox.from_shapes([box1, t * box2])
+        new_box = BoundingBox.from_shapes([b for b in [box1, t * box2] if b is not None])
         return Compose(new_box, self, ApplyTransform(t, other))        
 
     
@@ -614,6 +614,14 @@ class Diagram(tx.Transformable):
     def to_tikz(self, pylatex: PyLatex, style: Style) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
         raise NotImplementedError
+
+
+def bounding_box_transform(t, box):
+    return BoundingBox(tx.apply_affine(t,
+                                       Vec2Array([box.min_point,
+                                                  box.max_point,
+                                                  unit_x * box.min_point + unit_y * box.max_point,
+                                                  unit_y * box.min_point + unit_x * box.max_point])))
     
 @dataclass
 class Primitive(Diagram):
@@ -677,14 +685,11 @@ class Primitive(Diagram):
         """
 
         new_transform = t * self.transform
-        print(new_transform)
-        print(self.shape.get_bounding_box())
-        print()
-        return (new_transform * self.shape.get_bounding_box()).bounding_box
+        return bounding_box_transform(new_transform, self.shape.get_bounding_box())
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         new_transform = t * self.transform
-        return new_transform * self.shape.get_trace()
+        return self.shape.get_trace().apply_transform(new_transform)
 
     def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives.
@@ -739,7 +744,7 @@ class Empty(Diagram):
 
     def get_bounding_box(self, t: Affine = Ident) -> BoundingBox:
         """Returns the bounding box of a diagram."""
-        return BoundingBox.from_points([Point(0, 0)])
+        return None
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         return Trace.empty()
@@ -769,7 +774,7 @@ class Compose(Diagram):
 
     def get_bounding_box(self, t: Affine = Ident) -> BoundingBox:
         """Returns the bounding box of a diagram."""
-        return (t * self.box).bounding_box
+        return bounding_box_transform(t, self.box)
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         # TODO Should we cache the trace?

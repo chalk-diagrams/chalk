@@ -8,7 +8,7 @@ def to_cairo(affine: Affine) -> Any:
     import cairo
 
     def convert(a, b, c, d, e, f):  # type: ignore
-        return cairo.Matrix(a, b, d, e, c, f)  # type: ignore
+        return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
 
     return convert(*affine[:6])  # type: ignore
 
@@ -16,7 +16,7 @@ def to_svg(affine: Affine) -> str:
     def convert(
         a: float, b: float, c: float, d: float, e: float, f: float
     ) -> str:
-        return f"matrix({a}, {b}, {d}, {e}, {c}, {f})"
+        return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
 
     return convert(*affine[:6])
 
@@ -24,7 +24,7 @@ def to_tikz(affine: Affine) -> str:
     def convert(
         a: float, b: float, c: float, d: float, e: float, f: float
     ) -> str:
-        return f"{{{a}, {b}, {d}, {e}, ({c}, {f})}}"
+        return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
 
     return convert(*affine[:6])
     
@@ -39,6 +39,17 @@ def shear_x(λ: float) -> Affine:
 def shear_y(λ: float) -> Affine:
     return Affine(1, λ, 0, 0, 1, 0)
 
+def remove_translation(aff: Affine) -> Affine:
+    a, b, c, d, e, f = aff[:6]
+    return Affine(a, d, 0, b, e, 0)
+
+
+def _fix_affine(aff) -> Affine:
+    a, b, c, d, e, f = aff[:6]
+    return Affine(a, d, c, b, e, f)
+
+def apply_affine(aff, x) -> Affine:
+    return _fix_affine(aff) * x
 
 TTrans = TypeVar("TTrans", bound="Transformable")
 
@@ -50,7 +61,7 @@ class Transformable:
         pass
 
     def __rmul__(self, t: Affine) -> TTrans:
-        return self.apply_transform(t)
+        return self.apply_transform(_fix_affine(t))
 
     def scale(self: TTrans, α: float) -> TTrans:
         return Affine.scale(Vec2(α, α)) * self

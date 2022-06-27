@@ -13,7 +13,7 @@ from svgwrite.shapes import Rect
 from planar import Point, Vec2, BoundingBox, Vec2Array
 
 from chalk import transform as tx
-from chalk.segment import Line, Segment, line_circle_intersection
+from chalk.segment import Segment, ray_circle_intersection, Ray
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
 
@@ -58,8 +58,8 @@ class Circle(Shape):
 
     def get_trace(self) -> Trace:
         def f(p: Point, v: Vec2) -> List[SignedDistance]:
-            line = Line(p, v)
-            return sorted(line_circle_intersection(line, self.radius))
+            ray = Ray(p, v)
+            return sorted(ray_circle_intersection(ray, self.radius))
 
         return Trace(f)
 
@@ -198,7 +198,7 @@ class Path(Shape, tx.Transformable):
         return Trace.concat(segment.get_trace() for segment in self.segments)
 
     def apply_transform(self, t: tx.Affine) -> "Path":  # type: ignore
-        return Path(t * p)
+        return Path(tx.apply_affine(t, self.points))
 
     def render(self, ctx: PyCairoContext) -> None:
         p, *rest = self.points

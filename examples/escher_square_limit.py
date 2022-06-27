@@ -99,7 +99,7 @@ def make_tile(name):
 
 def quartet(tl, tr, bl, br):
     diagram = (tl | tr) / (bl | br)
-    return diagram.center_xy()#.scale(0.5)
+    return diagram.center_xy().scale(0.5)
 
 
 def cycle(diagram):
@@ -109,23 +109,29 @@ def cycle(diagram):
     br = diagram.rotate(θ).rotate(θ)
     return quartet(tl, tr, bl, br)
 
-
 fish = {name: make_tile(name) for name in names}
-
 fish_t = quartet(fish["p"], fish["q"], fish["r"], fish["s"])
-
-output_path = "examples/output/fish.png"
-fish_t.show_origin().show_bounding_box().render(output_path, height=512)
-output_path = "examples/output/square.png"
-(fish_t.rotate_by(0.25).show_origin().show_bounding_box()).render(output_path, height=512)
-
 fish_u = cycle(fish["q"].rotate(θ))
 
 side_1 = quartet(blank, blank, fish_t.rotate(θ), fish_t)
+
+# output_path = "examples/output/fish.png"
+# side_1.show_origin().show_bounding_box().render(output_path, height=512)
+# output_path = "examples/output/square.png"
+# (fish_t.rotate_by(0.25).show_origin().show_bounding_box()).render(output_path, height=512)
+
+
 side_2 = quartet(side_1, side_1, fish_t.rotate(θ), fish_t)
 corner_1 = quartet(blank, blank, blank, fish_u)
+
+output_path = "examples/output/fish.png"
+side_2.show_origin().show_bounding_box().render(output_path, height=512)
+
 corner_2 = quartet(corner_1, side_1, side_1.rotate(θ), fish_u)
+corner_2.show_origin().show_bounding_box().render(output_path, height=512)
 pseudocorner = quartet(corner_2, side_2, side_2.rotate(θ), fish_t.rotate(θ))
+
+
 pseudolimit = cycle(pseudocorner)
 
 output_path = "examples/output/escher-square-limit.png"
