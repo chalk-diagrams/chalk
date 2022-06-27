@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 
 from planar import Point, Vec2
 from planar.py import Ray
+
 from chalk.trace import Trace
 
 
@@ -24,7 +25,9 @@ class Segment:
         return Ray(self.p, self.q - self.p)
 
 
-def ray_ray_intersection(ray1: Ray, ray2: Ray) -> Optional[Tuple[float, float]]:
+def ray_ray_intersection(
+    ray1: Ray, ray2: Ray
+) -> Optional[Tuple[float, float]]:
     """Given two rays
 
     ray₁ = λ t . p₁ + t v₁
@@ -36,7 +39,7 @@ def ray_ray_intersection(ray1: Ray, ray2: Ray) -> Optional[Tuple[float, float]]:
     ray₁ t₁ = ray₂ t₂
 
     """
-    u =  ray2.anchor - ray1.anchor
+    u = ray2.anchor - ray1.anchor
     x1 = ray1.direction.cross(ray2.direction)
     x2 = u.cross(ray1.direction)
     x3 = u.cross(ray2.direction)
@@ -92,9 +95,9 @@ def ray_circle_intersection(ray: Ray, circle_radius: float) -> List[float]:
     """
     p = ray.anchor
 
-    a = ray.direction.x**2 + ray.direction.y**2
-    b = 2 * (p.x * ray.direction.x + p.y * ray.direction.y)
-    c = p.x**2 + p.y**2 - circle_radius**2
+    a = ray.direction.length2
+    b = 2 * (p.dot(ray.direction))
+    c = p.length2 - circle_radius**2
 
     Δ = b**2 - 4 * a * c
     eps = 1e-6  # rounding error tolerance

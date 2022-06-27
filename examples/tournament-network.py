@@ -41,9 +41,9 @@ def connect_diagrams(d1, d2, gap=0.1):
 n = 6
 hexagon = Path.regular_polygon(n, 1)
 nodes = [make_node(i) for i in range(n)]
-nodes = [node.translate(point.x, point.y).show_bounding_box() for node, point in zip(nodes, hexagon.points)]
+nodes = [node.translate(point.x, point.y) for node, point in zip(nodes, hexagon.points)]
 
 connections = concat(connect_diagrams(nodes[i], nodes[j]) for i in range(n) for j in range(i + 1, n))
-dia = concat(nodes).show_bounding_box() + connections
+dia = concat(nodes) + connections
 
 dia.render_svg("examples/output/tournament-network.svg")

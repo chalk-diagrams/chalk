@@ -7,13 +7,14 @@ from typing import Any, List, Optional, Tuple
 import cairo
 import cairosvg
 import PIL
+from planar import BoundingBox, Point, Vec2, Vec2Array
+from planar.py import Ray
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
-from planar import Point, Vec2, BoundingBox, Vec2Array
 
 from chalk import transform as tx
-from chalk.segment import Segment, ray_circle_intersection, Ray
+from chalk.segment import Segment, ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
 
@@ -22,6 +23,7 @@ PyLatexElement = Any
 PyCairoContext = Any
 
 ORIGIN = Point(0, 0)
+
 
 @dataclass
 class Shape:

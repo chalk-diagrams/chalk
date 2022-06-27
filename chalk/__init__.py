@@ -7,8 +7,9 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
+from planar import Affine, BoundingBox, Point, Vec2
+
 from chalk.core import Diagram, Empty, Primitive, unit_x, unit_y
-from planar import Point, Vec2, BoundingBox, Affine
 from chalk.shape import (
     Arc,
     Circle,
@@ -20,7 +21,6 @@ from chalk.shape import (
     Text,
 )
 from chalk.trail import Trail
-
 
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
@@ -320,11 +320,12 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
 
 
-def cardinal(self, dir: str) -> Point:
+def cardinal(box: BoundingBox, dir: str) -> Point:
     """Returns the position of an edge or a corner of the bounding
     box based on a labeled direction (``dir``).
 
     Args:
+        box (BoundingBox): Bounding box to check.
         dir (str): Direction of the edge or the corner.
 
     Choose `dir` from the following table.
@@ -347,15 +348,15 @@ def cardinal(self, dir: str) -> Point:
 
     """
     return {
-        "N": unit_y * self.min_point,
-        "S": unit_y * self.max_point,
-        "W": unit_x * self.min_point,
-        "E": unit_x * self.max_point,
-        "NW": self.min_point,
-        "NE": unit_y * self.min_point + unit_x * self.max_point,
-        "SW": unit_y * self.max_point + unit_x * self.min_point,
-        "SE": self.max_point,
-        "C": self.center,
+        "N": unit_y * box.min_point,
+        "S": unit_y * box.max_point,
+        "W": unit_x * box.min_point,
+        "E": unit_x * box.max_point,
+        "NW": box.min_point,
+        "NE": unit_y * box.min_point + unit_x * box.max_point,
+        "SW": unit_y * box.max_point + unit_x * box.min_point,
+        "SE": box.max_point,
+        "C": box.center,
     }[dir]
 
 

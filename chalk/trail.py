@@ -1,9 +1,11 @@
+from __future__ import annotations
 from typing import List
 
-from planar import Point, Vec2, Vec2Array, Affine
-from chalk.transform import Transformable
+from planar import Affine, Point, Vec2, Vec2Array
+
 from chalk.core import Primitive
 from chalk.shape import Path
+from chalk.transform import Transformable, apply_affine
 
 
 class Trail(Transformable):
@@ -14,12 +16,13 @@ class Trail(Transformable):
     [TODO]: Need more explanation on what this class is for (preferably
     with illustrations/figures).
     """
-    offsets : Vec2Array
-    
+
+    offsets: Vec2Array
+
     def __init__(self, offsets: Vec2Array):
         self.offsets = Vec2Array(offsets)
-        
-    def __add__(self, other: "Trail") -> "Trail":
+
+    def __add__(self, other: Trail) -> Trail:
         """Adds another trail to this one and
         returns the resulting trail.
 
@@ -34,7 +37,7 @@ class Trail(Transformable):
         return Trail(new_vec)
 
     @classmethod
-    def from_path(cls, path: Path) -> "Trail":
+    def from_path(cls, path: Path) -> Trail:
         """Constructs and returns a trail from a given path.
 
         Args:
@@ -70,7 +73,7 @@ class Trail(Transformable):
         """
         return Primitive.from_shape(self.to_path())
 
-    def apply_transform(self, t: Affine) -> "Trail":  # type: ignore
+    def apply_transform(self, t: Affine) -> Trail:  # type: ignore
         """Applies a given transform.
 
         This is the same as ``Trail.transform()`` method.

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from functools import reduce
 from typing import Callable, Iterable, List, Optional
 
-from planar import Point, Vec2
-from chalk.transform import Affine, Transformable, apply_affine, remove_translation
+from planar import Affine, Point, Vec2
+
+from chalk.transform import Transformable, apply_affine, remove_translation
 
 SignedDistance = float
 
@@ -13,33 +16,33 @@ class Trace(Transformable):
     ) -> None:
         self.f = f
 
-    def __call__(
-        self, point: Point, direction: Vec2
-    ) -> List[SignedDistance]:
+    def __call__(self, point: Point, direction: Vec2) -> List[SignedDistance]:
         return self.f(point, direction)
 
     @classmethod
-    def empty(cls) -> "Trace":
+    def empty(cls) -> Trace:
         return cls(lambda point, direction: [])
 
-    def __add__(self, other: "Trace") -> "Trace":
+    def __add__(self, other: Trace) -> Trace:
         return Trace(
             lambda point, direction: self(point, direction)
             + other(point, direction)
         )
 
     @staticmethod
-    def mappend(trace1: "Trace", trace2: "Trace") -> "Trace":
+    def mappend(trace1: Trace, trace2: Trace) -> Trace:
         return trace1 + trace2
 
     @staticmethod
-    def concat(traces: Iterable["Trace"]) -> "Trace":
+    def concat(traces: Iterable[Trace]) -> Trace:
         return reduce(Trace.mappend, traces, Trace.empty())
 
-    def apply_transform(self, t: Affine) -> "Trace":  # type: ignore
+    def apply_transform(self, t: Affine) -> Trace:  # type: ignore
         def wrapped(p: Point, d: Vec2) -> List[SignedDistance]:
             t1 = ~t
-            return self(apply_affine(t1, p), apply_affine(remove_translation(t1), d))
+            return self(
+                apply_affine(t1, p), apply_affine(remove_translation(t1), d)
+            )
 
         return Trace(wrapped)
 
