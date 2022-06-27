@@ -80,7 +80,7 @@ class Transformable:
     def rotate_by(self: TTrans, turns: float) -> TTrans:
         """Rotate by fractions of a circle (turn)."""
         θ = 2 * math.pi * turns
-        return self._app(Affine.rotatation(from_radians(θ)))
+        return self._app(Affine.rotation(from_radians(θ)))
 
     def reflect_x(self: TTrans) -> TTrans:
         return self._app(Affine.scale(Vec2(-1, +1)))
