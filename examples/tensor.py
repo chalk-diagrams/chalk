@@ -2,7 +2,7 @@ from PIL import Image as PILImage
 from chalk import *
 from colour import Color
 import chalk.transform as tx
-
+import math
 h = hstrut(2.5)
 papaya = Color("#ff9700")
 white = Color("white")
@@ -11,7 +11,7 @@ black = Color("black")
 
 def draw_cube():
     up = Vec2(0, -1)
-    hyp = tx.shear_x(-1) * (up * 0.5)
+    hyp = tx.Affine.shear(-tx.from_radians(math.atan(1)), 0) * (up * 0.5)
     right = Vec2(1, 0)
     
     # Faces

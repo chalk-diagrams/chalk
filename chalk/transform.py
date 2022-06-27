@@ -31,17 +31,9 @@ def to_tikz(affine: Affine) -> str:
     return convert(*affine[:6])
 
 
-def rotate_radians(θ: float) -> Affine:
+def from_radians(θ: float) -> Affine:
     t = (θ / math.pi) * 180
-    return Affine.rotation(t)
-
-
-def shear_x(λ: float) -> Affine:
-    return Affine(1, 0, 0, λ, 1, 0)
-
-
-def shear_y(λ: float) -> Affine:
-    return Affine(1, λ, 0, 0, 1, 0)
+    return t
 
 
 def remove_translation(aff: Affine) -> Affine:
@@ -83,12 +75,12 @@ class Transformable:
         return self._app(Affine.scale(Vec2(1, α)))
 
     def rotate(self: TTrans, θ: float) -> TTrans:
-        return self._app(rotate_radians(θ))
+        return self._app(Affine.rotate(from_radians(θ)))
 
     def rotate_by(self: TTrans, turns: float) -> TTrans:
         """Rotate by fractions of a circle (turn)."""
         θ = 2 * math.pi * turns
-        return self._app(rotate_radians(θ))
+        return self._app(Affine.rotate(from_radians(θ)))
 
     def reflect_x(self: TTrans) -> TTrans:
         return self._app(Affine.scale(Vec2(-1, +1)))
@@ -97,10 +89,10 @@ class Transformable:
         return self._app(Affine.scale(Vec2(+1, -1)))
 
     def shear_x(self: TTrans, λ: float) -> TTrans:
-        return self._app(shear_x(λ))
+        return self._app(Affine.shear(from_radians(math.atan(λ)), 0))
 
     def shear_y(self: TTrans, λ: float) -> TTrans:
-        return self._app(shear_y(λ))
+        return self._app(Affine.shear(0, from_radians(math.atan(λ))))
 
     def translate(self: TTrans, dx: float, dy: float) -> TTrans:
         return self._app(Affine.translation(Vec2(dx, dy)))
