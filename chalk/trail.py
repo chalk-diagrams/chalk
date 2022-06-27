@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import List
 
 from planar import Affine, Point, Vec2, Vec2Array
 

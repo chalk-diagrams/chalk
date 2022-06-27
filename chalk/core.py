@@ -74,7 +74,7 @@ class Diagram(tx.Transformable):
         pad = 0.05
         box = self.get_bounding_box()
         assert box is not None
-        
+
         # infer width to preserve aspect ratio
         width = width or int(height * box.width / box.height)
 
@@ -164,7 +164,7 @@ class Diagram(tx.Transformable):
         pad = 0.05
         box = self.get_bounding_box()
         assert box is not None
-        
+
         # infer width to preserve aspect ratio
         width = heightpt * (box.width / box.height)
         # determine scale to fit the largest axis in the target frame size
@@ -198,7 +198,9 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
-    def _empty_check(self, other: Diagram) -> Tuple[Optional[Diagram], BoundingBox, BoundingBox]:
+    def _empty_check(
+        self, other: Diagram
+    ) -> Tuple[Optional[Diagram], BoundingBox, BoundingBox]:
         fake = BoundingBox([Point(0, 0)])
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
@@ -206,7 +208,7 @@ class Diagram(tx.Transformable):
             return self, fake, fake
         if box1 is None:
             return other, fake, fake
-        return None,  box1, box2
+        return None, box1, box2
 
     def atop(self, other: Diagram) -> Diagram:
         dia, box1, box2 = self._empty_check(other)
@@ -268,7 +270,7 @@ class Diagram(tx.Transformable):
 
         Returns:
             Diagram: A diagram object.
-        """        
+        """
         box = self.get_bounding_box()
         if box is None:
             return self
@@ -541,9 +543,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(fill_opacity=opacity), self)
 
-    def dashing(
-        self, dashing_strokes: List[float], offset: float
-    ) -> Diagram:
+    def dashing(self, dashing_strokes: List[float], offset: float) -> Diagram:
         """Apply dashed line to the edge of a diagram.
 
         > [TODO]: improve args description.
