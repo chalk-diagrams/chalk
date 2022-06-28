@@ -213,31 +213,30 @@ class Diagram(tx.Transformable):
             return other, fake, fake
         return None, envelope1, envelope2
 
-    def atop(self, other: Diagram) -> Diagram:
+    def atop(
+        self, other: Diagram, direction: Optional[Vec2] = None
+    ) -> Diagram:
         dia, envelope1, envelope2 = self._empty_check(other)
         if dia is not None:
             return dia
-        new_envelope = envelope1 + envelope2
-        return Compose(new_envelope, self, other)
+        if direction is None:
+            new_envelope = envelope1 + envelope2
+            return Compose(new_envelope, self, other)
+        else:
+            d = envelope1(direction) + envelope2(-direction)
+            t = Affine.translation(direction * d)
+            new_envelope = envelope1 + (t * envelope2)
+            return Compose(new_envelope, self, ApplyTransform(t, other))
 
     __add__ = atop
 
-    def _merge(self, other: Diagram, direction: Vec2) -> Diagram:
-        dia, envelope1, envelope2 = self._empty_check(other)
-        if dia is not None:
-            return dia
-        d = envelope1(direction) + envelope2(-direction)
-        t = Affine.translation(direction * d)
-        new_envelope = envelope1 + (t * envelope2)
-        return Compose(new_envelope, self, ApplyTransform(t, other))
-
     def above(self, other: Diagram) -> Diagram:
-        return self._merge(other, unit_y)
+        return self.atop(other, unit_y)
 
     __truediv__ = above
 
     def beside(self, other: Diagram) -> Diagram:
-        return self._merge(other, unit_x)
+        return self.atop(other, unit_x)
 
     __or__ = beside
 
@@ -277,17 +276,21 @@ class Diagram(tx.Transformable):
         t = Affine.translation(-envelope.center)
         return ApplyTransform(t, self)
 
+    def align(self, v: Vec2) -> Diagram:
+        envelope = self.get_envelope()
+        if envelope is None:
+            return self
+
+        t = Affine.translation(-envelope.envelope_v(v))
+        return ApplyTransform(t, self)
+
     def align_t(self) -> Diagram:
         """Align a diagram with its top edge.
 
         Returns:
             Diagram
         """
-        envelope = self.get_envelope()
-        if envelope is None:
-            return self
-        t = Affine.translation(-unit_y * envelope.min_point)
-        return ApplyTransform(t, self)
+        return self.align(-unit_y)
 
     def align_b(self) -> Diagram:
         """Align a diagram with its bottom edge.
@@ -295,11 +298,7 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram
         """
-        envelope = self.get_envelope()
-        if envelope is None:
-            return self
-        t = Affine.translation(-unit_y * envelope.max_point)
-        return ApplyTransform(t, self)
+        return self.align(unit_y)
 
     def align_r(self) -> Diagram:
         """Align a diagram with its right edge.
@@ -307,12 +306,7 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram
         """
-        envelope = self.get_envelope()
-        if envelope is None:
-            return self
-
-        t = Affine.translation(-unit_x * envelope.max_point)
-        return ApplyTransform(t, self)
+        return self.align(unit_x)
 
     def align_l(self) -> Diagram:
         """Align a diagram with its left edge.
@@ -320,11 +314,7 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        envelope = self.get_envelope()
-        if envelope is None:
-            return self
-        t = Affine.translation(-unit_x * envelope.min_point)
-        return ApplyTransform(t, self)
+        return self.align(-unit_x)
 
     def align_tl(self) -> Diagram:
         """Align a diagram with its top-left edges.

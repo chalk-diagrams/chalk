@@ -187,7 +187,9 @@ def latex(t: str) -> Diagram:
     return Primitive.from_shape(Latex(t))
 
 
-def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+def atop(
+    diagram1: Diagram, diagram2: Diagram, direction: Optional[Vec2]
+) -> Diagram:
     """
     Places `diagram2` atop `diagram1`. This is done such that their
     origins align.
@@ -197,11 +199,12 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     Args:
         diagram1 (Diagram): Base diagram object.
         diagram2 (Diagram): Diagram placed atop.
+        direction (Optional[Vec2]): Placement direction.
 
     Returns:
         Diagram: New diagram object.
     """
-    return diagram1.atop(diagram2)
+    return diagram1.atop(diagram2, direction)
 
 
 def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
@@ -252,18 +255,21 @@ def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.above(diagram2)
 
 
-def concat(diagrams: Iterable[Diagram]) -> Diagram:
+def concat(
+    diagrams: Iterable[Diagram], direction: Optional[Vec2] = None
+) -> Diagram:
     """
     Concat diagrams atop of each other with atop.
 
     Args:
         diagrams (Iterable[Diagram]): Diagrams to concat.
+        direction (Optional[Vec2]): Direction along envelope to place object.
 
     Returns:
         Diagram: New diagram
 
     """
-    return reduce(atop, diagrams, empty())
+    return reduce((lambda x, y: atop(x, y, direction)), diagrams, empty())
 
 
 def strut(width: float, height: float) -> Diagram:

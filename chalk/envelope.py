@@ -72,15 +72,23 @@ class Envelope(Transformable):
 
         def wrapped(v: Vec2) -> SignedDistance:
             t1v = apply_affine(t1, v)
-            t1v2 = t1v / (t1v.length)
+            t1v2 = t1v.scaled_to(1)
             return self(t1v2) * t1v.length + u.dot(v) / (v.dot(v))  # type: ignore
 
         return Envelope(wrapped)
 
+    def envelope_v(self, v: Vec2) -> Vec2:
+        v = v.scaled_to(1)
+        d = self(v)
+        return d * v
+
     @staticmethod
     def from_bounding_box(box: BoundingBox) -> Envelope:
         def wrapped(d: Vec2) -> SignedDistance:
-            return apply_affine(Affine.rotation(d.angle), box).bounding_box.max_point.x / d.length  # type: ignore
+            v: float = apply_affine(
+                Affine.rotation(d.angle), box
+            ).bounding_box.max_point.x
+            return v / d.length  # type: ignore
 
         return Envelope(wrapped)
 
@@ -97,13 +105,17 @@ class Envelope(Transformable):
             hull = Polygon.convex_hull(path)
 
             def wrapped(d: Vec2) -> SignedDistance:
-                return apply_affine(Affine.rotation(d.angle), hull).bounding_box.max_point.x / d.length  # type: ignore
+                v: float = apply_affine(
+                    Affine.rotation(d.angle), hull
+                ).bounding_box.max_point.x
+                return v / d.length  # type: ignore
 
             return Envelope(wrapped)
         else:
             return Envelope.from_bounding_box(BoundingBox(path))
 
     def to_path(self) -> Vec2Array:
+        "Draws an envelope by sampling every 10 degrees."
         pts = []
         for i in range(0, 361, 10):
             v = Vec2.polar(i)

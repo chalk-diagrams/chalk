@@ -20,7 +20,6 @@ def draw_cube():
     face_t = rectangle(1, 0.5).shear_x(-1).align_bl()
     face_r = rectangle(0.5, 1).shear_y(-1).align_tr()
 
-    print(face_m.get_envelope()(Point(1, 0)))
     return (face_t + face_m).align_tr() + face_r, (up, hyp, right)
 
 draw_cube()[0].render("examples/output/cube.png", 50)
