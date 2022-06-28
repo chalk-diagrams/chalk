@@ -372,8 +372,8 @@ def connect_outer(
     c2: str,
     arrow: bool = False,
 ) -> Diagram:
-    bb1 = diagram.get_subdiagram_bounding_box(name1)
-    bb2 = diagram.get_subdiagram_bounding_box(name2)
+    bb1 = diagram.get_subdiagram_envelope(name1)
+    bb2 = diagram.get_subdiagram_envelope(name2)
     assert bb1 is not None, f"Name {name1} not found"
     assert bb2 is not None, f"Name {name2} not found"
     points = [cardinal(bb1, c1), cardinal(bb2, c2)]

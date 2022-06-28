@@ -15,13 +15,13 @@ grey = Color("#bbbbbb")
 
 def label(te):
     "Create text."
-    return text(te, 2).fill_color(black).line_color(white).pad_t(1).pad_b(3)
+    return text(te, 2).fill_color(black).line_color(white)
 
 def cover(d, a, b):
     "Draw a bounding_box around a subdiagram"
-    b1 = d.get_subdiagram_bounding_box(a)
-    b2 = d.get_subdiagram_bounding_box(b)
-    new_bb = BoundingBox([b1.min_point, b2.max_point])
+    b1 = d.get_subdiagram_envelope(a)
+    b2 = d.get_subdiagram_envelope(b)
+    new_bb = b1 + b2
     return rectangle(new_bb.width, new_bb.height) \
             .translate(new_bb.center.x, new_bb.center.y)
 
@@ -69,8 +69,8 @@ h = hstrut(6.5)
 d = ((stack("a", 32, 0, "", "") + draw) | (label("conv") / h) |
      stack("b", 28, 6, "", "C1") | (label("pool") / h) |
      stack("c", 14, 6, "", "S2") | (label("conv") / h) |
-     stack("d", 10, 16, "", "C3") | (label("pool") / h) |
-     stack("e", 5, 16, "", "S4").pad_l(-0.5) | (label("dense") / h) |
+     stack("d", 10, 16, "", "C3") | (label("pool") / h) | hstrut(-0.5) | 
+     stack("e", 5, 16, "", "S4") | (label("dense") / h) |
      network("dense1",  12, "", "") | (label("dense") / (h)) |
      network("dense2",  8.4, "", "") | (label("dense") / h) |
      network("dense3",  1, "", ""))

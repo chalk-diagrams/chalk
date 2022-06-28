@@ -18,8 +18,8 @@ def make_node(n):
 
 def connect_diagrams(d1, d2, gap=0.1):
     # TODO Make this functino work on named subdiagrams
-    c1 = d1.get_bounding_box().center
-    c2 = d2.get_bounding_box().center
+    c1 = d1.get_envelope().center
+    c2 = d2.get_envelope().center
 
     v = (c2 - c1)
     midpoint = c1 + 0.5 * v

@@ -38,6 +38,11 @@ def from_radians(θ: float) -> Affine:
 
 def remove_translation(aff: Affine) -> Affine:
     a, b, c, d, e, f = aff[:6]
+    return Affine(a, b, 0, d, e, 0)
+
+
+def transpose_translation(aff: Affine) -> Affine:
+    a, b, c, d, e, f = aff[:6]
     return Affine(a, d, 0, b, e, 0)
 
 

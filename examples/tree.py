@@ -24,7 +24,7 @@ def sample_tree(n=1):
                 sample_tree(n+1) if flip(0.2) else None)
 
 
-def draw_tree(tree, name="", ysep=15, xsep=1):
+def draw_tree(tree, name="", ysep=5, xsep=1):
     node = circle(5).named(name)
     if tree is None:
         node = node.fill_color(blue)
@@ -36,7 +36,7 @@ def draw_tree(tree, name="", ysep=15, xsep=1):
     rname, r = draw_tree(tree[2], name + "r")
 
     # Position node an origin and subtrees to both sides.
-    off = (l.get_bounding_box().max_point.x - r.get_bounding_box().min_point.x + xsep) / 2    
+    off = (l.get_envelope().max_point.x - r.get_envelope().min_point.x + xsep) / 2    
     x = node / vstrut(ysep) /  (l | hstrut(xsep) | r).translate(-off, 0)
 
     # Connect to children

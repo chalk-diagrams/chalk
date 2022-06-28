@@ -2,6 +2,7 @@ from PIL import Image as PILImage
 from chalk import *
 from colour import Color
 import chalk.transform as tx
+from planar import Point
 import math
 h = hstrut(2.5)
 papaya = Color("#ff9700")
@@ -18,11 +19,12 @@ def draw_cube():
     face_m = rectangle(1, 1).align_tl()
     face_t = rectangle(1, 0.5).shear_x(-1).align_bl()
     face_r = rectangle(0.5, 1).shear_y(-1).align_tr()
-    
-    return (face_m + face_t).align_tr() + face_r, (up, hyp, right)
-draw_cube()[0]
+
+    print(face_m.get_envelope()(Point(1, 0)))
+    return (face_t + face_m).align_tr() + face_r, (up, hyp, right)
+
 draw_cube()[0].render("examples/output/cube.png", 50)
-draw_cube()[0].render_pdf("examples/output/cube.pdf", 50)
+draw_cube()[0].show_envelope().render_pdf("examples/output/cube.pdf", 50)
 
 def draw_tensor(depth, rows, columns):
     "Draw a tensor"
@@ -37,7 +39,7 @@ def t(d, r, c):
     return draw_tensor(d, r, c).fill_color(white)
 
 def label(te, s=1.5):
-    return (text(te, s).fill_color(black).line_color(white).pad_t(2.5).center_xy())
+    return (text(te, s).fill_color(black).line_color(white).center_xy())
 
 
 # Create a diagram.

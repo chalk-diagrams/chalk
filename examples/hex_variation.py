@@ -41,7 +41,7 @@ def hex_variation(num_tiles):
     return place_at(diagrams, grid)
 
 
-dia = hex_variation(12).line_width(0.05).show_bounding_box()
+dia = hex_variation(12).line_width(0.05)
 dia = dia.rotate_by(1 / 4)
 dia.render("examples/output/hex-variation.png", height=512)
 dia.render_svg("examples/output/hex-variation.svg", height=512)

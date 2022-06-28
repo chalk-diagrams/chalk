@@ -10,9 +10,10 @@ path = "examples/output/intro-01.png"
 d = circle(1).fill_color(papaya)
 d.render(path, height=64)
 
-# Alternative, render as svg
-path = "examples/output/intro-01.svg"
-d.render_svg(path, height=64)
+
+# # Alternative, render as svg
+# path = "examples/output/intro-01.svg"
+# d.render_svg(path, height=64)
 
 # Alternative, render as pdf
 path = "examples/output/intro-01.pdf"
