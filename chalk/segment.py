@@ -52,10 +52,10 @@ def ray_ray_intersection(
 
 
 def line_segment(ray: Ray, segment: Segment) -> List[float]:
-    """Given a line and a segment, return the parameter t for which the line
+    """Given a ray and a segment, return the parameter t for which the ray
     meets the segment, that is:
 
-    line t = line t', with t' ∈ [0, 1]
+    ray t = ray t', with t' ∈ [0, 1]
 
     """
     ray_s = segment.to_ray()
@@ -65,7 +65,7 @@ def line_segment(ray: Ray, segment: Segment) -> List[float]:
     else:
         t1, t2 = t
         if 0 <= t2 <= 1:
-            # p = line_s.p + t2 * line_s.v
+            # p = ray_s.p + t2 * ray_s.v
             return [t1]
         else:
             return []

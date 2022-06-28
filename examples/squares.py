@@ -5,7 +5,7 @@ import random
 from itertools import product
 
 from colour import Color
-from chalk import square, concat
+from chalk import square, concat, empty
 
 random.seed(0)
 

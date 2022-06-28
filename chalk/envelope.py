@@ -19,19 +19,28 @@ unit_y = Vec2(0, 1)
 
 
 class Envelope(Transformable):
-    def __init__(self, f: Callable[[Vec2], SignedDistance]) -> None:
+    def __init__(
+        self, f: Callable[[Vec2], SignedDistance], is_empty: bool = False
+    ) -> None:
         self.f = f
+        self.is_empty = is_empty
 
     def __call__(self, direction: Vec2) -> SignedDistance:
+        assert not self.is_empty
         return self.f(direction)
 
     def __add__(self, other: Envelope) -> Envelope:
+        if self.is_empty:
+            return other
+        if other.is_empty:
+            return self
         return Envelope(
             lambda direction: max(self(direction), other(direction))
         )
 
     @property
     def center(self) -> Point:
+        assert not self.is_empty
         return Point(
             (-self(-unit_x) + self(unit_x)) / 2,
             (-self(-unit_y) + self(unit_y)) / 2,
@@ -39,10 +48,12 @@ class Envelope(Transformable):
 
     @property
     def width(self) -> float:
+        assert not self.is_empty
         return self(unit_x) + self(-unit_x)
 
     @property
     def height(self) -> float:
+        assert not self.is_empty
         return self(unit_y) + self(-unit_y)
 
     @staticmethod
@@ -51,13 +62,15 @@ class Envelope(Transformable):
 
     @staticmethod
     def empty() -> Envelope:
-        return Envelope(lambda v: 0)
+        return Envelope(lambda v: None, is_empty=True)
 
     @staticmethod
     def concat(envelopes: Iterable[Envelope]) -> Envelope:
         return reduce(Envelope.mappend, envelopes, Envelope.empty())
 
     def apply_transform(self, t: Affine) -> Envelope:  # type: ignore
+        if self.is_empty:
+            return self
         _, _, c, _, _, f = t[:6]
         u = Vec2(c, f)
         t1 = transpose_translation(remove_translation(t))
@@ -70,6 +83,8 @@ class Envelope(Transformable):
         return Envelope(wrapped)
 
     def envelope_v(self, v: Vec2) -> Vec2:
+        if self.is_empty:
+            return Vec2(0, 0)
         v = v.scaled_to(1)
         d = self(v)
         return d * v

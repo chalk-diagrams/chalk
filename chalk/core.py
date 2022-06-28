@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 import cairo
 import svgwrite
@@ -31,7 +31,7 @@ unit_y = Vec2(0, 1)
 class Diagram(tx.Transformable):
     """Diagram class."""
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Get the envelope of a diagram."""
         raise NotImplementedError
 
@@ -72,9 +72,10 @@ class Diagram(tx.Transformable):
             width (Optional[int], optional): Width of the rendered image.
                                              Defaults to None.
         """
-        pad = 0.05
         envelope = self.get_envelope()
         assert envelope is not None
+
+        pad = 0.05
 
         # infer width to preserve aspect ratio
         width = width or int(height * envelope.width / envelope.height)
@@ -88,7 +89,7 @@ class Diagram(tx.Transformable):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(surface)
 
-        s = self.frame(pad).scale(α)
+        s = self.scale(α).center_xy().pad(1 + pad)
         e = s.get_envelope()
         assert e is not None
         prims = s.translate(e(-unit_x), e(-unit_y)).to_list()
@@ -147,7 +148,7 @@ class Diagram(tx.Transformable):
         dwg.defs.add(marker)
 
         dwg.add(outer)
-        s = self.frame(pad).scale(α)
+        s = self.center_xy().pad(1 + pad).scale(α)
         e = s.get_envelope()
         assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
@@ -181,7 +182,7 @@ class Diagram(tx.Transformable):
         doc = pylatex.Document(documentclass="standalone")
         # document_options= pylatex.TikZOptions(margin=f"{{{x}pt {x}pt {y}pt {y}pt}}"))
         # add our sample drawings
-        diagram = self.scale(α).reflect_y().frame(x)
+        diagram = self.scale(α).reflect_y().pad(1 + pad)
         envelope = diagram.get_envelope()
         assert envelope is not None
         padding = Primitive.from_shape(
@@ -202,30 +203,19 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
-    def _empty_check(
-        self, other: Diagram
-    ) -> Tuple[Optional[Diagram], Envelope, Envelope]:
-        fake = Envelope(lambda v: 0.0)
-        envelope1 = self.get_envelope()
-        envelope2 = other.get_envelope()
-        if envelope2 is None:
-            return self, fake, fake
-        if envelope1 is None:
-            return other, fake, fake
-        return None, envelope1, envelope2
-
     def atop(
         self, other: Diagram, direction: Optional[Vec2] = None
     ) -> Diagram:
-        dia, envelope1, envelope2 = self._empty_check(other)
-        if dia is not None:
-            return dia
+        envelope1 = self.get_envelope()
+        envelope2 = other.get_envelope()
         if direction is None:
             new_envelope = envelope1 + envelope2
             return Compose(new_envelope, self, other)
         else:
-            d = envelope1(direction) + envelope2(-direction)
-            t = Affine.translation(direction * d)
+            d = envelope1.envelope_v(direction) - envelope2.envelope_v(
+                -direction
+            )
+            t = Affine.translation(d)
             new_envelope = envelope1 + (t * envelope2)
             return Compose(new_envelope, self, ApplyTransform(t, other))
 
@@ -254,9 +244,8 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        dia, envelope1, envelope2 = self._empty_check(other)
-        if dia is not None:
-            return dia
+        envelope1 = self.get_envelope()
+        envelope2 = other.get_envelope()
         direction = unit_y
         d = envelope1(direction) + envelope2(-direction)
         t = Affine.translation(-direction * d)
@@ -279,9 +268,6 @@ class Diagram(tx.Transformable):
 
     def align(self, v: Vec2) -> Diagram:
         envelope = self.get_envelope()
-        if envelope is None:
-            return self
-
         t = Affine.translation(-envelope.envelope_v(v))
         return ApplyTransform(t, self)
 
@@ -436,14 +422,32 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         envelope = self.get_envelope()
-        if envelope is None:
-            return self
 
         def f(d: Vec2) -> float:
             assert envelope is not None
             return envelope(d) + extra
 
-        new_envelope = Envelope(f)
+        new_envelope = Envelope(f, envelope.is_empty)
+        return Compose(new_envelope, self, Empty())
+
+    def pad(self, extra: float) -> Diagram:
+        """Scale outward directed padding for a diagram.
+
+        Be careful using this if your diagram is not centered.
+
+        Args:
+            extra (float): Amount of padding to add.
+
+        Returns:
+            Diagram: A diagram object.
+        """
+        envelope = self.get_envelope()
+
+        def f(d: Vec2) -> float:
+            assert envelope is not None
+            return envelope(d) * extra
+
+        new_envelope = Envelope(f, envelope.is_empty)
         return Compose(new_envelope, self, Empty())
 
     def scale_uniform_to_x(self, x: float) -> Diagram:
@@ -566,9 +570,8 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        dia, envelope1, envelope2 = self._empty_check(other)
-        if dia is not None:
-            return dia
+        envelope1 = self.get_envelope()
+        envelope2 = other.get_envelope()
         t = Affine.translation(envelope1.center)
         new_envelope = envelope1 + (t * envelope2)
         return Compose(new_envelope, self, ApplyTransform(t, other))
@@ -628,10 +631,6 @@ class Diagram(tx.Transformable):
     def to_tikz(self, pylatex: PyLatex, style: Style) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
         raise NotImplementedError
-
-
-def bounding_envelope_transform(t: Affine, envelope: Envelope) -> Envelope:
-    return envelope.apply_transform(t)
 
 
 @dataclass
@@ -696,9 +695,7 @@ class Primitive(Diagram):
         """
 
         new_transform = t * self.transform
-        return bounding_envelope_transform(
-            new_transform, self.shape.get_envelope()
-        )
+        return self.shape.get_envelope().apply_transform(new_transform)
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         new_transform = t * self.transform
@@ -753,9 +750,9 @@ class Primitive(Diagram):
 class Empty(Diagram):
     """An Empty diagram class."""
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Returns the bounding envelope of a diagram."""
-        return None
+        return Envelope.empty()
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         return Trace.empty()
@@ -783,9 +780,9 @@ class Compose(Diagram):
     diagram1: Diagram
     diagram2: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Returns the bounding envelope of a diagram."""
-        return bounding_envelope_transform(t, self.envelope)
+        return self.envelope.apply_transform(t)
 
     def get_trace(self, t: Affine = Ident) -> Trace:
         # TODO Should we cache the trace?
@@ -827,7 +824,7 @@ class ApplyTransform(Diagram):
     transform: Affine
     diagram: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Returns the bounding envelope of a diagram."""
         n = t * self.transform
         return self.diagram.get_envelope(n)
@@ -874,7 +871,7 @@ class ApplyStyle(Diagram):
     style: Style
     diagram: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Returns the bounding envelope of a diagram."""
         return self.diagram.get_envelope(t)
 
@@ -911,7 +908,7 @@ class ApplyName(Diagram):
     dname: str
     diagram: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Optional[Envelope]:
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
         """Returns the bounding envelope of a diagram."""
         return self.diagram.get_envelope(t)
 
