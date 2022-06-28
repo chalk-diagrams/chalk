@@ -11,7 +11,7 @@ from chalk.trail import unit_x, unit_y
 
 def hilbert(n):
     def hilbert2(m): return hilbert(m).rotate(-math.pi / 2)
-    if n == 0: return Trail([])
+    if n == 0: return Trail.empty()
     h, h2 = hilbert(n -1), hilbert2(n-1)
     return (h2.reflect_y() + unit_y
             + h + unit_x

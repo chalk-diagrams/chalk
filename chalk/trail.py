@@ -21,6 +21,10 @@ class Trail(Transformable):
 
     offsets: Vec2Array
 
+    @staticmethod
+    def empty() -> Trail:
+        return Trail(Vec2Array([]))
+
     def __add__(self, other: Trail) -> Trail:
         """Adds another trail to this one and
         returns the resulting trail.
@@ -86,5 +90,5 @@ class Trail(Transformable):
         return Trail(apply_affine(remove_translation(t), self.offsets))
 
 
-unit_x = Trail([Vec2(1, 0)])
-unit_y = Trail([Vec2(0, 1)])
+unit_x = Trail(Vec2Array([Vec2(1, 0)]))
+unit_y = Trail(Vec2Array([Vec2(0, 1)]))
