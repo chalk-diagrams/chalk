@@ -38,14 +38,6 @@ class Envelope(Transformable):
         )
 
     @property
-    def min_point(self) -> Point:
-        return Point(-self(-unit_x), -self(-unit_y))
-
-    @property
-    def max_point(self) -> Point:
-        return Point(self(unit_x), self(unit_y))
-
-    @property
     def width(self) -> float:
         return self(unit_x) + self(-unit_x)
 

@@ -88,12 +88,9 @@ class Diagram(tx.Transformable):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(surface)
 
-        ctx.scale(α, α)
-
-        tl = envelope.min_point
-        ctx.translate(-(1 + pad) * tl.x, -(1 + pad) * tl.y)
-
-        prims = self.to_list()
+        s = self.frame(pad).scale(α)
+        e = s.get_envelope()
+        prims = s.translate(e(-unit_x), e(-unit_y)).to_list()
 
         for prim in prims:
             # apply transformation
@@ -137,10 +134,8 @@ class Diagram(tx.Transformable):
             path,
             size=(width, height),
         )
-        tl = envelope.min_point
-        x, y = -(1 + pad) * tl.x, -(1 + pad) * tl.y
+
         outer = dwg.g(
-            transform=f"scale({α}) translate({x} {y})",
             style="fill:white; stroke: black; stroke-width: 0.01;",
         )
         # Arrow marker
@@ -151,7 +146,11 @@ class Diagram(tx.Transformable):
         dwg.defs.add(marker)
 
         dwg.add(outer)
-        outer.add(self.to_svg(dwg, Style.default()))
+        s = self.frame(pad).scale(α)
+        e = s.get_envelope()
+        s = s.translate(e(-unit_x), e(-unit_y))
+
+        outer.add(s.to_svg(dwg, Style.default()))
         dwg.save()
 
     def render_pdf(self, path: str, height: int = 128) -> None:

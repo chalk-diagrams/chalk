@@ -10,6 +10,7 @@ except ImportError:  # for Python<3.8
 from planar import Affine, BoundingBox, Point, Vec2
 
 from chalk.core import Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
     Circle,
@@ -326,12 +327,14 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
 
 
-def cardinal(box: BoundingBox, dir: str) -> Point:
-    """Returns the position of an edge or a corner of the bounding
-    box based on a labeled direction (``dir``).
+def cardinal(env: Envelope, dir: str) -> Point:
+    """Returns the position of an edge or a corner of the Envelope
+    based on a labeled direction (``dir``).
+
+    Only really works for box envelopes.
 
     Args:
-        box (BoundingBox): Bounding box to check.
+        env (Envelope): Envelope to check.
         dir (str): Direction of the edge or the corner.
 
     Choose `dir` from the following table.
@@ -353,16 +356,23 @@ def cardinal(box: BoundingBox, dir: str) -> Point:
         Point: A point object.
 
     """
+
+    def min_point(env: Envelope) -> Point:
+        return Point(-env(-unit_x), -env(-unit_y))
+
+    def max_point(env: Envelope) -> Point:
+        return Point(env(unit_x), env(unit_y))
+
     return {
-        "N": unit_y * box.min_point,
-        "S": unit_y * box.max_point,
-        "W": unit_x * box.min_point,
-        "E": unit_x * box.max_point,
-        "NW": box.min_point,
-        "NE": unit_y * box.min_point + unit_x * box.max_point,
-        "SW": unit_y * box.max_point + unit_x * box.min_point,
-        "SE": box.max_point,
-        "C": box.center,
+        "N": unit_y * min_point(env),
+        "S": unit_y * max_point(env),
+        "W": unit_x * min_point(env),
+        "E": unit_x * max_point(env),
+        "NW": min_point(env),
+        "NE": unit_y * min_point(env) + unit_x * max_point(env),
+        "SW": unit_y * max_point(env) + unit_x * min_point(env),
+        "SE": max_point(env),
+        "C": env.center,
     }[dir]
 
 
