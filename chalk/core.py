@@ -90,6 +90,7 @@ class Diagram(tx.Transformable):
 
         s = self.frame(pad).scale(α)
         e = s.get_envelope()
+        assert e is not None
         prims = s.translate(e(-unit_x), e(-unit_y)).to_list()
 
         for prim in prims:
@@ -148,6 +149,7 @@ class Diagram(tx.Transformable):
         dwg.add(outer)
         s = self.frame(pad).scale(α)
         e = s.get_envelope()
+        assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
 
         outer.add(s.to_svg(dwg, Style.default()))
