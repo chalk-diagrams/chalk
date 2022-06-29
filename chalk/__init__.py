@@ -217,7 +217,7 @@ def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
     Args:
         diagram1 (Diagram): Left diagram object.
         diagram2 (Diagram): Right diagram object.
-        direction (Optional[Vec2]): Placement direction.
+        direction (Vec2): Placement direction.
 
     Returns:
         Diagram: New diagram object.
