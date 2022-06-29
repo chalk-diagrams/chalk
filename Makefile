@@ -314,5 +314,11 @@ hex_variation:
 tree:
 	python examples/tree.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation tree
+tournament:
+	python examples/tournament-network.py
+
+parade:
+	python examples/rectangle_parade.py
+
+images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation tree tournament parade
 	@echo "🎁 Generate all examples ... ⏳"

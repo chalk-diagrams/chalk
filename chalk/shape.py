@@ -14,6 +14,7 @@ from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
 
 from chalk import transform as tx
+from chalk.envelope import Envelope
 from chalk.segment import Segment, ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
@@ -31,6 +32,9 @@ class Shape:
 
     def get_bounding_box(self) -> BoundingBox:
         raise NotImplementedError
+
+    def get_envelope(self) -> Envelope:
+        return Envelope.from_bounding_box(self.get_bounding_box())
 
     def get_trace(self) -> Trace:
         # default trace based on bounding box
@@ -52,6 +56,9 @@ class Circle(Shape):
     """Circle class."""
 
     radius: float
+
+    def get_envelope(self) -> Envelope:
+        return Envelope.from_circle(self.radius)
 
     def get_bounding_box(self) -> BoundingBox:
         tl = Point(-self.radius, -self.radius)
@@ -193,8 +200,11 @@ class Path(Shape, tx.Transformable):
             sides, side_length / (2 * math.sin(math.pi / sides))
         )
 
-    def get_bounding_box(self) -> BoundingBox:
-        return BoundingBox.from_points(self.points)
+    def get_envelope(self) -> Envelope:
+        return Envelope.from_path(self.points)
+
+    # def get_bounding_box(self) -> BoundingBox:
+    #     return BoundingBox.from_points(self.points)
 
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)

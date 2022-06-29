@@ -10,7 +10,8 @@ path = "examples/output/intro-01.png"
 d = circle(1).fill_color(papaya)
 d.render(path, height=64)
 
-# Alternative, render as svg
+
+# # Alternative, render as svg
 path = "examples/output/intro-01.svg"
 d.render_svg(path, height=64)
 
@@ -21,7 +22,7 @@ d.render_pdf(path, height=64)
 
 path = "examples/output/intro-02.png"
 d = circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
-d.render(path, height=64)
+d.show_envelope().render(path, height=64)
 
 path = "examples/output/intro-02.svg"
 d.render_svg(path, height=64)
@@ -48,7 +49,7 @@ def sierpinski(n: int, size: int) -> Diagram:
         return triangle(size)
     else:
         smaller = sierpinski(n - 1, size / 2)
-        return smaller.above(smaller.beside(smaller).center_xy())
+        return smaller.above((smaller | smaller).center_xy())
 
 d = sierpinski(5, 4).fill_color(papaya)
 d.render(path, height=256)

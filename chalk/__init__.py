@@ -9,7 +9,8 @@ except ImportError:  # for Python<3.8
 
 from planar import Affine, BoundingBox, Point, Vec2
 
-from chalk.core import Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.core import ORIGIN, Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
     Circle,
@@ -204,7 +205,7 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.atop(diagram2)
 
 
-def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
     """
     Places `diagram2` beside `diagram1`.
 
@@ -216,11 +217,12 @@ def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     Args:
         diagram1 (Diagram): Left diagram object.
         diagram2 (Diagram): Right diagram object.
+        direction (Vec2): Placement direction.
 
     Returns:
         Diagram: New diagram object.
     """
-    return diagram1.beside(diagram2)
+    return diagram1.beside(diagram2, direction)
 
 
 def place_at(
@@ -266,6 +268,19 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     return reduce(atop, diagrams, empty())
 
 
+def cat(
+    diagrams: Iterable[Diagram], v: Vec2, sep: Optional[float] = None
+) -> Diagram:
+    diagrams = iter(diagrams)
+    start = next(diagrams, None)
+    sep_dia = hstrut(sep).rotate((math.pi / 180) * v.angle)
+    if start is None:
+        return empty()
+    return reduce(
+        lambda a, b: a.beside(sep_dia, v).beside(b, v), diagrams, start
+    )
+
+
 def strut(width: float, height: float) -> Diagram:
     return Primitive.from_shape(Spacer(width, height))
 
@@ -288,11 +303,7 @@ def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
         Diagram: New diagram
 
     """
-    diagrams = iter(diagrams)
-    start = next(diagrams, None)
-    if start is None:
-        return empty()
-    return reduce(lambda a, b: a | hstrut(sep) | b, diagrams, start)
+    return cat(diagrams, unit_x, sep)
 
 
 def vstrut(height: Optional[float]) -> Diagram:
@@ -313,19 +324,17 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
         Diagrams
 
     """
-    diagrams = iter(diagrams)
-    start = next(diagrams, None)
-    if start is None:
-        return empty()
-    return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
+    return cat(diagrams, unit_y, sep)
 
 
-def cardinal(box: BoundingBox, dir: str) -> Point:
-    """Returns the position of an edge or a corner of the bounding
-    box based on a labeled direction (``dir``).
+def cardinal(env: Envelope, dir: str) -> Point:
+    """Returns the position of an edge or a corner of the Envelope
+    based on a labeled direction (``dir``).
+
+    Only really works for box envelopes.
 
     Args:
-        box (BoundingBox): Bounding box to check.
+        env (Envelope): Envelope to check.
         dir (str): Direction of the edge or the corner.
 
     Choose `dir` from the following table.
@@ -347,16 +356,23 @@ def cardinal(box: BoundingBox, dir: str) -> Point:
         Point: A point object.
 
     """
+
+    def min_point(env: Envelope) -> Point:
+        return Point(-env(-unit_x), -env(-unit_y))
+
+    def max_point(env: Envelope) -> Point:
+        return Point(env(unit_x), env(unit_y))
+
     return {
-        "N": unit_y * box.min_point,
-        "S": unit_y * box.max_point,
-        "W": unit_x * box.min_point,
-        "E": unit_x * box.max_point,
-        "NW": box.min_point,
-        "NE": unit_y * box.min_point + unit_x * box.max_point,
-        "SW": unit_y * box.max_point + unit_x * box.min_point,
-        "SE": box.max_point,
-        "C": box.center,
+        "N": unit_y * min_point(env),
+        "S": unit_y * max_point(env),
+        "W": unit_x * min_point(env),
+        "E": unit_x * max_point(env),
+        "NW": min_point(env),
+        "NE": unit_y * min_point(env) + unit_x * max_point(env),
+        "SW": unit_y * max_point(env) + unit_x * min_point(env),
+        "SE": max_point(env),
+        "C": env.center,
     }[dir]
 
 
@@ -372,8 +388,8 @@ def connect_outer(
     c2: str,
     arrow: bool = False,
 ) -> Diagram:
-    bb1 = diagram.get_subdiagram_bounding_box(name1)
-    bb2 = diagram.get_subdiagram_bounding_box(name2)
+    bb1 = diagram.get_subdiagram_envelope(name1)
+    bb2 = diagram.get_subdiagram_envelope(name2)
     assert bb1 is not None, f"Name {name1} not found"
     assert bb2 is not None, f"Name {name2} not found"
     points = [cardinal(bb1, c1), cardinal(bb2, c2)]

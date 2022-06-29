@@ -124,11 +124,7 @@ side_1 = quartet(blank, blank, fish_t.rotate(θ), fish_t)
 side_2 = quartet(side_1, side_1, fish_t.rotate(θ), fish_t)
 corner_1 = quartet(blank, blank, blank, fish_u)
 
-output_path = "examples/output/fish.png"
-side_2.show_origin().show_bounding_box().render(output_path, height=512)
-
 corner_2 = quartet(corner_1, side_1, side_1.rotate(θ), fish_u)
-corner_2.show_origin().show_bounding_box().render(output_path, height=512)
 pseudocorner = quartet(corner_2, side_2, side_2.rotate(θ), fish_t.rotate(θ))
 
 
