@@ -62,7 +62,7 @@ class Envelope(Transformable):
 
     @staticmethod
     def empty() -> Envelope:
-        return Envelope(lambda v: None, is_empty=True)
+        return Envelope(lambda v: 0, is_empty=True)
 
     @staticmethod
     def concat(envelopes: Iterable[Envelope]) -> Envelope:

@@ -273,10 +273,10 @@ def cat(
 ) -> Diagram:
     diagrams = iter(diagrams)
     start = next(diagrams, None)
-    sep = hstrut(sep).rotate((math.pi / 180) * v.angle)
+    sep_dia = hstrut(sep).rotate((math.pi / 180) * v.angle)
     if start is None:
         return empty()
-    return reduce(lambda a, b: a.beside(sep, v).beside(b, v), diagrams, start)
+    return reduce(lambda a, b: a.beside(sep_dia, v).beside(b, v), diagrams, start)
 
 
 def strut(width: float, height: float) -> Diagram:

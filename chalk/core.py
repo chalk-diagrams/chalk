@@ -204,7 +204,7 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
-    def juxtapose(self, other: Diagram, direction: Vec2):
+    def juxtapose(self, other: Diagram, direction: Vec2) -> Diagram:
         """Given two diagrams ``a`` and ``b``, ``a.juxtapose(b, v)``
         places ``b`` to touch ``a`` along angle ve .
 
@@ -264,7 +264,7 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         envelope = self.get_envelope()
-        if envelope is None:
+        if envelope.is_empty:
             return self
         t = Affine.translation(-envelope.center)
         return ApplyTransform(t, self)
@@ -341,15 +341,20 @@ class Diagram(tx.Transformable):
     def snug(self, v: Vec2) -> Diagram:
         "Align based on the trace."
         trace = self.get_trace()
-        t = Affine.translation(-trace.trace_v(ORIGIN, v))
+        d = trace.trace_v(ORIGIN, v)
+        assert d is not None
+        t = Affine.translation(-d)
         return ApplyTransform(t, self)
 
-    def juxtapose_snug(self, other: Diagram, direction: Vec2):
+    def juxtapose_snug(self, other: Diagram, direction: Vec2) -> Diagram:
         trace1 = self.get_trace()
         trace2 = other.get_trace()
-        d = trace1.trace_v(ORIGIN, direction) - trace2.trace_v(
+        d1 = trace1.trace_v(ORIGIN, direction)
+        d2 =  trace2.trace_v(
             ORIGIN, -direction
         )
+        assert d1 is not None and d2 is not None
+        d =  d1 - d2
         t = Affine.translation(d)
         return ApplyTransform(t, other)
 
@@ -481,7 +486,7 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         envelope = self.get_envelope()
-        if envelope is None:
+        if envelope.is_empty:
             return self
         α = x / envelope.width
         return ApplyTransform(Affine.scale(Vec2(α, α)), self)
@@ -496,7 +501,7 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         envelope = self.get_envelope()
-        if envelope is None:
+        if envelope.is_empty:
             return self
         α = y / envelope.height
         return ApplyTransform(Affine.scale(Vec2(α, α)), self)
@@ -604,7 +609,7 @@ class Diagram(tx.Transformable):
             Diagram
         """
         envelope = self.get_envelope()
-        if envelope is None:
+        if envelope.is_empty:
             return self
         origin_size = min(envelope.height, envelope.width) / 50
         origin = Primitive(
@@ -619,7 +624,7 @@ class Diagram(tx.Transformable):
             Diagram
         """
         envelope = self.get_envelope()
-        if envelope is None:
+        if envelope.is_empty:
             return self
         origin = Primitive(
             Path(envelope.to_path()),
