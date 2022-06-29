@@ -3,7 +3,7 @@ from chalk import *
 
 # Needed for recursion 
 import sys
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(100000)
 
 
 # This code is for a Vogel subflower, ported from:
@@ -48,7 +48,7 @@ mask = rectangle(1.5, 1).fill_color(white).line_color(white).line_width(0.05).tr
 # assemble
 d = (background + floret + logo).center_xy() + mask
 
-d.pad_b(-1).render("examples/output/logo.png", 500)
-d.pad_b(-1).render_svg("examples/output/logo.svg", 500)
+d.render("examples/output/logo.png", 500)
+d.render_svg("examples/output/logo.svg", 500)
 
 d.render_pdf("examples/output/logo.pdf", 50)
