@@ -11,27 +11,28 @@ black = Color("black")
 
 
 def draw_cube():
-    up = Vec2(0, -1)
-    hyp = tx.Affine.shear(-tx.from_radians(math.atan(1)), 0) * (up * 0.5)
-    right = Vec2(1, 0)
-    
-    # Faces
+    # Assemble cube
     face_m = rectangle(1, 1).align_tl()
     face_t = rectangle(1, 0.5).shear_x(-1).align_bl()
     face_r = rectangle(0.5, 1).shear_y(-1).align_tr()
+    cube = (face_t + face_m).align_tr() + face_r
 
-    return (face_t + face_m).align_tr() + face_r, (up, hyp, right)
-
-draw_cube()[0].render("examples/output/cube.png", 50)
-draw_cube()[0].show_envelope().render_pdf("examples/output/cube.pdf", 50)
+    # Replace envelope with front face. 
+    return cube.align_bl().with_envelope(face_m.align_bl())
 
 def draw_tensor(depth, rows, columns):
     "Draw a tensor"
-    cube, (up, hyp, right) = draw_cube()
-    return concat(([cube.translate_by(hyp * i + -up * j + right * k)
-                    for i in reversed(range(depth))
-                    for j in reversed(range(rows))
-                    for k in range(columns)]))
+    cube  = draw_cube()
+    # Fix this ...
+    hyp = tx.Affine.shear(-tx.from_radians(math.atan(1)), 0) * (unit_y * 0.5)
+    # Build a matrix. 
+    front = cat([hcat([cube for i in range(columns)])
+                 for j in reversed(range(rows))], -unit_y).align_t()
+
+    # Build depth
+    return concat(front.translate(-k * hyp.x, -k * hyp.y)
+                  for k in reversed(range(depth)))
+
 draw_tensor(2, 3, 4)
 
 def t(d, r, c):

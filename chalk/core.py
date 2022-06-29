@@ -204,6 +204,9 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
+    def with_envelope(self, other: Diagram) -> Diagram:
+        return Compose(other.get_envelope(), self, Empty())
+
     def juxtapose(self, other: Diagram, direction: Vec2) -> Diagram:
         """Given two diagrams ``a`` and ``b``, ``a.juxtapose(b, v)``
         places ``b`` to touch ``a`` along angle ve .
@@ -350,11 +353,9 @@ class Diagram(tx.Transformable):
         trace1 = self.get_trace()
         trace2 = other.get_trace()
         d1 = trace1.trace_v(ORIGIN, direction)
-        d2 =  trace2.trace_v(
-            ORIGIN, -direction
-        )
+        d2 = trace2.trace_v(ORIGIN, -direction)
         assert d1 is not None and d2 is not None
-        d =  d1 - d2
+        d = d1 - d2
         t = Affine.translation(d)
         return ApplyTransform(t, other)
 

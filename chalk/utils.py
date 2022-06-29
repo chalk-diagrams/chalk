@@ -223,7 +223,7 @@ def create_sample_diagram(
     b = square(1).fill_color(blue)
 
     if option is None:
-        d = a | b # a|b
+        d = a | b  # a|b
     else:
         option = "".join(option.split())
         # handle specific cases
