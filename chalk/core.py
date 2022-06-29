@@ -8,7 +8,7 @@ from typing import Any, List, Optional
 import cairo
 import svgwrite
 from colour import Color
-from planar import Affine, Vec2
+from planar import Affine, Point, Vec2
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
@@ -25,6 +25,7 @@ PyLatexElement = Any
 Ident = Affine.identity()
 unit_x = Vec2(1, 0)
 unit_y = Vec2(0, 1)
+ORIGIN = Point(0, 0)
 
 
 @dataclass
@@ -203,33 +204,41 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
-    def atop(
-        self, other: Diagram, direction: Optional[Vec2] = None
-    ) -> Diagram:
+    def juxtapose(self, other: Diagram, direction: Vec2):
+        """Given two diagrams ``a`` and ``b``, ``a.juxtapose(b, v)``
+        places ``b`` to touch ``a`` along angle ve .
+
+        Args:
+            other (Diagram): Another diagram object.
+            direction (Vec2): (Normalized) vector angle to juxtapose
+
+        Returns:
+            Diagram: Repositioned ``b`` diagram
+        """
         envelope1 = self.get_envelope()
         envelope2 = other.get_envelope()
-        if direction is None:
-            new_envelope = envelope1 + envelope2
-            return Compose(new_envelope, self, other)
-        else:
-            d = envelope1.envelope_v(direction) - envelope2.envelope_v(
-                -direction
-            )
-            t = Affine.translation(d)
-            new_envelope = envelope1 + (t * envelope2)
-            return Compose(new_envelope, self, ApplyTransform(t, other))
+        d = envelope1.envelope_v(direction) - envelope2.envelope_v(-direction)
+        t = Affine.translation(d)
+        return ApplyTransform(t, other)
+
+    def atop(self, other: Diagram) -> Diagram:
+        envelope1 = self.get_envelope()
+        envelope2 = other.get_envelope()
+        new_envelope = envelope1 + envelope2
+        return Compose(new_envelope, self, other)
 
     __add__ = atop
 
     def above(self, other: Diagram) -> Diagram:
-        return self.atop(other, unit_y)
+        return self.beside(other, unit_y)
 
     __truediv__ = above
 
-    def beside(self, other: Diagram) -> Diagram:
-        return self.atop(other, unit_x)
+    def beside(self, other: Diagram, direction: Optional[Vec2]) -> Diagram:
+        return self + self.juxtapose(other, direction)
 
-    __or__ = beside
+    def __or__(self, d: Diagram) -> Diagram:
+        return self.beside(d, unit_x)
 
     def above2(self, other: Diagram) -> Diagram:
         """Given two diagrams ``a`` and ``b``, ``a.above2(b)``
@@ -244,13 +253,7 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        envelope1 = self.get_envelope()
-        envelope2 = other.get_envelope()
-        direction = unit_y
-        d = envelope1(direction) + envelope2(-direction)
-        t = Affine.translation(-direction * d)
-        new_envelope = t * envelope1 + envelope2
-        return Compose(new_envelope, ApplyTransform(t, self), other)
+        return other.beside(self, -unit_y)
 
     __floordiv__ = above2
 
@@ -334,6 +337,24 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         return self.align_b().align_l()
+
+    def snug(self, v: Vec2) -> Diagram:
+        "Align based on the trace."
+        trace = self.get_trace()
+        t = Affine.translation(-trace.trace_v(ORIGIN, v))
+        return ApplyTransform(t, self)
+
+    def juxtapose_snug(self, other: Diagram, direction: Vec2):
+        trace1 = self.get_trace()
+        trace2 = other.get_trace()
+        d = trace1.trace_v(ORIGIN, direction) - trace2.trace_v(
+            ORIGIN, -direction
+        )
+        t = Affine.translation(d)
+        return ApplyTransform(t, other)
+
+    def beside_snug(self, other: Diagram, direction: Vec2) -> Diagram:
+        return self + self.juxtapose_snug(other, direction)
 
     # def pad_l(self, extra: float) -> Diagram:
     #     """Add outward directed left-side padding for

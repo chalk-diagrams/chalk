@@ -49,7 +49,7 @@ def sierpinski(n: int, size: int) -> Diagram:
         return triangle(size)
     else:
         smaller = sierpinski(n - 1, size / 2)
-        return smaller.above(smaller.beside(smaller).center_xy())
+        return smaller.above((smaller | smaller).center_xy())
 
 d = sierpinski(5, 4).fill_color(papaya)
 d.render(path, height=256)

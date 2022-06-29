@@ -9,7 +9,7 @@ except ImportError:  # for Python<3.8
 
 from planar import Affine, BoundingBox, Point, Vec2
 
-from chalk.core import Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.core import ORIGIN, Diagram, Empty, Primitive, unit_x, unit_y
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -188,9 +188,7 @@ def latex(t: str) -> Diagram:
     return Primitive.from_shape(Latex(t))
 
 
-def atop(
-    diagram1: Diagram, diagram2: Diagram, direction: Optional[Vec2]
-) -> Diagram:
+def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     """
     Places `diagram2` atop `diagram1`. This is done such that their
     origins align.
@@ -200,15 +198,14 @@ def atop(
     Args:
         diagram1 (Diagram): Base diagram object.
         diagram2 (Diagram): Diagram placed atop.
-        direction (Optional[Vec2]): Placement direction.
 
     Returns:
         Diagram: New diagram object.
     """
-    return diagram1.atop(diagram2, direction)
+    return diagram1.atop(diagram2)
 
 
-def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
+def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
     """
     Places `diagram2` beside `diagram1`.
 
@@ -220,11 +217,12 @@ def beside(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     Args:
         diagram1 (Diagram): Left diagram object.
         diagram2 (Diagram): Right diagram object.
+        direction (Optional[Vec2]): Placement direction.
 
     Returns:
         Diagram: New diagram object.
     """
-    return diagram1.beside(diagram2)
+    return diagram1.beside(diagram2, direction)
 
 
 def place_at(
@@ -256,21 +254,29 @@ def above(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.above(diagram2)
 
 
-def concat(
-    diagrams: Iterable[Diagram], direction: Optional[Vec2] = None
-) -> Diagram:
+def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
     Concat diagrams atop of each other with atop.
 
     Args:
         diagrams (Iterable[Diagram]): Diagrams to concat.
-        direction (Optional[Vec2]): Direction along envelope to place object.
 
     Returns:
         Diagram: New diagram
 
     """
-    return reduce((lambda x, y: atop(x, y, direction)), diagrams, empty())
+    return reduce(atop, diagrams, empty())
+
+
+def cat(
+    diagrams: Iterable[Diagram], v: Vec2, sep: Optional[float] = None
+) -> Diagram:
+    diagrams = iter(diagrams)
+    start = next(diagrams, None)
+    sep = hstrut(sep).rotate((math.pi / 180) * v.angle)
+    if start is None:
+        return empty()
+    return reduce(lambda a, b: a.beside(sep, v).beside(b, v), diagrams, start)
 
 
 def strut(width: float, height: float) -> Diagram:
@@ -295,11 +301,7 @@ def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
         Diagram: New diagram
 
     """
-    diagrams = iter(diagrams)
-    start = next(diagrams, None)
-    if start is None:
-        return empty()
-    return reduce(lambda a, b: a | hstrut(sep) | b, diagrams, start)
+    return cat(diagrams, unit_x, sep)
 
 
 def vstrut(height: Optional[float]) -> Diagram:
@@ -320,11 +322,7 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
         Diagrams
 
     """
-    diagrams = iter(diagrams)
-    start = next(diagrams, None)
-    if start is None:
-        return empty()
-    return reduce(lambda a, b: a / vstrut(sep) / b, diagrams, start)
+    return cat(diagrams, unit_y, sep)
 
 
 def cardinal(env: Envelope, dir: str) -> Point:
