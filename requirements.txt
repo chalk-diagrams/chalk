@@ -1,10 +1,11 @@
+setuptools==45
 pycairo
 toolz
 colour
 svgwrite
 cairosvg
 Pillow
-affine
+planar
 latextools
 loguru
 typing-extensions

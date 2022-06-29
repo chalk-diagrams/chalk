@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 import cairo
 import svgwrite
 from colour import Color
+from planar import Affine, BoundingBox, Point, Vec2
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
 from chalk import transform as tx
-from chalk.bounding_box import BoundingBox
 from chalk.shape import Circle, Rectangle, Shape, Spacer
 from chalk.style import Style
 from chalk.trace import Trace
@@ -19,22 +21,24 @@ from chalk.utils import imgen
 PyCairoContext = Any
 PyLatex = Any
 PyLatexElement = Any
-Ident = tx.Identity()
+Ident = Affine.identity()
+unit_x = Vec2(1, 0)
+unit_y = Vec2(0, 1)
 
 
 @dataclass
 class Diagram(tx.Transformable):
     """Diagram class."""
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Get the bounding box of a diagram."""
         raise NotImplementedError
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         """Get the trace of a diagram."""
         raise NotImplementedError
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
         is accumulated upwards, from the tree's leaves.
         """
@@ -69,6 +73,7 @@ class Diagram(tx.Transformable):
         """
         pad = 0.05
         box = self.get_bounding_box()
+        assert box is not None
 
         # infer width to preserve aspect ratio
         width = width or int(height * box.width / box.height)
@@ -83,13 +88,14 @@ class Diagram(tx.Transformable):
         ctx = cairo.Context(surface)
 
         ctx.scale(α, α)
-        ctx.translate(-(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y)
+        tl = box.min_point
+        ctx.translate(-(1 + pad) * tl.x, -(1 + pad) * tl.y)
 
         prims = self.to_list()
 
         for prim in prims:
             # apply transformation
-            matrix = prim.transform.to_cairo()
+            matrix = tx.to_cairo(prim.transform)
             ctx.transform(matrix)
 
             prim.shape.render(ctx)
@@ -117,6 +123,7 @@ class Diagram(tx.Transformable):
         box = self.get_bounding_box()
 
         # infer width to preserve aspect ratio
+        assert box is not None
         width = width or int(height * box.width / box.height)
 
         # determine scale to fit the largest axis in the target frame size
@@ -128,7 +135,8 @@ class Diagram(tx.Transformable):
             path,
             size=(width, height),
         )
-        x, y = -(1 + pad) * box.tl.x, -(1 + pad) * box.tl.y
+        tl = box.min_point
+        x, y = -(1 + pad) * tl.x, -(1 + pad) * tl.y
         outer = dwg.g(
             transform=f"scale({α}) translate({x} {y})",
             style="fill:white; stroke: black; stroke-width: 0.01;",
@@ -155,6 +163,7 @@ class Diagram(tx.Transformable):
 
         pad = 0.05
         box = self.get_bounding_box()
+        assert box is not None
 
         # infer width to preserve aspect ratio
         width = heightpt * (box.width / box.height)
@@ -189,35 +198,49 @@ class Diagram(tx.Transformable):
         os.unlink(f.name)
         return svg
 
-    def atop(self, other: "Diagram") -> "Diagram":
+    def _empty_check(
+        self, other: Diagram
+    ) -> Tuple[Optional[Diagram], BoundingBox, BoundingBox]:
+        fake = BoundingBox([Point(0, 0)])
         box1 = self.get_bounding_box()
         box2 = other.get_bounding_box()
-        new_box = box1.union(box2)
+        if box2 is None:
+            return self, fake, fake
+        if box1 is None:
+            return other, fake, fake
+        return None, box1, box2
+
+    def atop(self, other: Diagram) -> Diagram:
+        dia, box1, box2 = self._empty_check(other)
+        if dia is not None:
+            return dia
+        new_box = BoundingBox.from_shapes([box1, box2])
         return Compose(new_box, self, other)
 
     __add__ = atop
 
-    def beside(self, other: "Diagram") -> "Diagram":
-        box1 = self.get_bounding_box()
-        box2 = other.get_bounding_box()
-        dx = box1.right - box2.left
-        t = tx.Translate(dx, 0)
-        new_box = box1.union(box2.apply_transform(t))
+    def _merge(self, other: Diagram, direction: Vec2) -> Diagram:
+        dia, box1, box2 = self._empty_check(other)
+        if dia is not None:
+            return dia
+        d = box1.max_point - box2.min_point
+        t = Affine.translation(direction * d)
+        new_box = BoundingBox.from_shapes(
+            [b for b in [box1, t * box2] if b is not None]
+        )
         return Compose(new_box, self, ApplyTransform(t, other))
 
-    __or__ = beside
-
-    def above(self, other: "Diagram") -> "Diagram":
-        box1 = self.get_bounding_box()
-        box2 = other.get_bounding_box()
-        dy = box1.bottom - box2.top
-        t = tx.Translate(0, dy)
-        new_box = box1.union(box2.apply_transform(t))
-        return Compose(new_box, self, ApplyTransform(t, other))
+    def above(self, other: Diagram) -> Diagram:
+        return self._merge(other, unit_y)
 
     __truediv__ = above
 
-    def above2(self, other: "Diagram") -> "Diagram":
+    def beside(self, other: Diagram) -> Diagram:
+        return self._merge(other, unit_x)
+
+    __or__ = beside
+
+    def above2(self, other: Diagram) -> Diagram:
         """Given two diagrams ``a`` and ``b``, ``a.above2(b)``
         places ``a`` on top of ``b``. This moves ``a`` down to
         touch ``b``.
@@ -230,67 +253,80 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        box1 = self.get_bounding_box()
-        box2 = other.get_bounding_box()
-        dy = box1.bottom - box2.top
-        t = tx.Translate(0, -dy)
-        new_box = box2.union(box1.apply_transform(t))
+        dia, box1, box2 = self._empty_check(other)
+        if dia is not None:
+            return dia
+        d = box1.max_point - box2.min_point
+        t = Affine.translation(-unit_y * d)
+        new_box = BoundingBox.from_shapes(
+            [b for b in [t * box1, box2] if b is not None]
+        )
         return Compose(new_box, ApplyTransform(t, self), other)
 
     __floordiv__ = above2
 
-    def center_xy(self) -> "Diagram":
-        """Center a diagram.
+    def center_xy(self) -> Diagram:
+        """Center< a diagram.
 
         Returns:
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        c = box.center
-        t = tx.Translate(-c.x, -c.y)
+        if box is None:
+            return self
+        t = Affine.translation(-box.center)
         return ApplyTransform(t, self)
 
-    def align_t(self) -> "Diagram":
+    def align_t(self) -> Diagram:
         """Align a diagram with its top edge.
 
         Returns:
             Diagram
         """
         box = self.get_bounding_box()
-        t = tx.Translate(0, -box.top)
+        if box is None:
+            return self
+        t = Affine.translation(-unit_y * box.min_point)
         return ApplyTransform(t, self)
 
-    def align_b(self) -> "Diagram":
+    def align_b(self) -> Diagram:
         """Align a diagram with its bottom edge.
 
         Returns:
             Diagram
         """
         box = self.get_bounding_box()
-        t = tx.Translate(0, -box.bottom)
+        if box is None:
+            return self
+        t = Affine.translation(-unit_y * box.max_point)
         return ApplyTransform(t, self)
 
-    def align_r(self) -> "Diagram":
+    def align_r(self) -> Diagram:
         """Align a diagram with its right edge.
 
         Returns:
             Diagram
         """
         box = self.get_bounding_box()
-        t = tx.Translate(-box.right, 0)
+        if box is None:
+            return self
+
+        t = Affine.translation(-unit_x * box.max_point)
         return ApplyTransform(t, self)
 
-    def align_l(self) -> "Diagram":
+    def align_l(self) -> Diagram:
         """Align a diagram with its left edge.
 
         Returns:
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        t = tx.Translate(-box.left, 0)
+        if box is None:
+            return self
+        t = Affine.translation(-unit_x * box.min_point)
         return ApplyTransform(t, self)
 
-    def align_tl(self) -> "Diagram":
+    def align_tl(self) -> Diagram:
         """Align a diagram with its top-left edges.
 
         Returns:
@@ -298,7 +334,7 @@ class Diagram(tx.Transformable):
         """
         return self.align_t().align_l()
 
-    def align_br(self) -> "Diagram":
+    def align_br(self) -> Diagram:
         """Align a diagram with its bottom-right edges.
 
         Returns:
@@ -306,7 +342,7 @@ class Diagram(tx.Transformable):
         """
         return self.align_b().align_r()
 
-    def align_tr(self) -> "Diagram":
+    def align_tr(self) -> Diagram:
         """Align a diagram with its top-right edges.
 
         Returns:
@@ -314,7 +350,7 @@ class Diagram(tx.Transformable):
         """
         return self.align_t().align_r()
 
-    def align_bl(self) -> "Diagram":
+    def align_bl(self) -> Diagram:
         """Align a diagram with its bottom-left edges.
 
         Returns:
@@ -322,7 +358,7 @@ class Diagram(tx.Transformable):
         """
         return self.align_b().align_l()
 
-    def pad_l(self, extra: float) -> "Diagram":
+    def pad_l(self, extra: float) -> Diagram:
         """Add outward directed left-side padding for
         a diagram. This padding is applied **only** on
         the **left** side.
@@ -334,12 +370,13 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        new_box = BoundingBox.from_limits(
-            box.tl.x - extra, box.tl.y, box.br.x, box.br.y
-        )
+        if box is None:
+            return self
+        tl, br = box.min_point, box.max_point
+        new_box = BoundingBox.from_points([Point(tl.x - extra, tl.y), br])
         return Compose(new_box, self, Empty())
 
-    def pad_t(self, extra: float) -> "Diagram":
+    def pad_t(self, extra: float) -> Diagram:
         """Add outward directed top-side padding for
         a diagram. This padding is applied **only** on
         the **top** side.
@@ -351,12 +388,13 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        new_box = BoundingBox.from_limits(
-            box.tl.x, box.tl.y - extra, box.br.x, box.br.y
-        )
+        if box is None:
+            return self
+        tl, br = box.min_point, box.max_point
+        new_box = BoundingBox.from_points([Point(tl.x, tl.y - extra), br])
         return Compose(new_box, self, Empty())
 
-    def pad_r(self, extra: float) -> "Diagram":
+    def pad_r(self, extra: float) -> Diagram:
         """Add outward directed right-side padding for
         a diagram. This padding is applied **only** on
         the **right** side.
@@ -368,12 +406,13 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        new_box = BoundingBox.from_limits(
-            box.tl.x, box.tl.y, box.br.x + extra, box.br.y
-        )
+        if box is None:
+            return self
+        tl, br = box.min_point, box.max_point
+        new_box = BoundingBox.from_points([tl, Point(br.x + extra, br.y)])
         return Compose(new_box, self, Empty())
 
-    def pad_b(self, extra: float) -> "Diagram":
+    def pad_b(self, extra: float) -> Diagram:
         """Add outward directed bottom-side padding for
         a diagram. This padding is applied **only** on
         the **bottom** side.
@@ -385,12 +424,13 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        new_box = BoundingBox.from_limits(
-            box.tl.x, box.tl.y, box.br.x, box.br.y + extra
-        )
+        if box is None:
+            return self
+        tl, br = box.min_point, box.max_point
+        new_box = BoundingBox.from_points([tl, Point(br.x, br.y + extra)])
         return Compose(new_box, self, Empty())
 
-    def pad(self, extra: float) -> "Diagram":
+    def pad(self, extra: float) -> Diagram:
         """Add outward directed padding for a diagram.
         This padding is applied uniformly on all sides.
 
@@ -401,15 +441,18 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
-        new_box = BoundingBox.from_limits(
-            box.tl.x - extra,
-            box.tl.y - extra,
-            box.br.x + extra,
-            box.br.y + extra,
+        if box is None:
+            return self
+        tl, br = box.min_point, box.max_point
+        new_box = BoundingBox.from_points(
+            [
+                Point(tl.x - extra, tl.y - extra),
+                Point(br.x + extra, br.y + extra),
+            ]
         )
         return Compose(new_box, self, Empty())
 
-    def scale_uniform_to_x(self, x: float) -> "Diagram":
+    def scale_uniform_to_x(self, x: float) -> Diagram:
         """Apply uniform scaling along the x-axis.
 
         Args:
@@ -419,10 +462,12 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
+        if box is None:
+            return self
         α = x / box.width
-        return ApplyTransform(tx.Scale(α, α), self)
+        return ApplyTransform(Affine.scale(Vec2(α, α)), self)
 
-    def scale_uniform_to_y(self, y: float) -> "Diagram":
+    def scale_uniform_to_y(self, y: float) -> Diagram:
         """Apply uniform scaling along the y-axis.
 
         Args:
@@ -432,25 +477,27 @@ class Diagram(tx.Transformable):
             Diagram: A diagram object.
         """
         box = self.get_bounding_box()
+        if box is None:
+            return self
         α = y / box.height
-        return ApplyTransform(tx.Scale(α, α), self)
+        return ApplyTransform(Affine.scale(Vec2(α, α)), self)
 
-    def apply_transform(self, t: tx.Transform) -> "Diagram":  # type: ignore
+    def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
         """Apply a transformation.
 
         Args:
-            t (tx.Transform): A transformation.
+            t (Affine): A transformation.
 
         Returns:
             Diagram: A diagram object.
         """
         return ApplyTransform(t, self)
 
-    # def at(self, x: float, y: float) -> "Diagram":
+    # def at(self, x: float, y: float) -> Diagram:
     #     t = tx.Translate(x, y)
     #     return ApplyTransform(t, self.center_xy())
 
-    def line_width(self, width: float) -> "Diagram":
+    def line_width(self, width: float) -> Diagram:
         """Apply specified line-width to the edge of
         the diagram.
 
@@ -462,7 +509,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(line_width=width), self)
 
-    def line_color(self, color: Color) -> "Diagram":
+    def line_color(self, color: Color) -> Diagram:
         """Apply specified line-color to the edge of
         the diagram.
 
@@ -474,7 +521,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(line_color=color), self)
 
-    def fill_color(self, color: Color) -> "Diagram":
+    def fill_color(self, color: Color) -> Diagram:
         """Apply specified fill-color to the diagram.
 
         Args:
@@ -485,7 +532,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(fill_color=color), self)
 
-    def fill_opacity(self, opacity: float) -> "Diagram":
+    def fill_opacity(self, opacity: float) -> Diagram:
         """Apply specified amount of opacity to the diagram.
 
         Args:
@@ -496,9 +543,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(fill_opacity=opacity), self)
 
-    def dashing(
-        self, dashing_strokes: List[float], offset: float
-    ) -> "Diagram":
+    def dashing(self, dashing_strokes: List[float], offset: float) -> Diagram:
         """Apply dashed line to the edge of a diagram.
 
         > [TODO]: improve args description.
@@ -512,7 +557,7 @@ class Diagram(tx.Transformable):
         """
         return ApplyStyle(Style(dashing=(dashing_strokes, offset)), self)
 
-    def at_center(self, other: "Diagram") -> "Diagram":
+    def at_center(self, other: Diagram) -> Diagram:
         """Center two given diagrams.
 
         💡 `a.at_center(b)` means center of ``a`` is translated
@@ -527,33 +572,39 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        box1 = self.get_bounding_box()
-        box2 = other.get_bounding_box()
-        c = box1.center
-        t = tx.Translate(c.x, c.y)
-        new_box = box1.union(box2.apply_transform(t))
+        dia, box1, box2 = self._empty_check(other)
+        if dia is not None:
+            return dia
+        t = Affine.translation(box1.center)
+        new_box = BoundingBox.from_shapes(
+            [b for b in [box1, t * box2] if b is not None]
+        )
         return Compose(new_box, self, ApplyTransform(t, other))
 
-    def show_origin(self) -> "Diagram":
+    def show_origin(self) -> Diagram:
         """Add a red dot at the origin of a diagram for debugging.
 
         Returns:
             Diagram
         """
         box = self.get_bounding_box()
+        if box is None:
+            return self
         origin_size = min(box.height, box.width) / 50
         origin = Primitive(
             Circle(origin_size), Style(fill_color=Color("red")), Ident
         )
         return self + origin
 
-    def show_bounding_box(self) -> "Diagram":
+    def show_bounding_box(self) -> Diagram:
         """Add red bounding box to diagram for debugging.
 
         Returns:
             Diagram
         """
         box = self.get_bounding_box()
+        if box is None:
+            return self
         origin = Primitive(
             Rectangle(box.width, box.height),
             Style(fill_opacity=0, line_color=Color("red")),
@@ -561,7 +612,7 @@ class Diagram(tx.Transformable):
         ).translate(box.center.x, box.center.y)
         return self + origin
 
-    def named(self, name: str) -> "Diagram":
+    def named(self, name: str) -> Diagram:
         """Add a name to a diagram.
 
         Args:
@@ -573,7 +624,7 @@ class Diagram(tx.Transformable):
         return ApplyName(name, self)
 
     def get_subdiagram_bounding_box(
-        self, name: str, t: tx.Transform = Ident
+        self, name: str, t: Affine = Ident
     ) -> Optional[BoundingBox]:
         """Get the bounding box of the sub-diagram."""
         return None
@@ -587,6 +638,10 @@ class Diagram(tx.Transformable):
         raise NotImplementedError
 
 
+def bounding_box_transform(t: Affine, box: BoundingBox) -> BoundingBox:
+    return tx.apply_affine(t, box).bounding_box
+
+
 @dataclass
 class Primitive(Diagram):
     """Primitive class.
@@ -598,7 +653,7 @@ class Primitive(Diagram):
 
     shape: Shape
     style: Style
-    transform: tx.Transform
+    transform: Affine
 
     @classmethod
     def from_shape(cls, shape: Shape) -> "Primitive":
@@ -612,7 +667,7 @@ class Primitive(Diagram):
         """
         return cls(shape, Style.default(), Ident)
 
-    def apply_transform(self, t: tx.Transform) -> "Primitive":  # type: ignore
+    def apply_transform(self, t: Affine) -> "Primitive":  # type: ignore
         """Applies a transform and returns a primitive.
 
         Args:
@@ -621,7 +676,7 @@ class Primitive(Diagram):
         Returns:
             Primitive: A primitive object.
         """
-        new_transform = tx.Compose(t, self.transform)
+        new_transform = t * self.transform
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> "Primitive":
@@ -637,7 +692,7 @@ class Primitive(Diagram):
             self.shape, self.style.merge(other_style), self.transform
         )
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> BoundingBox:
         """Apply a transform and return a bounding box.
 
         Args:
@@ -647,14 +702,17 @@ class Primitive(Diagram):
         Returns:
             BoundingBox: A bounding box object.
         """
-        new_transform = tx.Compose(t, self.transform)
-        return self.shape.get_bounding_box().apply_transform(new_transform)
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
-        new_transform = tx.Compose(t, self.transform)
+        new_transform = t * self.transform
+        return bounding_box_transform(
+            new_transform, self.shape.get_bounding_box()
+        )
+
+    def get_trace(self, t: Affine = Ident) -> Trace:
+        new_transform = t * self.transform
         return self.shape.get_trace().apply_transform(new_transform)
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives.
 
         Args:
@@ -669,7 +727,7 @@ class Primitive(Diagram):
     def to_svg(self, dwg: Drawing, other_style: Style) -> BaseElement:
         """Convert a diagram to SVG image."""
         style = self.style.merge(other_style).to_svg()
-        transform = self.transform.to_svg()
+        transform = tx.to_svg(self.transform)
         inner = self.shape.render_svg(dwg)
         if not style and not transform:
             return inner
@@ -685,17 +743,15 @@ class Primitive(Diagram):
     ) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
 
-        transform = self.transform.to_tikz()
+        transform = tx.to_tikz(self.transform)
         style = self.style.merge(other_style)
-        style = style.scale_style(
-            max(self.transform()[0], self.transform()[4])
-        )
+        style = style.scale_style(max(self.transform[0], self.transform[4]))
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
             return [inner]
         else:
             options = {}
-            options["cm"] = self.transform.to_tikz()
+            options["cm"] = tx.to_tikz(self.transform)
             s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
             s.append(inner)
             return [s]
@@ -705,14 +761,14 @@ class Primitive(Diagram):
 class Empty(Diagram):
     """An Empty diagram class."""
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Returns the bounding box of a diagram."""
-        return BoundingBox.empty()
+        return None
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         return Trace.empty()
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
         return []
 
@@ -735,16 +791,16 @@ class Compose(Diagram):
     diagram1: Diagram
     diagram2: Diagram
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Returns the bounding box of a diagram."""
-        return self.box.apply_transform(t)
+        return bounding_box_transform(t, self.box)
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         # TODO Should we cache the trace?
         return self.diagram1.get_trace(t) + self.diagram2.get_trace(t)
 
     def get_subdiagram_bounding_box(
-        self, name: str, t: tx.Transform = Ident
+        self, name: str, t: Affine = Ident
     ) -> Optional[BoundingBox]:
         """Get the bounding box of the sub-diagram."""
         bb = self.diagram1.get_subdiagram_bounding_box(name, t)
@@ -752,7 +808,7 @@ class Compose(Diagram):
             bb = self.diagram2.get_subdiagram_bounding_box(name, t)
         return bb
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
         return self.diagram1.to_list(t) + self.diagram2.to_list(t)
 
@@ -776,36 +832,36 @@ class Compose(Diagram):
 class ApplyTransform(Diagram):
     """ApplyTransform class."""
 
-    transform: tx.Transform
+    transform: Affine
     diagram: Diagram
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Returns the bounding box of a diagram."""
-        t_new = tx.Compose(t, self.transform)
-        return self.diagram.get_bounding_box(t_new)
+        n = t * self.transform
+        return self.diagram.get_bounding_box(n)
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         """Returns the bounding box of a diagram."""
-        t_new = tx.Compose(t, self.transform)
-        return self.diagram.get_trace(t_new)
+        return self.diagram.get_trace(t * self.transform)
 
     def get_subdiagram_bounding_box(
-        self, name: str, t: tx.Transform = Ident
+        self, name: str, t: Affine = Ident
     ) -> Optional[BoundingBox]:
         """Get the bounding box of the sub-diagram."""
-        t_new = tx.Compose(t, self.transform)
-        return self.diagram.get_subdiagram_bounding_box(name, t_new)
+        return self.diagram.get_subdiagram_bounding_box(
+            name, t * self.transform
+        )
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
-        t_new = tx.Compose(t, self.transform)
+        t_new = t * self.transform
         return [
             prim.apply_transform(t_new) for prim in self.diagram.to_list(t)
         ]
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         """Converts to SVG image."""
-        g = dwg.g(transform=self.transform.to_svg())
+        g = dwg.g(transform=tx.to_svg(self.transform))
         g.add(self.diagram.to_svg(dwg, style))
         return g
 
@@ -813,10 +869,8 @@ class ApplyTransform(Diagram):
         self, pylatex: PyLatexElement, style: Style
     ) -> List[PyLatexElement]:
         options = {}
-        style = style.scale_style(
-            max(self.transform()[0], self.transform()[4])
-        )
-        options["cm"] = self.transform.to_tikz()
+        style = style.scale_style(max(self.transform[0], self.transform[4]))
+        options["cm"] = tx.to_tikz(self.transform)
         s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
         for x in self.diagram.to_tikz(pylatex, style):
             s.append(x)
@@ -830,21 +884,21 @@ class ApplyStyle(Diagram):
     style: Style
     diagram: Diagram
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         """Returns the bounding box of a diagram."""
         return self.diagram.get_trace(t)
 
     def get_subdiagram_bounding_box(
-        self, name: str, t: tx.Transform = Ident
+        self, name: str, t: Affine = Ident
     ) -> Optional[BoundingBox]:
         """Get the bounding box of the sub-diagram."""
         return self.diagram.get_subdiagram_bounding_box(name, t)
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
         return [
             prim.apply_style(self.style) for prim in self.diagram.to_list(t)
@@ -867,16 +921,16 @@ class ApplyName(Diagram):
     dname: str
     diagram: Diagram
 
-    def get_bounding_box(self, t: tx.Transform = Ident) -> BoundingBox:
+    def get_bounding_box(self, t: Affine = Ident) -> Optional[BoundingBox]:
         """Returns the bounding box of a diagram."""
         return self.diagram.get_bounding_box(t)
 
-    def get_trace(self, t: tx.Transform = Ident) -> Trace:
+    def get_trace(self, t: Affine = Ident) -> Trace:
         """Returns the bounding box of a diagram."""
         return self.diagram.get_trace(t)
 
     def get_subdiagram_bounding_box(
-        self, name: str, t: tx.Transform = Ident
+        self, name: str, t: Affine = Ident
     ) -> Optional[BoundingBox]:
         """Get the bounding box of the sub-diagram."""
         if name == self.dname:
@@ -884,7 +938,7 @@ class ApplyName(Diagram):
         else:
             return None
 
-    def to_list(self, t: tx.Transform = Ident) -> List["Primitive"]:
+    def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
         return [prim for prim in self.diagram.to_list(t)]
 

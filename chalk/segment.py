@@ -2,7 +2,9 @@ import math
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from chalk.point import Point, Vector
+from planar import Point, Vec2
+from planar.py import Ray
+
 from chalk.trace import Trace
 
 
@@ -12,41 +14,35 @@ class Segment:
     q: Point
 
     def get_trace(self) -> Trace:
-        def f(point: Point, direction: Vector) -> List[float]:
-            line = Line(point, direction)
-            inter = sorted(line_segment(line, self))
+        def f(point: Point, direction: Vec2) -> List[float]:
+            ray = Ray(point, direction)
+            inter = sorted(line_segment(ray, self))
             return inter
 
         return Trace(f)
 
-    def to_line(self) -> "Line":
-        return Line(self.p, self.q - self.p)
+    def to_ray(self) -> "Ray":
+        return Ray(self.p, self.q - self.p)
 
 
-@dataclass
-class Line:
-    p: Point
-    v: Vector
-
-
-def line_line_intersection(
-    line1: Line, line2: Line
+def ray_ray_intersection(
+    ray1: Ray, ray2: Ray
 ) -> Optional[Tuple[float, float]]:
-    """Given two lines
+    """Given two rays
 
-    line₁ = λ t . p₁ + t v₁
-    line₂ = λ t . p₂ + t v₂
+    ray₁ = λ t . p₁ + t v₁
+    ray₂ = λ t . p₂ +o t v₂
 
-    the function returns the parameters t₁ and t₂ at which the two lines meet,
+    the function returns the parameters t₁ and t₂ at which the two rays meet,
     that is:
 
-    line₁ t₁ = line₂ t₂
+    ray₁ t₁ = ray₂ t₂
 
     """
-    u = line2.p - line1.p
-    x1 = line1.v.cross(line2.v)
-    x2 = u.cross(line1.v)
-    x3 = u.cross(line2.v)
+    u = ray2.anchor - ray1.anchor
+    x1 = ray1.direction.cross(ray2.direction)
+    x2 = u.cross(ray1.direction)
+    x3 = u.cross(ray2.direction)
     if x1 == 0 and x2 != 0:
         # parallel
         return None
@@ -55,31 +51,31 @@ def line_line_intersection(
         return x3 / x1, x2 / x1
 
 
-def line_segment(line: Line, segment: Segment) -> List[float]:
-    """Given a line and a segment, return the parameter t for which the line
+def line_segment(ray: Ray, segment: Segment) -> List[float]:
+    """Given a ray and a segment, return the parameter t for which the ray
     meets the segment, that is:
 
-    line t = line t', with t' ∈ [0, 1]
+    ray t = ray t', with t' ∈ [0, 1]
 
     """
-    line_s = segment.to_line()
-    t = line_line_intersection(line, line_s)
+    ray_s = segment.to_ray()
+    t = ray_ray_intersection(ray, ray_s)
     if not t:
         return []
     else:
         t1, t2 = t
         if 0 <= t2 <= 1:
-            # p = line_s.p + t2 * line_s.v
+            # p = ray_s.p + t2 * ray_s.v
             return [t1]
         else:
             return []
 
 
-def line_circle_intersection(line: Line, circle_radius: float) -> List[float]:
-    """Given a line and a circle centered at the origin, return the parameter t
-    where the line meets the circle, that is:
+def ray_circle_intersection(ray: Ray, circle_radius: float) -> List[float]:
+    """Given a ray and a circle centered at the origin, return the parameter t
+    where the ray meets the circle, that is:
 
-    line t = circle θ
+    ray t = circle θ
 
     The above equation is solved as follows:
 
@@ -97,9 +93,11 @@ def line_circle_intersection(line: Line, circle_radius: float) -> List[float]:
     This is a quadratic equation, whose solutions are well known.
 
     """
-    a = line.v.dx**2 + line.v.dy**2
-    b = 2 * (line.p.x * line.v.dx + line.p.y * line.v.dy)
-    c = line.p.x**2 + line.p.y**2 - circle_radius**2
+    p = ray.anchor
+
+    a = ray.direction.length2
+    b = 2 * (p.dot(ray.direction))
+    c = p.length2 - circle_radius**2
 
     Δ = b**2 - 4 * a * c
     eps = 1e-6  # rounding error tolerance
@@ -111,7 +109,7 @@ def line_circle_intersection(line: Line, circle_radius: float) -> List[float]:
         # tagent
         return [-b / (2 * a)]
     else:
-        # the line intersects at two points
+        # the ray intersects at two points
         return [
             (-b - math.sqrt(Δ)) / (2 * a),
             (-b + math.sqrt(Δ)) / (2 * a),
