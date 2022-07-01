@@ -1,6 +1,7 @@
 # + tags=["hide_inp"]
 import math
 from chalk import *
+from planar import Vec2Array
 def help(f):
     import pydoc
     from IPython.display import HTML
@@ -17,7 +18,7 @@ def help(f):
 
 # Trails are a sequence of vectors.
 
-trail = Trail([Vector(1, 0), Vector(1, 1), Vector(0, 1)])
+trail = Trail(Vec2Array([Vec2(1, 0), Vec2(1, 1), Vec2(0, 1)]))
 
 # ### Trail.stroke
 

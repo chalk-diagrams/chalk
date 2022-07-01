@@ -34,7 +34,7 @@ help(Diagram.translate)
 
 #
 
-triangle(1).translate(1, 1).show_bounding_box().show_origin()
+triangle(1).translate(1, 1).show_envelope().show_origin()
 
 #
 
@@ -48,7 +48,7 @@ help(Diagram.shear_x)
 
 #
 
-square(1).shear_x(0.25).show_bounding_box()
+square(1).shear_x(0.25).show_envelope()
 
 #
 

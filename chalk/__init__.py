@@ -1,15 +1,15 @@
 import math
 from functools import reduce
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
 try:
     from importlib import metadata
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from planar import Affine, BoundingBox, Point, Vec2
+from chalk.transform import Affine, BoundingBox, Point, V2
 
-from chalk.core import ORIGIN, Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.core import origin, Diagram, Empty, Primitive
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -29,7 +29,9 @@ __libname__: str = "chalk-diagrams"  # custom dunder attribute
 __version__ = metadata.version(__libname__)
 
 
-ignore = [Trail, Vec2]
+ignore = [Trail, V2]
+
+
 
 
 def empty() -> Diagram:
@@ -37,9 +39,19 @@ def empty() -> Diagram:
 
 
 def make_path(
-    coords: List[Tuple[float, float]], arrow: bool = False
+    coords: Union[List[Tuple[float, float]],
+                   List[Point]], arrow: bool = False
 ) -> Diagram:
-    return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
+    if not coords or isinstance(coords[0], Point):
+        return Primitive.from_shape(Path.from_points(coords))
+    else:
+        return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))        
+
+V2.stroke = lambda self: make_path([origin, self], False)
+V2.arc = lambda self: Arc(self.length, 0, self.angle * (math.pi / 180)) 
+
+unit_x = V2(1, 0)
+unit_y = V2(0, 1)
 
 
 def circle(radius: float) -> Diagram:
@@ -205,7 +217,7 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.atop(diagram2)
 
 
-def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
+def beside(diagram1: Diagram, diagram2: Diagram, direction: V2) -> Diagram:
     """
     Places `diagram2` beside `diagram1`.
 
@@ -217,7 +229,7 @@ def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
     Args:
         diagram1 (Diagram): Left diagram object.
         diagram2 (Diagram): Right diagram object.
-        direction (Optional[Vec2]): Placement direction.
+        direction (Optional[V2]): Placement direction.
 
     Returns:
         Diagram: New diagram object.
@@ -269,7 +281,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
 
 
 def cat(
-    diagrams: Iterable[Diagram], v: Vec2, sep: Optional[float] = None
+    diagrams: Iterable[Diagram], v: V2, sep: Optional[float] = None
 ) -> Diagram:
     diagrams = iter(diagrams)
     start = next(diagrams, None)

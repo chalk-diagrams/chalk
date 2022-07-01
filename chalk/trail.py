@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from planar import Affine, Point, Vec2, Vec2Array
-
 from chalk.core import Primitive
 from chalk.shape import Path
-from chalk.transform import Transformable, apply_affine, remove_translation
+from chalk.transform import Transformable, apply_affine, remove_translation, Affine, Point, V2, Vec2Array
 
 
 @dataclass
@@ -90,5 +88,5 @@ class Trail(Transformable):
         return Trail(apply_affine(remove_translation(t), self.offsets))
 
 
-unit_x = Trail(Vec2Array([Vec2(1, 0)]))
-unit_y = Trail(Vec2Array([Vec2(0, 1)]))
+unit_x = Trail(Vec2Array([V2(1, 0)]))
+unit_y = Trail(Vec2Array([V2(0, 1)]))

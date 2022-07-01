@@ -1,7 +1,7 @@
 import math
 from typing import Any, TypeVar
 
-from planar import Affine, Vec2
+from planar.py import Affine, Vec2, Point, Ray, BoundingBox, Vec2Array, Polygon
 
 
 def to_cairo(affine: Affine) -> Any:
@@ -104,3 +104,33 @@ class Transformable:
 
     def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
         return self._app(Affine.translation(vector))
+
+V2 = Vec2
+V2._app = lambda x, y: y * x
+V2.shear_x = Transformable.shear_x
+V2.shear_y = Transformable.shear_y
+V2.scale = Transformable.scale
+V2.scale_x = Transformable.scale_x
+V2.scale_y = Transformable.scale_y
+V2.rotate = Transformable.rotate
+V2.rotate_by = Transformable.rotate_by
+V2.reflect_x = Transformable.reflect_x
+V2.reflect_y = Transformable.reflect_y
+
+P2 = Point
+P2.shear_x = Transformable.shear_x
+P2.shear_y = Transformable.shear_y
+P2.scale = Transformable.scale
+P2.scale_x = Transformable.scale_x
+P2.scale_y = Transformable.scale_y
+P2.rotate = Transformable.rotate
+P2.rotate_by = Transformable.rotate_by
+P2.reflect_x = Transformable.reflect_x
+P2.reflect_y = Transformable.reflect_y
+V2.translate = Transformable.translate
+V2.translate_by = Transformable.translate_by
+
+
+origin = P2(0, 0)
+unit_x = V2(1, 0)
+unit_y = V2(0, 1)

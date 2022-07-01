@@ -317,6 +317,7 @@ nav:
     - Connections: api/names.py
     - Utils: api/utils.md
   - Examples:
+    - BigBen: examples/bigben.py
     - Hanoi: examples/hanoi.py
     - Koch: examples/koch.py
     - LeNet: examples/lenet.py

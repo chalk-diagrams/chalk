@@ -8,7 +8,6 @@ from typing import Any, List, Optional
 import cairo
 import svgwrite
 from colour import Color
-from planar import Affine, Point, Vec2
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
@@ -17,15 +16,13 @@ from chalk.envelope import Envelope
 from chalk.shape import Circle, Path, Shape, Spacer
 from chalk.style import Style
 from chalk.trace import Trace
+from chalk.transform import unit_x, unit_y, origin, V2, P2, Affine
 from chalk.utils import imgen
 
 PyCairoContext = Any
 PyLatex = Any
 PyLatexElement = Any
 Ident = Affine.identity()
-unit_x = Vec2(1, 0)
-unit_y = Vec2(0, 1)
-ORIGIN = Point(0, 0)
 
 
 @dataclass
@@ -207,13 +204,13 @@ class Diagram(tx.Transformable):
     def with_envelope(self, other: Diagram) -> Diagram:
         return Compose(other.get_envelope(), self, Empty())
 
-    def juxtapose(self, other: Diagram, direction: Vec2) -> Diagram:
+    def juxtapose(self, other: Diagram, direction: V2) -> Diagram:
         """Given two diagrams ``a`` and ``b``, ``a.juxtapose(b, v)``
         places ``b`` to touch ``a`` along angle ve .
 
         Args:
             other (Diagram): Another diagram object.
-            direction (Vec2): (Normalized) vector angle to juxtapose
+            direction (V2): (Normalized) vector angle to juxtapose
 
         Returns:
             Diagram: Repositioned ``b`` diagram
@@ -237,7 +234,7 @@ class Diagram(tx.Transformable):
 
     __truediv__ = above
 
-    def beside(self, other: Diagram, direction: Optional[Vec2]) -> Diagram:
+    def beside(self, other: Diagram, direction: Optional[V2]) -> Diagram:
         return self + self.juxtapose(other, direction)
 
     def __or__(self, d: Diagram) -> Diagram:
@@ -272,7 +269,7 @@ class Diagram(tx.Transformable):
         t = Affine.translation(-envelope.center)
         return ApplyTransform(t, self)
 
-    def align(self, v: Vec2) -> Diagram:
+    def align(self, v: V2) -> Diagram:
         envelope = self.get_envelope()
         t = Affine.translation(-envelope.envelope_v(v))
         return ApplyTransform(t, self)
@@ -341,25 +338,25 @@ class Diagram(tx.Transformable):
         """
         return self.align_b().align_l()
 
-    def snug(self, v: Vec2) -> Diagram:
+    def snug(self, v: V2) -> Diagram:
         "Align based on the trace."
         trace = self.get_trace()
-        d = trace.trace_v(ORIGIN, v)
+        d = trace.trace_v(origin, v)
         assert d is not None
         t = Affine.translation(-d)
         return ApplyTransform(t, self)
 
-    def juxtapose_snug(self, other: Diagram, direction: Vec2) -> Diagram:
+    def juxtapose_snug(self, other: Diagram, direction: V2) -> Diagram:
         trace1 = self.get_trace()
         trace2 = other.get_trace()
-        d1 = trace1.trace_v(ORIGIN, direction)
-        d2 = trace2.trace_v(ORIGIN, -direction)
+        d1 = trace1.trace_v(origin, direction)
+        d2 = trace2.trace_v(origin, -direction)
         assert d1 is not None and d2 is not None
         d = d1 - d2
         t = Affine.translation(d)
         return ApplyTransform(t, other)
 
-    def beside_snug(self, other: Diagram, direction: Vec2) -> Diagram:
+    def beside_snug(self, other: Diagram, direction: V2) -> Diagram:
         return self + self.juxtapose_snug(other, direction)
 
     # def pad_l(self, extra: float) -> Diagram:
@@ -378,7 +375,7 @@ class Diagram(tx.Transformable):
     #     if envelope is None:
     #         return self
     #     tl, br = envelope.min_point, envelope.max_point
-    #     new_envelope = Envelope.from_points([Point(tl.x - extra, tl.y), br])
+    #     new_envelope = Envelope.from_points([P2(tl.x - extra, tl.y), br])
     #     return Compose(new_envelope, self, Empty())
 
     # def pad_t(self, extra: float) -> Diagram:
@@ -397,7 +394,7 @@ class Diagram(tx.Transformable):
     #     if envelope is None:
     #         return self
     #     tl, br = envelope.min_point, envelope.max_point
-    #     new_envelope = Envelope.from_points([Point(tl.x, tl.y - extra), br])
+    #     new_envelope = Envelope.from_points([P2(tl.x, tl.y - extra), br])
     #     return Compose(new_envelope, self, Empty())
 
     # def pad_r(self, extra: float) -> Diagram:
@@ -416,7 +413,7 @@ class Diagram(tx.Transformable):
     #     if envelope is None:
     #         return self
     #     tl, br = envelope.min_point, envelope.max_point
-    #     new_envelope = Envelope.from_points([tl, Point(br.x + extra, br.y)])
+    #     new_envelope = Envelope.from_points([tl, P2(br.x + extra, br.y)])
     #     return Compose(new_envelope, self, Empty())
 
     # def pad_b(self, extra: float) -> Diagram:
@@ -435,7 +432,7 @@ class Diagram(tx.Transformable):
     #     if envelope is None:
     #         return self
     #     tl, br = envelope.min_point, envelope.max_point
-    #     new_envelope = Envelope.from_points([tl, Point(br.x, br.y + extra)])
+    #     new_envelope = Envelope.from_points([tl, P2(br.x, br.y + extra)])
     #     return Compose(new_envelope, self, Empty())
 
     def frame(self, extra: float) -> Diagram:
@@ -450,7 +447,7 @@ class Diagram(tx.Transformable):
         """
         envelope = self.get_envelope()
 
-        def f(d: Vec2) -> float:
+        def f(d: V2) -> float:
             assert envelope is not None
             return envelope(d) + extra
 
@@ -470,7 +467,7 @@ class Diagram(tx.Transformable):
         """
         envelope = self.get_envelope()
 
-        def f(d: Vec2) -> float:
+        def f(d: V2) -> float:
             assert envelope is not None
             return envelope(d) * extra
 
@@ -490,7 +487,7 @@ class Diagram(tx.Transformable):
         if envelope.is_empty:
             return self
         α = x / envelope.width
-        return ApplyTransform(Affine.scale(Vec2(α, α)), self)
+        return self.scale(α)
 
     def scale_uniform_to_y(self, y: float) -> Diagram:
         """Apply uniform scaling along the y-axis.
@@ -505,8 +502,8 @@ class Diagram(tx.Transformable):
         if envelope.is_empty:
             return self
         α = y / envelope.height
-        return ApplyTransform(Affine.scale(Vec2(α, α)), self)
-
+        return self.scale(α)
+    
     def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
         """Apply a transformation.
 
@@ -613,27 +610,44 @@ class Diagram(tx.Transformable):
         if envelope.is_empty:
             return self
         origin_size = min(envelope.height, envelope.width) / 50
-        origin = Primitive(
-            Circle(origin_size), Style(fill_color=Color("red")), Ident
-        )
+        origin = Primitive.from_shape(
+            Circle(origin_size)
+        ).line_color(Color("red"))
         return self + origin
 
-    def show_envelope(self) -> Diagram:
+    def show_envelope(self, phantom=False, rate=45) -> Diagram:
         """Add red envelope to diagram for debugging.
 
         Returns:
             Diagram
         """
+        self.show_origin()
         envelope = self.get_envelope()
         if envelope.is_empty:
             return self
-        origin = Primitive(
-            Path(envelope.to_path()),
-            Style(fill_opacity=0, line_color=Color("red")),
-            Ident,
-        )
-        return self + origin
+        outer = Primitive.from_shape(Path(envelope.to_path(10))).fill_opacity(0).line_color(Color("red"))
+        for segment in envelope.to_segments(rate):
+            outer = outer + Primitive.from_shape(Path(segment)).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
 
+        new = (self + outer)
+        if phantom:
+            new.with_envelope(self)
+        return new
+
+    def show_beside(self, other, direction: V2) -> Diagram:
+
+        envelope1 = self.get_envelope()
+        envelope2 = other.get_envelope()
+        v1 = envelope1.envelope_v(direction)
+        one = Primitive.from_shape(Path(Vec2Array([origin, v1]))).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
+        v2 = envelope2.envelope_v(-direction)
+        two = Primitive.from_shape(Path(Vec2Array([origin, v2]))).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
+        split = Primitive.from_shape(Path(Vec2Array([v1 + direction.perpendicular(), v1 - direction.perpendicular()]))).line_color(Color("blue")).line_width(0.02)
+        one = (self.show_origin() + one + split).with_envelope(self)
+        two = (other.show_origin() + two).with_envelope(other)
+        return one.beside(two, direction)
+        
+        
     def named(self, name: str) -> Diagram:
         """Add a name to a diagram.
 

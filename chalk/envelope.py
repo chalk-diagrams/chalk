@@ -3,20 +3,20 @@ from __future__ import annotations
 from functools import reduce
 from typing import Callable, Iterable
 
-from planar import Affine, BoundingBox, Point, Polygon, Vec2, Vec2Array
 
 from chalk.transform import (
     Transformable,
     apply_affine,
     remove_translation,
     transpose_translation,
+    Affine, BoundingBox, Point, Polygon, Vec2, Vec2Array
 )
 
 SignedDistance = float
 
 unit_x = Vec2(1, 0)
 unit_y = Vec2(0, 1)
-
+ORIGIN = Point(0, 0)
 
 class Envelope(Transformable):
     def __init__(
@@ -121,10 +121,18 @@ class Envelope(Transformable):
         else:
             return Envelope.from_bounding_box(BoundingBox(path))
 
-    def to_path(self) -> Vec2Array:
+    def to_path(self, angle=45) -> Vec2Array:
         "Draws an envelope by sampling every 10 degrees."
         pts = []
-        for i in range(0, 361, 10):
+        for i in range(0, 361, angle):
             v = Vec2.polar(i)
             pts.append(self(v) * v)
         return Vec2Array(pts)
+
+    def to_segments(self, angle=45) -> List[Vec2Array]:
+        "Draws an envelope by sampling every 10 degrees."
+        segments = []
+        for i in range(0, 361, angle):
+            v = Vec2.polar(i)
+            segments.append(Vec2Array([ORIGIN, self(v) * v]))
+        return segments
