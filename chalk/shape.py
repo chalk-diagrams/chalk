@@ -62,7 +62,7 @@ class Circle(Shape):
     def get_trace(self) -> Trace:
         def f(p: P2, v: V2) -> List[SignedDistance]:
             ray = Ray(p, v)
-            return sorted(ray_circle_intersection(ray, self.radius))
+            return sorted([d / v.length for d in ray_circle_intersection(ray, self.radius)])
 
         return Trace(f)
 

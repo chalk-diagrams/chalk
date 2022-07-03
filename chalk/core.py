@@ -23,7 +23,11 @@ PyCairoContext = Any
 PyLatex = Any
 PyLatexElement = Any
 Ident = Affine.identity()
+SVG_HEIGHT = 200
 
+def set_svg_height(height):
+    global SVG_HEIGHT
+    SVG_HEIGHT = height
 
 @dataclass
 class Diagram(tx.Transformable):
@@ -194,8 +198,9 @@ class Diagram(tx.Transformable):
         doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
 
     def _repr_svg_(self) -> str:
+        global SVG_HEIGHT
         f = tempfile.NamedTemporaryFile(delete=False)
-        self.render_svg(f.name, height=500)
+        self.render_svg(f.name, height=SVG_HEIGHT)
         f.close()
         svg = open(f.name).read()
         os.unlink(f.name)
@@ -625,7 +630,7 @@ class Diagram(tx.Transformable):
         envelope = self.get_envelope()
         if envelope.is_empty:
             return self
-        outer = Primitive.from_shape(Path(envelope.to_path(10))).fill_opacity(0).line_color(Color("red"))
+        outer = Primitive.from_shape(Path(envelope.to_path(rate))).fill_opacity(0).line_color(Color("red"))
         for segment in envelope.to_segments(rate):
             outer = outer + Primitive.from_shape(Path(segment)).line_color(Color("red")).dashing([0.01, 0.01], 0)
             

@@ -9,7 +9,7 @@ except ImportError:  # for Python<3.8
 
 from chalk.transform import Affine, BoundingBox, Point, V2, unit_x, unit_y, P2, to_radians
 
-from chalk.core import origin, Diagram, Empty, Primitive
+from chalk.core import origin, Diagram, Empty, Primitive, set_svg_height
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -412,3 +412,4 @@ def connect_outer(
     assert bb2 is not None, f"Name {name2} not found"
     points = [cardinal(bb1, c1), cardinal(bb2, c2)]
     return Primitive.from_shape(Path(points, arrow))
+
