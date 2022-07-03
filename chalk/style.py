@@ -97,7 +97,7 @@ class Style:
         if self.line_color is not None:
             style += f"stroke: {self.line_color.hex_l};"
         if self.line_width is not None:
-            style += f"stroke-width: {self.line_width};"
+            style += f"stroke-width: {100 * self.line_width};"
         if self.fill_opacity is not None:
             style += f"fill-opacity: {self.fill_opacity};"
         if self.dashing is not None:

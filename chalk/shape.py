@@ -59,11 +59,6 @@ class Circle(Shape):
     def get_envelope(self) -> Envelope:
         return Envelope.from_circle(self.radius)
 
-    def get_bounding_box(self) -> BoundingBox:
-        tl = P2(-self.radius, -self.radius)
-        br = P2(+self.radius, +self.radius)
-        return BoundingBox([tl, br])
-
     def get_trace(self) -> Trace:
         def f(p: P2, v: V2) -> List[SignedDistance]:
             ray = Ray(p, v)
@@ -75,7 +70,8 @@ class Circle(Shape):
         ctx.arc(origin.x, origin.y, self.radius, 0, 2 * math.pi)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        return dwg.circle((origin.x, origin.y), self.radius)
+        return dwg.circle((origin.x, origin.y), self.radius,                        
+                            style="vector-effect: non-scaling-stroke")
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         return pylatex.TikZDraw(
@@ -126,6 +122,7 @@ class Rectangle(Shape):
             (self.width, self.height),
             rx=self.radius,
             ry=self.radius,
+            style="vector-effect: non-scaling-stroke;"
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
@@ -222,7 +219,8 @@ class Path(Shape, tx.Transformable):
             ctx.line_to(p.x, p.y)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        line = dwg.polyline([(p.x, p.y) for p in self.points])
+        line = dwg.polyline([(p.x, p.y) for p in self.points],
+                            style="vector-effect: non-scaling-stroke;")
         if self.arrow:
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
@@ -245,7 +243,6 @@ class Arc(Shape):
     radius: float
     angle0: float
     angle1: float
-
     def __post_init__(self) -> None:
         surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
@@ -255,18 +252,35 @@ class Arc(Shape):
         l, t, r, b = self.ctx.path_extents()
         return BoundingBox([P2(l, t), P2(r, b)])
 
+
+    def get_envelope(self) -> Envelope:
+        angle0_deg = self.angle0 * (180 / math.pi) 
+        angle1_deg = self.angle1 * (180 / math.pi)
+        v1 = V2.polar(angle0_deg, self.radius)
+        v2 = V2.polar(angle1_deg, self.radius)
+        def wrapped(d: V2) -> SignedDistance:
+            angle = (d.angle + 360) % 360
+            if angle >= angle0_deg and angle <= angle1_deg:
+                # Case 1: Point at arc
+                return self.radius / d.length  # type: ignore
+            else:
+                # Case 2: Point outside of arc
+                return max(d.dot(v1), d.dot(v2))
+
+        return Envelope(wrapped)
+
+        
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         u = V2.polar(self.angle0 * (180 / math.pi), self.radius)
         v = V2.polar(self.angle1 * (180 / math.pi), self.radius)
-        path = dwg.path(fill="none")
+        path = dwg.path(fill="none", style="vector-effect: non-scaling-stroke;")
+        large = 1 if self.angle1 - self.angle0 > math.pi else 0
         path.push(
-            "M {} {} A {} {} 0 0 1 {} {}".format(
-                u.x, u.y, self.radius, self.radius, v.x, v.y
+            f"M {u.x} {u.y} A {self.radius} {self.radius} 0 {large} 1 {v.x} {v.y}"
             )
-        )
         return path
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:

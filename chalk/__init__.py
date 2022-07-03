@@ -7,7 +7,7 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from chalk.transform import Affine, BoundingBox, Point, V2
+from chalk.transform import Affine, BoundingBox, Point, V2, unit_x, unit_y, P2, to_radians
 
 from chalk.core import origin, Diagram, Empty, Primitive
 from chalk.envelope import Envelope
@@ -47,11 +47,11 @@ def make_path(
     else:
         return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))        
 
-V2.stroke = lambda self: make_path([origin, self], False)
-V2.arc = lambda self: Arc(self.length, 0, self.angle * (math.pi / 180)) 
+def v2_stroke(x):
+    return make_path([origin, x], False)
 
-unit_x = V2(1, 0)
-unit_y = V2(0, 1)
+def v2_arc(x: V2):
+    return Primitive.from_shape(Arc(x.length, 0, x.angle * (math.pi / 180)))
 
 
 def circle(radius: float) -> Diagram:
@@ -74,18 +74,18 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
     Args:
       radius (float): Circle radius.
-      angle0 (float): Starting cutoff in radians.
-      angle1 (float): Finishing cutoff in radians.
+      angle0 (float): Starting cutoff.
+      angle1 (float): Finishing cutoff.
 
     Returns:
       Diagram
 
     """
-    return Primitive.from_shape(Arc(radius, angle0, angle1))
+    return Primitive.from_shape(Arc(radius, to_radians(angle0), to_radians(angle1)))
 
 
 def arc_between(
-    point1: Tuple[float, float], point2: Tuple[float, float], height: float
+    point1: Union[Point, Tuple[float, float]], point2: Union[Point, Tuple[float, float]], height: float
 ) -> Diagram:
     """Makes an arc starting at point1 and ending at point2, with the midpoint
     at a distance of abs(height) away from the straight line from point1 to
@@ -95,8 +95,14 @@ def arc_between(
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
-    p = Point(*point1)
-    q = Point(*point2)
+    if not isinstance(point1, Point):
+        p = Point(*point1)
+    else:
+        p = point1
+    if not isinstance(point2, Point):
+        q = Point(*point2)
+    else:
+        q = point2
 
     h = abs(height)
     v = q - p
@@ -120,9 +126,9 @@ def arc_between(
             dy = h - r
 
         shape = (
-            Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
+            Primitive.from_shape(Arc(r, -θ, θ)).rotate_rad(-φ).translate(d / 2, dy)
         )
-    return shape.rotate(v.angle).translate(p.x, p.y)
+    return shape.rotate(-v.angle).translate_by(p)
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:

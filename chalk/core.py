@@ -16,7 +16,7 @@ from chalk.envelope import Envelope
 from chalk.shape import Circle, Path, Shape, Spacer
 from chalk.style import Style
 from chalk.trace import Trace
-from chalk.transform import unit_x, unit_y, origin, V2, P2, Affine
+from chalk.transform import unit_x, unit_y, origin, V2, P2, Affine, Vec2Array
 from chalk.utils import imgen
 
 PyCairoContext = Any
@@ -136,7 +136,7 @@ class Diagram(tx.Transformable):
         )
 
         outer = dwg.g(
-            style="fill:white; stroke: black; stroke-width: 0.01;",
+            style="fill:white; stroke: black; stroke-width: 1.00;",
         )
         # Arrow marker
         marker = dwg.marker(
@@ -195,7 +195,7 @@ class Diagram(tx.Transformable):
 
     def _repr_svg_(self) -> str:
         f = tempfile.NamedTemporaryFile(delete=False)
-        self.render_svg(f.name)
+        self.render_svg(f.name, height=500)
         f.close()
         svg = open(f.name).read()
         os.unlink(f.name)
@@ -627,7 +627,8 @@ class Diagram(tx.Transformable):
             return self
         outer = Primitive.from_shape(Path(envelope.to_path(10))).fill_opacity(0).line_color(Color("red"))
         for segment in envelope.to_segments(rate):
-            outer = outer + Primitive.from_shape(Path(segment)).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
+            outer = outer + Primitive.from_shape(Path(segment)).line_color(Color("red")).dashing([0.01, 0.01], 0)
+            
 
         new = (self + outer)
         if phantom:
@@ -890,6 +891,7 @@ class ApplyTransform(Diagram):
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         """Converts to SVG image."""
         g = dwg.g(transform=tx.to_svg(self.transform))
+        style = style.scale_style(max(self.transform[0], self.transform[4]))
         g.add(self.diagram.to_svg(dwg, style))
         return g
 

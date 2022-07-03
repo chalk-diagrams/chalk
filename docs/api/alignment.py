@@ -39,6 +39,11 @@ rectangle(1, 1).show_beside(triangle(1), unit_x)
 
 (rectangle(1, 1) | triangle(1)).pad(1.4)
 
+
+arc(1, 0, math.pi).show_origin().show_envelope(rate=10)
+
+
+
 # ### Diagram.align_*
 
 # + tags=["hide_inp"]
