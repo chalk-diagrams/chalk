@@ -23,7 +23,7 @@ def make_square():
     i = random.random() > 0.75
     color = colors[i]
 
-    return square(0.75).line_color(color).rotate(θ)
+    return square(0.75).line_color(color).rotate_rad(-θ)
 make_square()
 
 def make_group(num_squares=4):

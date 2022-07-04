@@ -16,7 +16,7 @@ from chalk.envelope import Envelope
 from chalk.shape import Circle, Path, Shape, Spacer
 from chalk.style import Style
 from chalk.trace import Trace
-from chalk.transform import unit_x, unit_y, origin, V2, P2, Affine, Vec2Array
+from chalk.transform import V2, Affine, Vec2Array, origin, unit_x, unit_y
 from chalk.utils import imgen
 
 PyCairoContext = Any
@@ -25,9 +25,12 @@ PyLatexElement = Any
 Ident = Affine.identity()
 SVG_HEIGHT = 200
 
-def set_svg_height(height):
+
+def set_svg_height(height: int) -> None:
+    "Globally set the svg preview height for notebooks."
     global SVG_HEIGHT
     SVG_HEIGHT = height
+
 
 @dataclass
 class Diagram(tx.Transformable):
@@ -508,7 +511,7 @@ class Diagram(tx.Transformable):
             return self
         α = y / envelope.height
         return self.scale(α)
-    
+
     def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
         """Apply a transformation.
 
@@ -615,13 +618,17 @@ class Diagram(tx.Transformable):
         if envelope.is_empty:
             return self
         origin_size = min(envelope.height, envelope.width) / 50
-        origin = Primitive.from_shape(
-            Circle(origin_size)
-        ).line_color(Color("red"))
+        origin = Primitive.from_shape(Circle(origin_size)).line_color(
+            Color("red")
+        )
         return self + origin
 
-    def show_envelope(self, phantom=False, rate=45) -> Diagram:
+    def show_envelope(self, phantom: bool = False, angle: int = 45) -> Diagram:
         """Add red envelope to diagram for debugging.
+
+        Args:
+            phantom (bool): Don't include debugging in the envelope
+            angle (int): Angle increment to show debugging lines.
 
         Returns:
             Diagram
@@ -630,30 +637,57 @@ class Diagram(tx.Transformable):
         envelope = self.get_envelope()
         if envelope.is_empty:
             return self
-        outer = Primitive.from_shape(Path(envelope.to_path(rate))).fill_opacity(0).line_color(Color("red"))
-        for segment in envelope.to_segments(rate):
-            outer = outer + Primitive.from_shape(Path(segment)).line_color(Color("red")).dashing([0.01, 0.01], 0)
-            
+        outer = (
+            Primitive.from_shape(Path(envelope.to_path(angle)))
+            .fill_opacity(0)
+            .line_color(Color("red"))
+        )
+        for segment in envelope.to_segments(angle):
+            outer = outer + Primitive.from_shape(Path(segment)).line_color(
+                Color("red")
+            ).dashing([0.01, 0.01], 0)
 
-        new = (self + outer)
+        new = self + outer
         if phantom:
             new.with_envelope(self)
         return new
 
-    def show_beside(self, other, direction: V2) -> Diagram:
-
+    def show_beside(self, other: Diagram, direction: V2) -> Diagram:
+        "Add blue normal line to show placement of combination."
         envelope1 = self.get_envelope()
         envelope2 = other.get_envelope()
         v1 = envelope1.envelope_v(direction)
-        one = Primitive.from_shape(Path(Vec2Array([origin, v1]))).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
+        one = (
+            Primitive.from_shape(Path(Vec2Array([origin, v1])))
+            .line_color(Color("red"))
+            .dashing([0.01, 0.01], 0)
+            .line_width(0.01)
+        )
         v2 = envelope2.envelope_v(-direction)
-        two = Primitive.from_shape(Path(Vec2Array([origin, v2]))).line_color(Color("red")).dashing([0.01, 0.01], 0).line_width(0.01)
-        split = Primitive.from_shape(Path(Vec2Array([v1 + direction.perpendicular(), v1 - direction.perpendicular()]))).line_color(Color("blue")).line_width(0.02)
+        two = (
+            Primitive.from_shape(Path(Vec2Array([origin, v2])))
+            .line_color(Color("red"))
+            .dashing([0.01, 0.01], 0)
+            .line_width(0.01)
+        )
+        split = (
+            Primitive.from_shape(
+                Path(
+                    Vec2Array(
+                        [
+                            v1 + direction.perpendicular(),
+                            v1 - direction.perpendicular(),
+                        ]
+                    )
+                )
+            )
+            .line_color(Color("blue"))
+            .line_width(0.02)
+        )
         one = (self.show_origin() + one + split).with_envelope(self)
         two = (other.show_origin() + two).with_envelope(other)
         return one.beside(two, direction)
-        
-        
+
     def named(self, name: str) -> Diagram:
         """Add a name to a diagram.
 

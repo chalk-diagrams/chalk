@@ -4,7 +4,15 @@ from dataclasses import dataclass
 
 from chalk.core import Primitive
 from chalk.shape import Path
-from chalk.transform import Transformable, apply_affine, remove_translation, Affine, Point, V2, Vec2Array
+from chalk.transform import (
+    P2,
+    V2,
+    Affine,
+    Transformable,
+    Vec2Array,
+    apply_affine,
+    remove_translation,
+)
 
 
 @dataclass
@@ -51,11 +59,11 @@ class Trail(Transformable):
         offsets = [t - s for s, t in zip(pts, pts[1:])]
         return cls(offsets)
 
-    def to_path(self, origin: Point = Point(0, 0)) -> Path:
+    def to_path(self, origin: P2 = P2(0, 0)) -> Path:
         """Converts a trail to a path, given a point (as a reference).
 
         Args:
-            origin (Point, optional): A point object.
+            origin (P2, optional): A point object.
                                       Defaults to ORIGIN.
 
         Returns:

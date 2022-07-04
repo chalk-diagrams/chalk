@@ -14,8 +14,8 @@ def koch(n):
     else:
         return (
             koch(n - 1).scale(1 / 3)
-            + koch(n - 1).scale(1 / 3).rotate_by(-1 / 6)
             + koch(n - 1).scale(1 / 3).rotate_by(+1 / 6)
+            + koch(n - 1).scale(1 / 3).rotate_by(-1 / 6)
             + koch(n - 1).scale(1 / 3)
         )
 

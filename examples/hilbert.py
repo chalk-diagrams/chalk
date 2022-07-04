@@ -10,7 +10,7 @@ from chalk.trail import unit_x, unit_y
 # Draw a space filling Hilbert curve
 
 def hilbert(n):
-    def hilbert2(m): return hilbert(m).rotate(-math.pi / 2)
+    def hilbert2(m): return hilbert(m).rotate_by(0.25)
     if n == 0: return Trail.empty()
     h, h2 = hilbert(n -1), hilbert2(n-1)
     return (h2.reflect_y() + unit_y

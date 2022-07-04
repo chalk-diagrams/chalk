@@ -3,15 +3,20 @@ from __future__ import annotations
 from functools import reduce
 from typing import Callable, Iterable, List, Optional
 
-from chalk.transform import Transformable, apply_affine, remove_translation, Affine, P2, V2
+from chalk.transform import (
+    P2,
+    V2,
+    Affine,
+    Transformable,
+    apply_affine,
+    remove_translation,
+)
 
 SignedDistance = float
 
 
 class Trace(Transformable):
-    def __init__(
-        self, f: Callable[[P2, V2], List[SignedDistance]]
-    ) -> None:
+    def __init__(self, f: Callable[[P2, V2], List[SignedDistance]]) -> None:
         self.f = f
 
     def __call__(self, point: P2, direction: V2) -> List[SignedDistance]:

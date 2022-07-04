@@ -12,7 +12,7 @@ pink = Color("pink")
 
 def make_node(n):
     c = circle(0.2).fill_color(green)
-    t = text(str(n), 0.2).fill_color(white).line_color(white)
+    t = text(str(n), 0.2).fill_color(white).line_color(white).line_width(0)
     return c + t
 
 

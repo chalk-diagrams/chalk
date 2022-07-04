@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
 import cairo
 import cairosvg
 import PIL
-
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
@@ -17,12 +18,11 @@ from chalk.envelope import Envelope
 from chalk.segment import Segment, ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
-from chalk.transform import origin, Ray, BoundingBox, Vec2Array, P2, V2
+from chalk.transform import P2, V2, BoundingBox, Ray, Vec2Array, origin
 
 PyLatex = Any
 PyLatexElement = Any
 PyCairoContext = Any
-
 
 
 @dataclass
@@ -62,7 +62,12 @@ class Circle(Shape):
     def get_trace(self) -> Trace:
         def f(p: P2, v: V2) -> List[SignedDistance]:
             ray = Ray(p, v)
-            return sorted([d / v.length for d in ray_circle_intersection(ray, self.radius)])
+            return sorted(
+                [
+                    d / v.length
+                    for d in ray_circle_intersection(ray, self.radius)
+                ]
+            )
 
         return Trace(f)
 
@@ -70,8 +75,11 @@ class Circle(Shape):
         ctx.arc(origin.x, origin.y, self.radius, 0, 2 * math.pi)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        return dwg.circle((origin.x, origin.y), self.radius,                        
-                            style="vector-effect: non-scaling-stroke")
+        return dwg.circle(
+            (origin.x, origin.y),
+            self.radius,
+            style="vector-effect: non-scaling-stroke",
+        )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         return pylatex.TikZDraw(
@@ -122,7 +130,7 @@ class Rectangle(Shape):
             (self.width, self.height),
             rx=self.radius,
             ry=self.radius,
-            style="vector-effect: non-scaling-stroke;"
+            style="vector-effect: non-scaling-stroke;",
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
@@ -146,17 +154,17 @@ class Path(Shape, tx.Transformable):
     arrow: bool = False
 
     @classmethod
-    def from_point(cls, point: P2) -> "Path":
+    def from_point(cls, point: P2) -> Path:
         return cls(Vec2Array([point]))
 
     @classmethod
-    def from_points(cls, points: List[P2]) -> "Path":
+    def from_points(cls, points: List[P2]) -> Path:
         return cls(Vec2Array(points))
 
     @classmethod
     def from_list_of_tuples(
         cls, coords: List[Tuple[float, float]], arrow: bool = False
-    ) -> "Path":
+    ) -> Path:
         points = [P2(x, y) for x, y in coords]
         return cls(Vec2Array(points), arrow)
 
@@ -167,15 +175,15 @@ class Path(Shape, tx.Transformable):
         ]
 
     @staticmethod
-    def hrule(length: float) -> "Path":
+    def hrule(length: float) -> Path:
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
 
     @staticmethod
-    def vrule(length: float) -> "Path":
+    def vrule(length: float) -> Path:
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
 
     @staticmethod
-    def rectangle(width: float, height: float) -> "Path":
+    def rectangle(width: float, height: float) -> Path:
         # Should I reuse the `polygon` function to define `rectangle`?
         # polygon(4, 1, math.pi / 4).scale_x(width).scale_y(height)
         x = width / 2
@@ -185,7 +193,7 @@ class Path(Shape, tx.Transformable):
         )
 
     @staticmethod
-    def polygon(sides: int, radius: float, rotation: float = 0) -> "Path":
+    def polygon(sides: int, radius: float, rotation: float = 0) -> Path:
         coords = []
         n = sides + 1
         for s in range(n):
@@ -195,7 +203,7 @@ class Path(Shape, tx.Transformable):
         return Path.from_list_of_tuples(coords)
 
     @staticmethod
-    def regular_polygon(sides: int, side_length: float) -> "Path":
+    def regular_polygon(sides: int, side_length: float) -> Path:
         return Path.polygon(
             sides, side_length / (2 * math.sin(math.pi / sides))
         )
@@ -209,7 +217,7 @@ class Path(Shape, tx.Transformable):
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)
 
-    def apply_transform(self, t: tx.Affine) -> "Path":  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
         return Path(tx.apply_affine(t, self.points))
 
     def render(self, ctx: PyCairoContext) -> None:
@@ -219,8 +227,10 @@ class Path(Shape, tx.Transformable):
             ctx.line_to(p.x, p.y)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        line = dwg.polyline([(p.x, p.y) for p in self.points],
-                            style="vector-effect: non-scaling-stroke;")
+        line = dwg.polyline(
+            [(p.x, p.y) for p in self.points],
+            style="vector-effect: non-scaling-stroke;",
+        )
         if self.arrow:
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
@@ -243,6 +253,7 @@ class Arc(Shape):
     radius: float
     angle0: float
     angle1: float
+
     def __post_init__(self) -> None:
         surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
@@ -252,12 +263,12 @@ class Arc(Shape):
         l, t, r, b = self.ctx.path_extents()
         return BoundingBox([P2(l, t), P2(r, b)])
 
-
     def get_envelope(self) -> Envelope:
-        angle0_deg = self.angle0 * (180 / math.pi) 
+        angle0_deg = self.angle0 * (180 / math.pi)
         angle1_deg = self.angle1 * (180 / math.pi)
         v1 = V2.polar(angle0_deg, self.radius)
         v2 = V2.polar(angle1_deg, self.radius)
+
         def wrapped(d: V2) -> SignedDistance:
             angle = (d.angle + 360) % 360
             if angle >= angle0_deg and angle <= angle1_deg:
@@ -265,22 +276,24 @@ class Arc(Shape):
                 return self.radius / d.length  # type: ignore
             else:
                 # Case 2: Point outside of arc
-                return max(d.dot(v1), d.dot(v2))
+                x: float = max(d.dot(v1), d.dot(v2))
+                return x
 
         return Envelope(wrapped)
 
-        
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
         u = V2.polar(self.angle0 * (180 / math.pi), self.radius)
         v = V2.polar(self.angle1 * (180 / math.pi), self.radius)
-        path = dwg.path(fill="none", style="vector-effect: non-scaling-stroke;")
+        path = dwg.path(
+            fill="none", style="vector-effect: non-scaling-stroke;"
+        )
         large = 1 if self.angle1 - self.angle0 > math.pi else 0
         path.push(
             f"M {u.x} {u.y} A {self.radius} {self.radius} 0 {large} 1 {v.x} {v.y}"
-            )
+        )
         return path
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:

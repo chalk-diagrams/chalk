@@ -3,29 +3,33 @@ from __future__ import annotations
 from functools import reduce
 from typing import Callable, Iterable
 
-
 from chalk.transform import (
+    P2,
+    V2,
+    Affine,
+    BoundingBox,
+    Polygon,
     Transformable,
+    Vec2Array,
     apply_affine,
+    origin,
     remove_translation,
     transpose_translation,
-    Affine, BoundingBox, Point, Polygon, Vec2, Vec2Array
+    unit_x,
+    unit_y,
 )
 
 SignedDistance = float
 
-unit_x = Vec2(1, 0)
-unit_y = Vec2(0, 1)
-ORIGIN = Point(0, 0)
 
 class Envelope(Transformable):
     def __init__(
-        self, f: Callable[[Vec2], SignedDistance], is_empty: bool = False
+        self, f: Callable[[V2], SignedDistance], is_empty: bool = False
     ) -> None:
         self.f = f
         self.is_empty = is_empty
 
-    def __call__(self, direction: Vec2) -> SignedDistance:
+    def __call__(self, direction: V2) -> SignedDistance:
         assert not self.is_empty
         return self.f(direction)
 
@@ -39,9 +43,9 @@ class Envelope(Transformable):
         )
 
     @property
-    def center(self) -> Point:
+    def center(self) -> P2:
         assert not self.is_empty
-        return Point(
+        return P2(
             (-self(-unit_x) + self(unit_x)) / 2,
             (-self(-unit_y) + self(unit_y)) / 2,
         )
@@ -72,26 +76,26 @@ class Envelope(Transformable):
         if self.is_empty:
             return self
         _, _, c, _, _, f = t[:6]
-        u = Vec2(c, f)
+        u = V2(c, f)
         t1 = transpose_translation(remove_translation(t))
 
-        def wrapped(v: Vec2) -> SignedDistance:
+        def wrapped(v: V2) -> SignedDistance:
             t1v = apply_affine(t1, v)
             t1v2 = t1v.scaled_to(1)
             return self(t1v2) * t1v.length + u.dot(v) / (v.dot(v))  # type: ignore
 
         return Envelope(wrapped)
 
-    def envelope_v(self, v: Vec2) -> Vec2:
+    def envelope_v(self, v: V2) -> V2:
         if self.is_empty:
-            return Vec2(0, 0)
+            return V2(0, 0)
         v = v.scaled_to(1)
         d = self(v)
         return d * v
 
     @staticmethod
     def from_bounding_box(box: BoundingBox) -> Envelope:
-        def wrapped(d: Vec2) -> SignedDistance:
+        def wrapped(d: V2) -> SignedDistance:
             v: float = apply_affine(
                 Affine.rotation(d.angle), box
             ).bounding_box.max_point.x
@@ -101,7 +105,7 @@ class Envelope(Transformable):
 
     @staticmethod
     def from_circle(radius: float) -> Envelope:
-        def wrapped(d: Vec2) -> SignedDistance:
+        def wrapped(d: V2) -> SignedDistance:
             return radius / d.length  # type: ignore
 
         return Envelope(wrapped)
@@ -111,7 +115,7 @@ class Envelope(Transformable):
         if len(path) > 2:
             hull = Polygon.convex_hull(path)
 
-            def wrapped(d: Vec2) -> SignedDistance:
+            def wrapped(d: V2) -> SignedDistance:
                 v: float = apply_affine(
                     Affine.rotation(d.angle), hull
                 ).bounding_box.max_point.x
@@ -121,18 +125,18 @@ class Envelope(Transformable):
         else:
             return Envelope.from_bounding_box(BoundingBox(path))
 
-    def to_path(self, angle=45) -> Vec2Array:
+    def to_path(self, angle: int = 45) -> Vec2Array:
         "Draws an envelope by sampling every 10 degrees."
         pts = []
         for i in range(0, 361, angle):
-            v = Vec2.polar(i)
+            v = V2.polar(i)
             pts.append(self(v) * v)
         return Vec2Array(pts)
 
-    def to_segments(self, angle=45) -> List[Vec2Array]:
+    def to_segments(self, angle: int = 45) -> Iterable[Vec2Array]:
         "Draws an envelope by sampling every 10 degrees."
         segments = []
         for i in range(0, 361, angle):
-            v = Vec2.polar(i)
-            segments.append(Vec2Array([ORIGIN, self(v) * v]))
+            v = V2.polar(i)
+            segments.append(Vec2Array([origin, self(v) * v]))
         return segments

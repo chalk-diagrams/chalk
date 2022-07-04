@@ -1,7 +1,7 @@
 import math
 from typing import Any, TypeVar
 
-from planar.py import Affine, Vec2, Point, Ray, BoundingBox, Vec2Array, Polygon
+from planar.py import Affine, BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 
 
 def to_cairo(affine: Affine) -> Any:
@@ -34,6 +34,8 @@ def to_tikz(affine: Affine) -> str:
 def from_radians(θ: float) -> Affine:
     t = (θ / math.pi) * 180
     return t
+
+
 def to_radians(θ: float) -> Affine:
     t = (θ / 180) * math.pi
     return t
@@ -78,9 +80,11 @@ class Transformable:
         return self._app(Affine.scale(Vec2(1, α)))
 
     def rotate(self: TTrans, θ: float) -> TTrans:
+        "Rotate by θ degrees clockwise"
         return self._app(Affine.rotation(θ))
 
     def rotate_rad(self: TTrans, θ: float) -> TTrans:
+        "Rotatte by θ radians clockwise"
         return self._app(Affine.rotation(from_radians(θ)))
 
     def rotate_by(self: TTrans, turns: float) -> TTrans:
@@ -94,11 +98,11 @@ class Transformable:
     def reflect_y(self: TTrans) -> TTrans:
         return self._app(Affine.scale(Vec2(+1, -1)))
 
-    def shear_x(self: TTrans, λ: float) -> TTrans:
-        return self._app(Affine.shear(from_radians(math.atan(λ)), 0))
-
     def shear_y(self: TTrans, λ: float) -> TTrans:
-        return self._app(Affine.shear(0, from_radians(math.atan(λ))))
+        return self._app(Affine(1.0, 0.0, 0.0, λ, 1.0, 0.0))
+
+    def shear_x(self: TTrans, λ: float) -> TTrans:
+        return self._app(Affine(1.0, λ, 0.0, 0.0, 1.0, 0.0))
 
     def translate(self: TTrans, dx: float, dy: float) -> TTrans:
         return self._app(Affine.translation(Vec2(dx, dy)))
@@ -112,7 +116,7 @@ class Transformable:
 # patching in methods to Vec2 and by fixing a bug in the Affine
 # transformation. This is not great, but necessary to keep the
 # Object oriented api of Chalk.
-    
+
 Vec2._app = lambda x, y: y * x
 Vec2.shear_x = Transformable.shear_x
 Vec2.shear_y = Transformable.shear_y
@@ -135,21 +139,33 @@ unit_x = V2(1, 0)
 unit_y = V2(0, 1)
 
 
-def affine(self, other):
-    sa, sb, sc, sd, se, sf, _, _, _ = self
+def affine(affine: Affine, other: Any) -> Any:
+    sa, sb, sc, sd, se, sf, _, _, _ = affine[:]
     if isinstance(other, Affine):
         oa, ob, oc, od, oe, of, _, _, _ = other
-        return tuple.__new__(Affine, 
-            (sa*oa + sb*od, sa*ob + sb*oe, sa*oc + sb*of + sc,
-             sd*oa + se*od, sd*ob + se*oe, sd*oc + se*of + sf,
-             0.0, 0.0, 1.0))
-    elif hasattr(other, 'from_points'):
+        return tuple.__new__(
+            Affine,
+            (
+                sa * oa + sb * od,
+                sa * ob + sb * oe,
+                sa * oc + sb * of + sc,
+                sd * oa + se * od,
+                sd * ob + se * oe,
+                sd * oc + se * of + sf,
+                0.0,
+                0.0,
+                1.0,
+            ),
+        )
+
+    elif hasattr(other, "from_points"):
         # Point/vector array
-        points = getattr(other, 'points', other)
+        points = getattr(other, "points", other)
         try:
             return other.from_points(
-                Point(px*sa + py*sb + sc, px*sd + py*se + sf)
-                for px, py in points)
+                Point(px * sa + py * sb + sc, px * sd + py * se + sf)
+                for px, py in points
+            )
         except TypeError:
             return NotImplemented
     else:
@@ -157,6 +173,11 @@ def affine(self, other):
             vx, vy = other
         except Exception:
             return NotImplemented
-        return Vec2(vx*sa + vy*sb + sc, vx*sd + vy*se + sf)
+        return Vec2(vx * sa + vy * sb + sc, vx * sd + vy * se + sf)
+
 
 Affine.__mul__ = affine
+
+# Explicit rexport
+
+__all__ = ["BoundingBox", "Polygon", "Vec2Array", "Ray"]
