@@ -264,8 +264,7 @@ class Arc(Shape):
         return BoundingBox([P2(l, t), P2(r, b)])
 
     def get_envelope(self) -> Envelope:
-
-        def is_in_mod_360(x, a, b):
+        def is_in_mod_360(x: float, a: float, b: float) -> bool:
             """Checks if x ∈ [a, b] mod 360. See the following link for an
             explanation:
             https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
