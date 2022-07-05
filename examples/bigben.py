@@ -1,8 +1,10 @@
 # # Big Ben
 
-# Big Ben is perhaps the most iconic clock face with the world standing at 22.5 feet.
+# *A literate notebook by [Sasha Rush](http://www.rush-nlp.com)*
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# [Big Ben](https://en.wikipedia.org/wiki/Big_Ben) is the most iconic clock face in the world.
+
+# <img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
 
 # In this notebook, we are going to replicate the design of the clockface from first principles using the
 # Chalk library. This project was done for fun without any knowledge of clockmaking or even the right
@@ -10,7 +12,7 @@
 
 # Here is what it will look like when we are done.
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="complete.svg">
+# <img style="height:500px;width:500px;max-width:auto;" src="chalk_bigben.svg">
 
 # ## Preliminary: Roman Numerals
 
@@ -324,8 +326,6 @@ part2 = fit_in(band3, fit_in(band2, band1))
 set_svg_height(500)
 part2
 
-part2.render_pdf("part2.pdf", height=500)
-
 # Looks pretty close to the original!
 
 # ![](part2.png)
@@ -410,6 +410,7 @@ inner = (
 part3 = fit_in(r, corner4, 0.05) + inner
 part3
 
+
 # !<img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
 
 # ## Clock Hands
@@ -462,6 +463,6 @@ final = (
 
 final.render_svg("chalk_bigben.svg", height=500)
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="chalk_bigben.svg">
+# <img style="height:500px;width:500px;max-width:auto;" src="chalk_bigben.svg">
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# <img style="height:500px;width:500px;max-width:auto;" src="bigben.png">

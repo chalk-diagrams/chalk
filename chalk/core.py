@@ -242,7 +242,7 @@ class Diagram(tx.Transformable):
 
     __truediv__ = above
 
-    def beside(self, other: Diagram, direction: Vec2) -> Diagram:
+    def beside(self, other: Diagram, direction: V2) -> Diagram:
         return self + self.juxtapose(other, direction)
 
     def __or__(self, d: Diagram) -> Diagram:

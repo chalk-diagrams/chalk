@@ -264,8 +264,8 @@ class Arc(Shape):
         return BoundingBox([P2(l, t), P2(r, b)])
 
     def get_envelope(self) -> Envelope:
-        angle0_deg = self.angle0 * (180 / math.pi)
-        angle1_deg = self.angle1 * (180 / math.pi)
+        angle0_deg = (self.angle0 * (180 / math.pi) + 360) % 360
+        angle1_deg = (self.angle1 * (180 / math.pi) + 360) % 360
         v1 = V2.polar(angle0_deg, self.radius)
         v2 = V2.polar(angle1_deg, self.radius)
 
