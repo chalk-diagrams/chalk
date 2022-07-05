@@ -157,8 +157,9 @@ class Diagram(tx.Transformable):
         e = s.get_envelope()
         assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
-
-        outer.add(s.to_svg(dwg, Style.default()))
+        style = Style.default()
+        style.output_size = height
+        outer.add(s.to_svg(dwg, style))
         dwg.save()
 
     def render_pdf(self, path: str, height: int = 128) -> None:

@@ -81,11 +81,11 @@ class Transformable:
         return self._app(Affine.scale(Vec2(1, α)))
 
     def rotate(self: TTrans, θ: float) -> TTrans:
-        "Rotate by θ degrees clockwise"
+        "Rotate by θ degrees counterclockwise"
         return self._app(Affine.rotation(θ))
 
     def rotate_rad(self: TTrans, θ: float) -> TTrans:
-        "Rotatte by θ radians clockwise"
+        "Rotatte by θ radians counterclockwise"
         return self._app(Affine.rotation(from_radians(θ)))
 
     def rotate_by(self: TTrans, turns: float) -> TTrans:

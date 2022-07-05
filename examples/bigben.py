@@ -22,9 +22,9 @@ from colour import Color
 # The whole diagram a simple color pallet of gold black and a bit of grey. 
 
 gold = Color("#E7D49C")
-white = Color("white")
-black = Color("black")
-grey = Color("grey")
+white = Color("#CCCCCC")
+black = Color("#333333")
+grey = Color("#555555")
 
 
 # To begin, we will introduce some of the concepts of the Chalk library
@@ -44,10 +44,16 @@ column
 
 column.show_envelope()
 
+# Next lets make a diamond with an inlay. To do this we use `+` to put a
+# grey box on a black box.
+
+diamond = rectangle(1, 1).fill_color(black) + rectangle(0.5, 0.5).fill_color(grey)
+diamond
+
 # The benefit of the envelope representation is that it behaves more
 # intuitively under affine transformations like rotation. 
 
-diamond = rectangle(1, 1).fill_color(black).rotate_by(1 / 8)
+diamond = diamond.rotate_by(1 / 8)
 diamond.show_envelope()
 
 
@@ -66,7 +72,8 @@ column.show_beside(diamond, -unit_y)
 # When stacking on top we can use the shortcut `/`. The function `center_xy` resets
 # the center to the middle of the envelope.
 
-i = (diamond / column / diamond).center_xy()
+i = ((column / diamond).beside(diamond, -unit_y)).center_xy()
+i = i + rectangle(0.01, 4).line_color(grey)
 i.show_envelope()
 
 # We can also put diagrams next to each other using the `|` notation.
@@ -77,7 +84,7 @@ ii
 # We can similar create diagrams for the other roman numerals.
 # The `align` functions also re-center diagrams.
 
-v = i.align_b() + rectangle(1.5, 1).fill_color(black).align_bl()
+v = rectangle(1.5, 1).fill_color(black).align_bl() + i.align_b()
 v
 
 
@@ -97,13 +104,13 @@ ddiamond.show_origin()
 
 # Using `shear` lets us create a center line with a diagonal slash.
 
-mid = rectangle(2, 0.5).fill_color(black).shear_x(-0.2)
+mid = (rectangle(2, 0.5).fill_color(black) + rectangle(1.5, 0.1).fill_color(grey)).shear_x(-0.2)
 mid
 
 
 # We can then combine these complex diagrams together.
-
-x = ((ddiamond / column / ddiamond).center_xy() + mid).center_xy()
+column = column 
+x = ((column / ddiamond) + mid).beside(ddiamond, -unit_y).center_xy()
 x
 
 
@@ -237,17 +244,16 @@ part1
 
 
 # With the functions we have so far it is not so hard to do the rest of the main
-# clock-face. The main point worth noting is that we can build each part without
+# clock-face. The maink point worth noting is that we can build each part without
 # needing to know the sizes of the others. This makes it easy to debug and update.
 
 
 # The first band is two circles with a black dots. Nothing new.
 
-set_svg_height(400)
+set_svg_height(200)
 
-dots = rectangle(0.05, 0.05).fill_color(black)
 band1 = (circle(1.1).line_width(0.1) + circle(1)).line_width(0.2) + rot_cycle(
-    dots.translate(1.05, 0), 12
+    diamond.scale(0.05).translate(1.05, 0), 12
 )
 band1
 
@@ -304,11 +310,12 @@ band3 = (
 )
 band3
 
-# Add the thin lines.
+# Add the thin lines and rounded rect tracks
 
+track = rectangle(0.4, 0.001, 0.1).fill_color(black).center_xy().line_width(0.01)
 band3 = (
     band3
-    + rot_cycle(thin_line(0.4).line_width(0.3).translate(c, 0), 60)
+    + rot_cycle(track.line_width(0.3).translate(c, 0), 60)
     + rot_cycle(thin_line(0.6).translate(c, 0).rotate_by(1 / 48), 48)
 )
 band3
@@ -320,7 +327,7 @@ band3 = band3 + rot_cycle(
 )
 band3
 
-# And voila.
+# And voila. 
 
 part2 = fit_in(band3, fit_in(band2, band1))
 set_svg_height(500)
@@ -337,6 +344,7 @@ part2
 
 # The whole clock is surrounded by a thick gold frame with some ornamentation. We start with the outer box.
 
+set_svg_height(200)
 r = rectangle(1, 1).fill_color(black).line_color(gold).line_width(0.6)
 r
 
@@ -400,6 +408,7 @@ corner4
 
 # Putting it together gives the outer frame.
 
+set_svg_height(500) 
 inner = (
     circle(1)
     .line_width(0.3)
@@ -421,9 +430,10 @@ part3
 # To make the clock hands we just trace a path. We `make_path` and give
 # it a list of coordinates. We then reflect since it is symmetric. 
 
+set_svg_height(200) 
 hand = make_path(
     [(2, -0.5), (1, -0), (0.4, 20), (0, 21), (0, -1.5), (0.5, -1), (2, -0.5)]
-).fill_color(black)
+).fill_color(black).line_color(grey)
 hand = (hand + hand.reflect_x()).translate(0, -4).line_width(0.1)
 hand.show_origin()
 
@@ -446,6 +456,7 @@ hand2.show_origin()
 
 # We then overlay them as in the picture at the right scales.
 
+set_svg_height(500) 
 part4 = hand2.scale_uniform_to_y(0.5).rotate_by(0.07) + hand.scale_uniform_to_y(1.0)
 part4
 
@@ -460,6 +471,7 @@ final = (
     + fit_in(inner, (fit_in(part2, part1)), 0.0)
     + part4.scale_x(0.8).scale(0.55).rotate_by(0.10)
 )
+final
 
 final.render_svg("chalk_bigben.svg", height=500)
 
