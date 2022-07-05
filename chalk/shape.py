@@ -264,14 +264,22 @@ class Arc(Shape):
         return BoundingBox([P2(l, t), P2(r, b)])
 
     def get_envelope(self) -> Envelope:
-        angle0_deg = (self.angle0 * (180 / math.pi) + 360) % 360
-        angle1_deg = (self.angle1 * (180 / math.pi) + 360) % 360
+
+        def is_in_mod_360(x, a, b):
+            """Checks if x ∈ [a, b] mod 360. See the following link for an
+            explanation:
+            https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
+            """
+            return (x - a) % 360 <= (b - a) % 360
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
         v1 = V2.polar(angle0_deg, self.radius)
         v2 = V2.polar(angle1_deg, self.radius)
 
         def wrapped(d: V2) -> SignedDistance:
-            angle = (d.angle + 360) % 360
-            if angle >= angle0_deg and angle <= angle1_deg:
+            if is_in_mod_360(d.angle, angle0_deg, angle1_deg):
                 # Case 1: Point at arc
                 return self.radius / d.length  # type: ignore
             else:
