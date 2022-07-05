@@ -278,7 +278,8 @@ class Arc(Shape):
         v2 = V2.polar(angle1_deg, self.radius)
 
         def wrapped(d: V2) -> SignedDistance:
-            if is_in_mod_360(d.angle, angle0_deg, angle1_deg):
+            is_circle = abs(angle0_deg - angle1_deg) >= 360
+            if is_circle or is_in_mod_360(d.angle, angle0_deg, angle1_deg):
                 # Case 1: Point at arc
                 return self.radius / d.length  # type: ignore
             else:
