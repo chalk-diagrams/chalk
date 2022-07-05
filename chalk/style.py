@@ -10,6 +10,7 @@ PyLatex = Any
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
 
+
 LC = Color("black")
 LW = 0.01
 

@@ -355,7 +355,8 @@ class Text(Shape):
             transform=f"translate({dx}, 0)",
             style=f"""text-align:center; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
-                      font-size:{self.font_size}px""",
+                      font-size:{self.font_size}px;
+                      vector-effect: non-scaling-stroke;""",
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
