@@ -15,7 +15,7 @@ The documentation is available at [https://danoneata.github.io/chalk/](https://d
 The library is available on PyPI as `chalk-diagrams` and can be installed with `pip`:
 
 ```bash
-pip install chalk-diagrams
+pip install git+https://github.com/danoneata/chalk/
 ```
 
 On Debian (or Colab) you will need to install Cairo
