@@ -10,7 +10,6 @@ PyLatex = Any
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
 
-
 LC = Color("black")
 LW = 0.01
 
@@ -120,7 +119,7 @@ class Style:
         if self.line_color is not None:
             style["draw"] = tikz_color(self.line_color)
         # This constant was set based on observing TikZ output
-        width_scale = 10  # 20 * (1 if not self.scale else self.scale)
+        width_scale = 20 * (1 if not self.scale else self.scale)
         if self.line_width is not None:
             style["line width"] = f"{width_scale * self.line_width}pt"
         else:
