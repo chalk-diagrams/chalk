@@ -255,6 +255,7 @@ class Arc(Shape):
     angle1: float
 
     def __post_init__(self) -> None:
+        self.angle0, self.angle1 = -self.angle1, -self.angle0
         surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
 
@@ -298,7 +299,11 @@ class Arc(Shape):
         path = dwg.path(
             fill="none", style="vector-effect: non-scaling-stroke;"
         )
-        large = 1 if self.angle1 - self.angle0 > math.pi else 0
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
+        large = 1 if (angle1_deg - angle0_deg) % 360 > 180 else 0
         path.push(
             f"M {u.x} {u.y} A {self.radius} {self.radius} 0 {large} 1 {v.x} {v.y}"
         )

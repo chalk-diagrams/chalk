@@ -383,12 +383,13 @@ decal
 
 # To add the other shapes with we `arc` which draws part of a circle.
 
-marc = arc(2 / 2, 90, 3.5 * 90)
+marc = arc(2 / 2 + 0.1, 180, 30)
+disp = 20
 decal = concat(
     [
         decal,
-        decal.juxtapose(marc.align_t(), unit_x),
-        decal.juxtapose(marc.rotate_by(1 / 2).align_r(), -unit_y),
+        decal.juxtapose(marc, unit_x.rotate(90 + disp)),
+        decal.juxtapose(marc.rotate(-(90 + 45)), unit_x.rotate(-disp)),
     ]
 ).line_width(0.2)
 decal
