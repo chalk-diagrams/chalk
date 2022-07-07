@@ -349,7 +349,10 @@ class Text(Shape):
     font_size: Optional[float]
 
     def get_bounding_box(self) -> BoundingBox:
-        self.bb = BoundingBox([origin, origin])
+        # Text doesn't have a bounding box since we can't accurately know
+        # its size for all backends.
+        eps = 1e-4
+        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
         return self.bb
 
     def render(self, ctx: PyCairoContext) -> None:
@@ -415,7 +418,6 @@ class Image(Shape):
 
     def __post_init__(self) -> None:
         if self.local_path.endswith("svg"):
-            import cairo
             import cairosvg
 
             out = BytesIO()
