@@ -1,18 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.13.8
-#   kernelspec:
-#     display_name: chalk
-#     language: python
-#     name: chalk
-# ---
-
 # # Big Ben
 
 # *A literate notebook by [Sasha Rush](http://www.rush-nlp.com)*
