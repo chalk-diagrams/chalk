@@ -255,6 +255,7 @@ class Arc(Shape):
     angle1: float
 
     def __post_init__(self) -> None:
+        self.angle0, self.angle1 = -self.angle1, -self.angle0
         surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
 
@@ -264,14 +265,22 @@ class Arc(Shape):
         return BoundingBox([P2(l, t), P2(r, b)])
 
     def get_envelope(self) -> Envelope:
-        angle0_deg = (self.angle0 * (180 / math.pi) + 360) % 360
-        angle1_deg = (self.angle1 * (180 / math.pi) + 360) % 360
+        def is_in_mod_360(x: float, a: float, b: float) -> bool:
+            """Checks if x ∈ [a, b] mod 360. See the following link for an
+            explanation:
+            https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
+            """
+            return (x - a) % 360 <= (b - a) % 360
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
         v1 = V2.polar(angle0_deg, self.radius)
         v2 = V2.polar(angle1_deg, self.radius)
 
         def wrapped(d: V2) -> SignedDistance:
-            angle = (d.angle + 360) % 360
-            if angle >= angle0_deg and angle <= angle1_deg:
+            is_circle = abs(angle0_deg - angle1_deg) >= 360
+            if is_circle or is_in_mod_360(d.angle, angle0_deg, angle1_deg):
                 # Case 1: Point at arc
                 return self.radius / d.length  # type: ignore
             else:
@@ -290,7 +299,11 @@ class Arc(Shape):
         path = dwg.path(
             fill="none", style="vector-effect: non-scaling-stroke;"
         )
-        large = 1 if self.angle1 - self.angle0 > math.pi else 0
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
+        large = 1 if (angle1_deg - angle0_deg) % 360 > 180 else 0
         path.push(
             f"M {u.x} {u.y} A {self.radius} {self.radius} 0 {large} 1 {v.x} {v.y}"
         )

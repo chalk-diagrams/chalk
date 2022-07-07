@@ -404,12 +404,13 @@ decal
 
 # To add the other shapes with we `arc` which draws part of a circle.
 
-marc = arc(2 / 2, 90, 3.5 * 90)
+disp = 20  # degrees
+marc = arc(2 / 2, 180, disp)
 decal = concat(
     [
         decal,
-        decal.juxtapose(marc.align_t(), unit_x),
-        decal.juxtapose(marc.rotate_by(1 / 2).align_r(), -unit_y),
+        decal.juxtapose(marc, unit_x.rotate(90 + disp)),
+        decal.juxtapose(marc.rotate(-(90 + disp)), unit_x.rotate(-disp)),
     ]
 ).line_width(0.2)
 decal
@@ -417,7 +418,7 @@ decal
 
 # We scale the decoration to fit in the corner we created.
 
-fudge = 0.57
+fudge = 0.545
 corner = corner.align_bl() + decal.scale_uniform_to_x(fudge).align_bl()
 corner = corner.align_tr().translate(-0.4, 0.4).line_color(gold)
 corner.show_origin()
