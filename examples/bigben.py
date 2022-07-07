@@ -1,10 +1,25 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.13.8
+#   kernelspec:
+#     display_name: chalk
+#     language: python
+#     name: chalk
+# ---
+
 # # Big Ben
 
 # *A literate notebook by [Sasha Rush](http://www.rush-nlp.com)*
 
 # [Big Ben](https://en.wikipedia.org/wiki/Big_Ben) is the most iconic clock face in the world.
 
-# <img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# <img style="height:300px;width:300px;max-width:auto;" src="bigben.png">
 
 # In this notebook, we are going to replicate the design of the clockface from first principles using the
 # Chalk library. This project was done for fun without any knowledge of clockmaking or even the right
@@ -12,19 +27,19 @@
 
 # Here is what it will look like when we are done.
 
-# <img style="height:500px;width:500px;max-width:auto;" src="chalk_bigben.svg">
+# <img style="height:300px;width:300px;max-width:auto;" src="chalk_bigben.svg">
 
 # ## Preliminary: Roman Numerals
 
 from chalk import *
 from colour import Color
 
-# The whole diagram a simple color pallet of gold black and a bit of grey. 
+# The whole diagram a simple color pallet of gold black and a bit of grey.
 
 gold = Color("#E7D49C")
 white = Color("#CCCCCC")
-black = Color("#333333")
-grey = Color("#555555")
+black = Color("black")
+grey = Color("#444444")
 
 
 # To begin, we will introduce some of the concepts of the Chalk library
@@ -51,7 +66,7 @@ diamond = rectangle(1, 1).fill_color(black) + rectangle(0.5, 0.5).fill_color(gre
 diamond
 
 # The benefit of the envelope representation is that it behaves more
-# intuitively under affine transformations like rotation. 
+# intuitively under affine transformations like rotation.
 
 diamond = diamond.rotate_by(1 / 8)
 diamond.show_envelope()
@@ -104,12 +119,14 @@ ddiamond.show_origin()
 
 # Using `shear` lets us create a center line with a diagonal slash.
 
-mid = (rectangle(2, 0.5).fill_color(black) + rectangle(1.5, 0.1).fill_color(grey)).shear_x(-0.2)
+mid = (
+    rectangle(2, 0.5).fill_color(black) + rectangle(1.5, 0.1).fill_color(grey)
+).shear_x(-0.2)
 mid
 
 
 # We can then combine these complex diagrams together.
-column = column 
+column = column
 x = ((column / ddiamond) + mid).beside(ddiamond, -unit_y).center_xy()
 x
 
@@ -143,7 +160,7 @@ part0 = concat(
     ]
 )
 
-set_svg_height(500)
+set_svg_height(300)
 part0.show_origin()
 
 
@@ -152,9 +169,10 @@ part0.show_origin()
 # ![](part1.png)
 
 # This inner patten is a bit more complex. We are going to need more than just
-# simple shapes to draw it. 
+# simple shapes to draw it.
 
-# To start, let us make a function for rotational symmetry. 
+# To start, let us make a function for rotational symmetry.
+
 
 def rot_cycle(d: Diagram, times: int) -> Diagram:
     "Rotate diagram around a circle."
@@ -185,7 +203,7 @@ diffx = diffy * abs(u60.x / u45.x)
 # A `Trail` is a sequence of vectors drawn in order.
 # Once you are done drawing one you can use `stroke` to
 # make it a diagram. We start at the top left and draw
-# downward. 
+# downward.
 
 fudge = 0.73
 y = (
@@ -227,7 +245,7 @@ pattern
 # We can then rotate this to create the whole pattern. We set the
 # fudge factor above to make the pattern connect.
 
-set_svg_height(500)
+set_svg_height(300)
 part1 = inner_circle + rot_cycle(pattern.translate(0, width - 1), 12)
 part1 = part1.line_color(gold).line_width(0.2)
 part1
@@ -277,8 +295,10 @@ band2
 
 # We then draw thin lines in this region.
 
+
 def thin_line(h):
     return rectangle(h, 0.001).fill_color(black).center_xy().line_width(0.01)
+
 
 lines = thin_line(0.4)
 band2 = band2 + rot_cycle(lines.translate(1.2, 0), 48)
@@ -287,10 +307,11 @@ band2
 
 # Band 3 has a little jewel cross. We can draw this with shapes.
 
-diamond = rectangle(1, 1).rotate_by(1 / 8)
+diamond = rectangle(1, 1).rotate_by(1 / 8).fill_color(black).line_color(black)
 s = (
     (diamond | rectangle(2, 1).with_envelope(rectangle(1, 1)) | diamond)
     .fill_color(black)
+    .line_color(black)
     .center_xy()
 )
 s = s.scale_y(0.5) + s.rotate_by(0.25).scale_y(0.75).scale_x(0.25)
@@ -312,7 +333,7 @@ band3
 
 # Add the thin lines and rounded rect tracks
 
-track = rectangle(0.4, 0.001, 0.1).fill_color(black).center_xy().line_width(0.01)
+track = rectangle(0.33, 0.001, 0.1).fill_color(black).center_xy().line_width(0.01)
 band3 = (
     band3
     + rot_cycle(track.line_width(0.3).translate(c, 0), 60)
@@ -327,10 +348,10 @@ band3 = band3 + rot_cycle(
 )
 band3
 
-# And voila. 
+# And voila.
 
 part2 = fit_in(band3, fit_in(band2, band1))
-set_svg_height(500)
+set_svg_height(300)
 part2
 
 # Looks pretty close to the original!
@@ -339,7 +360,7 @@ part2
 
 # ## Frame
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# !<img style="height:300px;width:300px;max-width:auto;" src="bigben.png">
 
 
 # The whole clock is surrounded by a thick gold frame with some ornamentation. We start with the outer box.
@@ -408,7 +429,7 @@ corner4
 
 # Putting it together gives the outer frame.
 
-set_svg_height(500) 
+set_svg_height(300)
 inner = (
     circle(1)
     .line_width(0.3)
@@ -420,7 +441,7 @@ part3 = fit_in(r, corner4, 0.05) + inner
 part3
 
 
-# !<img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# !<img style="height:300px;width:300px;max-width:auto;" src="bigben.png">
 
 # ## Clock Hands
 
@@ -428,12 +449,14 @@ part3
 
 
 # To make the clock hands we just trace a path. We `make_path` and give
-# it a list of coordinates. We then reflect since it is symmetric. 
+# it a list of coordinates. We then reflect since it is symmetric.
 
-set_svg_height(200) 
-hand = make_path(
-    [(2, -0.5), (1, -0), (0.4, 20), (0, 21), (0, -1.5), (0.5, -1), (2, -0.5)]
-).fill_color(black).line_color(grey)
+set_svg_height(200)
+hand = (
+    make_path([(2, -0.5), (1, -0), (0.4, 20), (0, 21), (0, -1.5), (0.5, -1), (2, -0.5)])
+    .fill_color(black)
+    .line_color(grey)
+)
 hand = (hand + hand.reflect_x()).translate(0, -4).line_width(0.1)
 hand.show_origin()
 
@@ -456,7 +479,7 @@ hand2.show_origin()
 
 # We then overlay them as in the picture at the right scales.
 
-set_svg_height(500) 
+set_svg_height(300)
 part4 = hand2.scale_uniform_to_y(0.5).rotate_by(0.07) + hand.scale_uniform_to_y(1.0)
 part4
 
@@ -464,7 +487,7 @@ part4
 # ## All Together
 
 # Our final picture overlays each of the three parts using our fitting functions.
-# Each part was done separately, but they all click together to make the final image. 
+# Each part was done separately, but they all click together to make the final image.
 
 final = (
     part3
@@ -473,8 +496,6 @@ final = (
 )
 final
 
-final.render_svg("chalk_bigben.svg", height=500)
+final.render_svg("chalk_bigben.svg", height=300)
 
-# <img style="height:500px;width:500px;max-width:auto;" src="chalk_bigben.svg">
-
-# <img style="height:500px;width:500px;max-width:auto;" src="bigben.png">
+# <img style="height:300px;width:300px;max-width:auto;" src="chalk_bigben.svg">  <img style="height:300px;width:300px;max-width:auto;" src="bigben.png">
