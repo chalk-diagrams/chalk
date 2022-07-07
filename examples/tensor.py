@@ -1,9 +1,7 @@
 from PIL import Image as PILImage
 from chalk import *
 from colour import Color
-import chalk.transform as tx
-from planar import Point
-import math
+
 h = hstrut(2.5)
 papaya = Color("#ff9700")
 white = Color("white")
@@ -24,7 +22,7 @@ def draw_tensor(depth, rows, columns):
     "Draw a tensor"
     cube  = draw_cube()
     # Fix this ...
-    hyp = tx.Affine.shear(-tx.from_radians(math.atan(1)), 0) * (unit_y * 0.5)
+    hyp = (unit_y * 0.5).shear_x(-1)
     # Build a matrix. 
     front = cat([hcat([cube for i in range(columns)])
                  for j in reversed(range(rows))], -unit_y).align_t()

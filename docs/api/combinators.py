@@ -1,5 +1,6 @@
 # + tags=["hide_inp"]
 import math
+from planar import Vec2
 from chalk import *
 def help(f):
     import pydoc
@@ -12,6 +13,28 @@ def help(f):
 # through placement combinators. These place diagrams above, atop or
 # besides other diagrams. Relative location is determined by the bounding box
 # and origins of the diagrams.
+
+# ### beside
+
+# + tags=["hide_inp"]
+help(beside)
+# -
+
+#
+
+diagram = triangle(1).beside(square(1), unit_x)
+diagram
+
+#
+
+triangle(1).show_beside(square(1), unit_x)
+
+triangle(1).show_beside(triangle(1).rotate_by(1 / 6), Vec2.polar(-45))
+
+#
+
+triangle(1).show_beside(triangle(1).rotate_by(1 / 6), Vec2.polar(-30))
+
 
 # ### above
 
@@ -26,7 +49,7 @@ diagram
 
 #
 
-diagram.show_bounding_box().show_origin()
+diagram.show_envelope().show_origin()
 
 
 # ### atop
@@ -42,7 +65,7 @@ diagram
 
 #
 
-diagram.show_bounding_box().show_origin()
+diagram.show_envelope().show_origin()
 
 # Example 2 - Align then atop origin
 
@@ -58,24 +81,6 @@ t
 
 s + t
 
-# ### beside
-
-# + tags=["hide_inp"]
-help(beside)
-# -
-
-#
-
-diagram = triangle(1) | square(1)
-diagram
-
-#
-
-triangle(1).show_origin() | square(1).show_origin()
-
-#
-
-diagram.show_origin()
 
 
 # ### vcat

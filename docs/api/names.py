@@ -34,16 +34,16 @@ help(place_on_path)
 place_on_path([triangle(0.4) for i in range(5)],
               Path.from_list_of_tuples([(i, i % 2) for i in range(5)]))
 
-# ### Diagram.get_subdiagram_bounding_box
+# ### Diagram.get_subdiagram_envelope
 
 # + tags=["hide_inp"]
-help(Diagram.get_subdiagram_bounding_box)
+help(Diagram.get_subdiagram_envelope)
 # -
 
 #
 
 diagram = triangle(1).named("x") | square(1) 
-bbox = diagram.get_subdiagram_bounding_box("x")
+bbox = diagram.get_subdiagram_envelope("x")
 diagram + place_on_path([triangle(0.4)], Path.from_point(bbox.center))
 
 # ### connect

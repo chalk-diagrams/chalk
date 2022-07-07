@@ -25,6 +25,7 @@ class Style:
     fill_opacity: Optional[float] = None
     dashing: Optional[Tuple[List[float], float]] = None
     scale: Optional[float] = 1.0
+    output_size: Optional[float] = None
 
     @classmethod
     def default(cls) -> "Style":
@@ -38,6 +39,7 @@ class Style:
             self.fill_opacity,
             self.dashing,
             (1 if not self.scale else self.scale) * abs(s),
+            self.output_size,
         )
 
     def merge(self, other: "Style") -> "Style":
@@ -97,7 +99,8 @@ class Style:
         if self.line_color is not None:
             style += f"stroke: {self.line_color.hex_l};"
         if self.line_width is not None:
-            style += f"stroke-width: {self.line_width};"
+            assert self.output_size
+            style += f"stroke-width: {15 * self.line_width * (self.output_size / 500)};"
         if self.fill_opacity is not None:
             style += f"fill-opacity: {self.fill_opacity};"
         if self.dashing is not None:

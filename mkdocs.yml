@@ -37,18 +37,18 @@ theme:
       scheme: default
       primary: white
       accent: amber
-      toggle:
-        # icon: material/lightbulb-outline
-        icon: material/toggle-switch-off-outline
-        name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: white
-      accent: amber
-      toggle:
-        # icon: material/lightbulb
-        icon: material/toggle-switch
-        name: Switch to light mode
+    #   toggle:
+    #     # icon: material/lightbulb-outline
+    #     icon: material/toggle-switch-off-outline
+    #     name: Switch to dark mode
+    # - media: "(prefers-color-scheme: dark)"
+    #   scheme: slate
+    #   primary: white
+    #   accent: amber
+    #   toggle:
+    #     # icon: material/lightbulb
+    #     icon: material/toggle-switch
+    #     name: Switch to light mode
   features:
     - content.code.annotate
     - content.tabs.link
@@ -317,6 +317,7 @@ nav:
     - Connections: api/names.py
     - Utils: api/utils.md
   - Examples:
+    - BigBen: examples/bigben.py
     - Hanoi: examples/hanoi.py
     - Koch: examples/koch.py
     - LeNet: examples/lenet.py

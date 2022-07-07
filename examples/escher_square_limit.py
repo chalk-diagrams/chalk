@@ -84,7 +84,7 @@ markings = {
 
 names = "pqrs"
 blank = strut(1, 1)
-θ = -math.pi / 2
+θ = 90
 
 
 def normalize(coords):

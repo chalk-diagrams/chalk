@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -7,8 +9,6 @@ from typing import Any, List, Optional, Tuple
 import cairo
 import cairosvg
 import PIL
-from planar import BoundingBox, Point, Vec2, Vec2Array
-from planar.py import Ray
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
@@ -18,12 +18,11 @@ from chalk.envelope import Envelope
 from chalk.segment import Segment, ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
+from chalk.transform import P2, V2, BoundingBox, Ray, Vec2Array, origin
 
 PyLatex = Any
 PyLatexElement = Any
 PyCairoContext = Any
-
-ORIGIN = Point(0, 0)
 
 
 @dataclass
@@ -60,23 +59,27 @@ class Circle(Shape):
     def get_envelope(self) -> Envelope:
         return Envelope.from_circle(self.radius)
 
-    def get_bounding_box(self) -> BoundingBox:
-        tl = Point(-self.radius, -self.radius)
-        br = Point(+self.radius, +self.radius)
-        return BoundingBox([tl, br])
-
     def get_trace(self) -> Trace:
-        def f(p: Point, v: Vec2) -> List[SignedDistance]:
+        def f(p: P2, v: V2) -> List[SignedDistance]:
             ray = Ray(p, v)
-            return sorted(ray_circle_intersection(ray, self.radius))
+            return sorted(
+                [
+                    d / v.length
+                    for d in ray_circle_intersection(ray, self.radius)
+                ]
+            )
 
         return Trace(f)
 
     def render(self, ctx: PyCairoContext) -> None:
-        ctx.arc(ORIGIN.x, ORIGIN.y, self.radius, 0, 2 * math.pi)
+        ctx.arc(origin.x, origin.y, self.radius, 0, 2 * math.pi)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        return dwg.circle((ORIGIN.x, ORIGIN.y), self.radius)
+        return dwg.circle(
+            (origin.x, origin.y),
+            self.radius,
+            style="vector-effect: non-scaling-stroke",
+        )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         return pylatex.TikZDraw(
@@ -96,10 +99,10 @@ class Rectangle(Shape):
     radius: Optional[float] = None
 
     def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
+        tl = P2(left, top)
+        br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
 
     def get_trace(self) -> Trace:
@@ -107,8 +110,8 @@ class Rectangle(Shape):
         return Path.rectangle(self.width, self.height).get_trace()
 
     def render(self, ctx: PyCairoContext) -> None:
-        x = left = ORIGIN.x - self.width / 2
-        y = top = ORIGIN.y - self.height / 2
+        x = left = origin.x - self.width / 2
+        y = top = origin.y - self.height / 2
         if self.radius is None:
             ctx.rectangle(left, top, self.width, self.height)
         else:
@@ -120,18 +123,19 @@ class Rectangle(Shape):
             ctx.close_path()
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
         return dwg.rect(
             (left, top),
             (self.width, self.height),
             rx=self.radius,
             ry=self.radius,
+            style="vector-effect: non-scaling-stroke;",
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
         return pylatex.TikZDraw(
             [
                 pylatex.TikZCoordinate(left, top),
@@ -150,14 +154,18 @@ class Path(Shape, tx.Transformable):
     arrow: bool = False
 
     @classmethod
-    def from_point(cls, point: Point) -> "Path":
-        return cls([point])
+    def from_point(cls, point: P2) -> Path:
+        return cls(Vec2Array([point]))
+
+    @classmethod
+    def from_points(cls, points: List[P2]) -> Path:
+        return cls(Vec2Array(points))
 
     @classmethod
     def from_list_of_tuples(
         cls, coords: List[Tuple[float, float]], arrow: bool = False
-    ) -> "Path":
-        points = [Point(x, y) for x, y in coords]
+    ) -> Path:
+        points = [P2(x, y) for x, y in coords]
         return cls(Vec2Array(points), arrow)
 
     @property
@@ -167,15 +175,15 @@ class Path(Shape, tx.Transformable):
         ]
 
     @staticmethod
-    def hrule(length: float) -> "Path":
+    def hrule(length: float) -> Path:
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
 
     @staticmethod
-    def vrule(length: float) -> "Path":
+    def vrule(length: float) -> Path:
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
 
     @staticmethod
-    def rectangle(width: float, height: float) -> "Path":
+    def rectangle(width: float, height: float) -> Path:
         # Should I reuse the `polygon` function to define `rectangle`?
         # polygon(4, 1, math.pi / 4).scale_x(width).scale_y(height)
         x = width / 2
@@ -185,7 +193,7 @@ class Path(Shape, tx.Transformable):
         )
 
     @staticmethod
-    def polygon(sides: int, radius: float, rotation: float = 0) -> "Path":
+    def polygon(sides: int, radius: float, rotation: float = 0) -> Path:
         coords = []
         n = sides + 1
         for s in range(n):
@@ -195,7 +203,7 @@ class Path(Shape, tx.Transformable):
         return Path.from_list_of_tuples(coords)
 
     @staticmethod
-    def regular_polygon(sides: int, side_length: float) -> "Path":
+    def regular_polygon(sides: int, side_length: float) -> Path:
         return Path.polygon(
             sides, side_length / (2 * math.sin(math.pi / sides))
         )
@@ -209,7 +217,7 @@ class Path(Shape, tx.Transformable):
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)
 
-    def apply_transform(self, t: tx.Affine) -> "Path":  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
         return Path(tx.apply_affine(t, self.points))
 
     def render(self, ctx: PyCairoContext) -> None:
@@ -219,7 +227,10 @@ class Path(Shape, tx.Transformable):
             ctx.line_to(p.x, p.y)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        line = dwg.polyline([(p.x, p.y) for p in self.points])
+        line = dwg.polyline(
+            [(p.x, p.y) for p in self.points],
+            style="vector-effect: non-scaling-stroke;",
+        )
         if self.arrow:
             line.set_markers((None, False, dwg.defs.elements[0]))
         return line
@@ -244,25 +255,57 @@ class Arc(Shape):
     angle1: float
 
     def __post_init__(self) -> None:
+        self.angle0, self.angle1 = -self.angle1, -self.angle0
         surface = cairo.SVGSurface("undefined.svg", 1280, 200)
         self.ctx = cairo.Context(surface)
 
     def get_bounding_box(self) -> BoundingBox:
         self.render(self.ctx)
         l, t, r, b = self.ctx.path_extents()
-        return BoundingBox([Point(l, t), Point(r, b)])
+        return BoundingBox([P2(l, t), P2(r, b)])
+
+    def get_envelope(self) -> Envelope:
+        def is_in_mod_360(x: float, a: float, b: float) -> bool:
+            """Checks if x ∈ [a, b] mod 360. See the following link for an
+            explanation:
+            https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
+            """
+            return (x - a) % 360 <= (b - a) % 360
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
+        v1 = V2.polar(angle0_deg, self.radius)
+        v2 = V2.polar(angle1_deg, self.radius)
+
+        def wrapped(d: V2) -> SignedDistance:
+            is_circle = abs(angle0_deg - angle1_deg) >= 360
+            if is_circle or is_in_mod_360(d.angle, angle0_deg, angle1_deg):
+                # Case 1: Point at arc
+                return self.radius / d.length  # type: ignore
+            else:
+                # Case 2: Point outside of arc
+                x: float = max(d.dot(v1), d.dot(v2))
+                return x
+
+        return Envelope(wrapped)
 
     def render(self, ctx: PyCairoContext) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
     def render_svg(self, dwg: Drawing) -> BaseElement:
-        u = Vec2.polar(self.angle0 * (180 / math.pi), self.radius)
-        v = Vec2.polar(self.angle1 * (180 / math.pi), self.radius)
-        path = dwg.path(fill="none")
+        u = V2.polar(self.angle0 * (180 / math.pi), self.radius)
+        v = V2.polar(self.angle1 * (180 / math.pi), self.radius)
+        path = dwg.path(
+            fill="none", style="vector-effect: non-scaling-stroke;"
+        )
+
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
+        large = 1 if (angle1_deg - angle0_deg) % 360 > 180 else 0
         path.push(
-            "M {} {} A {} {} 0 0 1 {} {}".format(
-                u.x, u.y, self.radius, self.radius, v.x, v.y
-            )
+            f"M {u.x} {u.y} A {self.radius} {self.radius} 0 {large} 1 {v.x} {v.y}"
         )
         return path
 
@@ -303,8 +346,8 @@ class Text(Shape):
         extents = self.ctx.text_extents(self.text)
         left = extents.x_bearing - (extents.width / 2)
         top = extents.y_bearing
-        tl = Point(left, top)
-        br = Point(left + extents.x_advance, top + extents.height)
+        tl = P2(left, top)
+        br = P2(left + extents.x_advance, top + extents.height)
         self.bb = BoundingBox([tl, br])
 
         return self.bb
@@ -325,7 +368,8 @@ class Text(Shape):
             transform=f"translate({dx}, 0)",
             style=f"""text-align:center; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
-                      font-size:{self.font_size}px""",
+                      font-size:{self.font_size}px;
+                      vector-effect: non-scaling-stroke;""",
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
@@ -382,10 +426,10 @@ class Image(Shape):
         self.width = self.im.width
 
     def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
+        tl = P2(left, top)
+        br = P2(left + self.width, top + self.height)
         return BoundingBox(tl, br)
 
     def render(self, ctx: PyCairoContext) -> None:
@@ -409,15 +453,15 @@ class Spacer(Shape):
     height: float
 
     def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
+        tl = P2(left, top)
+        br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
         return pylatex.TikZPath(
             [
                 pylatex.TikZCoordinate(left, top),
@@ -471,10 +515,10 @@ class Latex(Shape):
         )
 
     def get_bounding_box(self) -> BoundingBox:
-        left = ORIGIN.x - self.width / 2
-        top = ORIGIN.y - self.height / 2
-        tl = Point(left, top)
-        br = Point(left + self.width, top + self.height)
+        left = origin.x - self.width / 2
+        top = origin.y - self.height / 2
+        tl = P2(left, top)
+        br = P2(left + self.width, top + self.height)
         return BoundingBox(tl, br).scale(0.05)
 
     def render(self, ctx: PyCairoContext) -> None:

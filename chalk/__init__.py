@@ -1,15 +1,13 @@
 import math
 from functools import reduce
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
 try:
     from importlib import metadata
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from planar import Affine, BoundingBox, Point, Vec2
-
-from chalk.core import ORIGIN, Diagram, Empty, Primitive, unit_x, unit_y
+from chalk.core import Diagram, Empty, Primitive, set_svg_height
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -22,6 +20,17 @@ from chalk.shape import (
     Text,
 )
 from chalk.trail import Trail
+from chalk.transform import (
+    P2,
+    V2,
+    Affine,
+    BoundingBox,
+    from_radians,
+    origin,
+    to_radians,
+    unit_x,
+    unit_y,
+)
 
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
@@ -29,7 +38,7 @@ __libname__: str = "chalk-diagrams"  # custom dunder attribute
 __version__ = metadata.version(__libname__)
 
 
-ignore = [Trail, Vec2]
+ignore = [Trail, V2]
 
 
 def empty() -> Diagram:
@@ -37,9 +46,12 @@ def empty() -> Diagram:
 
 
 def make_path(
-    coords: List[Tuple[float, float]], arrow: bool = False
+    coords: Union[List[Tuple[float, float]], List[P2]], arrow: bool = False
 ) -> Diagram:
-    return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
+    if not coords or isinstance(coords[0], P2):
+        return Primitive.from_shape(Path.from_points(coords))
+    else:
+        return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
 
 
 def circle(radius: float) -> Diagram:
@@ -62,18 +74,22 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
     Args:
       radius (float): Circle radius.
-      angle0 (float): Starting cutoff in radians.
-      angle1 (float): Finishing cutoff in radians.
+      angle0 (float): Starting cutoff in degrees.
+      angle1 (float): Finishing cutoff in degrees.
 
     Returns:
       Diagram
 
     """
-    return Primitive.from_shape(Arc(radius, angle0, angle1))
+    return Primitive.from_shape(
+        Arc(radius, to_radians(angle0), to_radians(angle1))
+    )
 
 
 def arc_between(
-    point1: Tuple[float, float], point2: Tuple[float, float], height: float
+    point1: Union[P2, Tuple[float, float]],
+    point2: Union[P2, Tuple[float, float]],
+    height: float,
 ) -> Diagram:
     """Makes an arc starting at point1 and ending at point2, with the midpoint
     at a distance of abs(height) away from the straight line from point1 to
@@ -83,8 +99,14 @@ def arc_between(
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
-    p = Point(*point1)
-    q = Point(*point2)
+    if not isinstance(point1, P2):
+        p = P2(*point1)
+    else:
+        p = point1
+    if not isinstance(point2, P2):
+        q = P2(*point2)
+    else:
+        q = point2
 
     h = abs(height)
     v = q - p
@@ -108,9 +130,11 @@ def arc_between(
             dy = h - r
 
         shape = (
-            Primitive.from_shape(Arc(r, -θ, θ)).rotate(φ).translate(d / 2, dy)
+            Primitive.from_shape(Arc(r, -θ, θ))
+            .rotate_rad(-φ)
+            .translate(d / 2, dy)
         )
-    return shape.rotate(v.angle).translate(p.x, p.y)
+    return shape.rotate(-v.angle).translate_by(p)
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
@@ -120,12 +144,14 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     Args:
        sides (int): Number of sides.
        radius (float): Internal radius.
-       rotation: (int): Rotation in radians
+       rotation: (int): Rotation in degress
 
     Returns:
        Diagram
     """
-    return Primitive.from_shape(Path.polygon(sides, radius, rotation))
+    return Primitive.from_shape(
+        Path.polygon(sides, radius, to_radians(rotation))
+    )
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
@@ -205,7 +231,7 @@ def atop(diagram1: Diagram, diagram2: Diagram) -> Diagram:
     return diagram1.atop(diagram2)
 
 
-def beside(diagram1: Diagram, diagram2: Diagram, direction: Vec2) -> Diagram:
+def beside(diagram1: Diagram, diagram2: Diagram, direction: V2) -> Diagram:
     """
     Places `diagram2` beside `diagram1`.
 
@@ -269,7 +295,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
 
 
 def cat(
-    diagrams: Iterable[Diagram], v: Vec2, sep: Optional[float] = None
+    diagrams: Iterable[Diagram], v: V2, sep: Optional[float] = None
 ) -> Diagram:
     diagrams = iter(diagrams)
     start = next(diagrams, None)
@@ -327,7 +353,7 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return cat(diagrams, unit_y, sep)
 
 
-def cardinal(env: Envelope, dir: str) -> Point:
+def cardinal(env: Envelope, dir: str) -> P2:
     """Returns the position of an edge or a corner of the Envelope
     based on a labeled direction (``dir``).
 
@@ -353,15 +379,15 @@ def cardinal(env: Envelope, dir: str) -> Point:
         | ``SE`` | South East   | corner |
 
     Returns:
-        Point: A point object.
+        P2: A point object.
 
     """
 
-    def min_point(env: Envelope) -> Point:
-        return Point(-env(-unit_x), -env(-unit_y))
+    def min_point(env: Envelope) -> P2:
+        return P2(-env(-unit_x), -env(-unit_y))
 
-    def max_point(env: Envelope) -> Point:
-        return Point(env(unit_x), env(unit_y))
+    def max_point(env: Envelope) -> P2:
+        return P2(env(unit_x), env(unit_y))
 
     return {
         "N": unit_y * min_point(env),
