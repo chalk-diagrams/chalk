@@ -5,7 +5,6 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
-import cairo
 import svgwrite
 from colour import Color
 from svgwrite import Drawing
@@ -77,6 +76,8 @@ class Diagram(tx.Transformable):
             width (Optional[int], optional): Width of the rendered image.
                                              Defaults to None.
         """
+        import cairo
+
         envelope = self.get_envelope()
         assert envelope is not None
 
