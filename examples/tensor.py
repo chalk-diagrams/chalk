@@ -47,9 +47,9 @@ m = hcat([t(1, r, c),  t(d, 1, c), label("→"), (base + t(1, r, c)), (base + t(
 
 
 pathsvg = "examples/output/tensor.svg"
-m.render_svg(pathsvg, 500)
+m.render_svg(pathsvg, 50)
 path = "examples/output/tensor.png"
-m.render(path, 500)
+m.render(path, 50)
 PILImage.open(path)
 
 # Needed for recursion 

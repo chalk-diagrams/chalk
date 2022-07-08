@@ -1,0 +1,18 @@
+<html>
+  {% for x, h in [("intro-00", 64),  ("intro-01", 64),  ("intro-02", 64), ("intro-03", 64),  ("intro-04", 256), ("normalized", 100),
+  ("escher-square-limit", 512),  ("hex-variation", 512),   ("koch", 512),  ("squares", 256),  ("hanoi", 700),  ("hilbert", 500),  ("lenet", 400),  ("tensor", 50),   ("tree", 1200)] %}
+  <div>
+    <h2> {{x}} </h2>
+    <div> <h3>SVG</h3>
+      <img src="../output/{{x}}.svg" height="{{h}}"/>
+    </div>
+    <div> <h3>PNG</h3>
+      <img src="../output/{{x}}.png" height="{{h}}" />
+    </div>
+    <div><h3>PDF</h3>
+      <embed src="../output/{{x}}.pdf#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" height="{{h}}" width="50%">
+    </div>
+     
+  </div>
+  {% endfor %}
+</html>
