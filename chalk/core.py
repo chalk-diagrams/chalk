@@ -106,7 +106,6 @@ class Diagram(tx.Transformable):
             ctx.transform(matrix)
 
             prim.shape.render(ctx)
-            
 
             # undo transformation
             matrix.invert()
@@ -539,8 +538,10 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        return ApplyStyle(Style(line_width=(WidthType.NORMALIZED, width)), self)
-    
+        return ApplyStyle(
+            Style(line_width=(WidthType.NORMALIZED, width)), self
+        )
+
     def line_width_local(self, width: float) -> Diagram:
         """Apply specified line-width to the edge of
         the diagram.

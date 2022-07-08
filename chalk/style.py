@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, fields
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Tuple
+
 from colour import Color
 
 PyCairoContext = Any
@@ -13,10 +16,12 @@ def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
 
 class WidthType(Enum):
     LOCAL = auto()
-    NORMALIZED = auto() 
+    NORMALIZED = auto()
+
 
 LC = Color("black")
 LW = 0.1
+
 
 @dataclass
 class Style:
@@ -30,14 +35,14 @@ class Style:
     output_size: Optional[float] = None
 
     @classmethod
-    def empty(cls) -> "Style":
+    def empty(cls) -> Style:
         return cls()
-    
+
     @classmethod
-    def root(cls, output_size) -> "Style":
+    def root(cls, output_size: float) -> Style:
         return cls(output_size=output_size)
-    
-    def merge(self, other: "Style") -> "Style":
+
+    def merge(self, other: Style) -> Style:
         """Merges two styles and returns the merged style.
 
         Args:
@@ -69,6 +74,7 @@ class Style:
         else:
             lc = self.line_color
         # Set by observation
+        assert self.output_size is not None
         normalizer = self.output_size * (15 / 500)
         if self.line_width is None:
             lw = LW * normalizer
@@ -86,27 +92,25 @@ class Style:
         if self.dashing is not None:
             ctx.set_dash(self.dashing[0], self.dashing[1])
 
-
-
     def to_svg(self) -> str:
         """Converts to SVG.
 
         Returns:
             str: A string notation of the SVG.
         """
-        
+
         style = ""
         if self.fill_color is not None:
             style += f"fill: {self.fill_color.hex_l};"
         if self.line_color is not None:
             style += f"stroke: {self.line_color.hex_l};"
         else:
-            style += f"stroke: black;"
+            style += "stroke: black;"
 
         # Set by observation
+        assert self.output_size is not None
         normalizer = self.output_size * (17 / 500)
         if self.line_width is not None:
-            assert self.output_size
             lwt, lw = self.line_width
             if lwt == WidthType.NORMALIZED:
                 lw = lw * normalizer
@@ -114,9 +118,9 @@ class Style:
                 lw = lw
         else:
             lw = LW * normalizer
-            
+
         style += f"stroke-width: {lw};"
-        
+
         if self.fill_opacity is not None:
             style += f"fill-opacity: {self.fill_opacity};"
         if self.dashing is not None:
@@ -139,7 +143,8 @@ class Style:
         if self.line_color is not None:
             style["draw"] = tikz_color(self.line_color)
         # This constant was set based on observing TikZ output
-        normalizer = (self.output_size / 500)
+        assert self.output_size is not None
+        normalizer = self.output_size / 500
         if self.line_width is not None:
             lwt, lw = self.line_width
             if lwt == WidthType.NORMALIZED:
