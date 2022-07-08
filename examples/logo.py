@@ -42,7 +42,7 @@ def sunflower(n):
         
 floret = sunflower(1900).center_xy().scale_uniform_to_x(1).center_xy()
 background = rectangle(1.5, 1).fill_color(black).line_width(0).translate(-0.25, 0)
-logo = text("Chalk", 0.35).fill_color(grey).line_width(0.008).line_color(black).translate(-0.15, -0.1)
+logo = text("Chalk", 0.35).fill_color(grey).line_width(0.1).line_color(black).translate(-0.15, -0.1)
 mask = rectangle(1.5, 1).fill_color(white).line_color(white).line_width(0.05).translate(0, 0.6)
 
 # assemble
