@@ -38,7 +38,12 @@ setup(
         "planar",
         "typing-extensions",
     ],
-    extras_require={"tikz": ["pylatex"], "latex": ["latextools"], "png": ["pycairo"], "svg": ["cairosvg"]},
+    extras_require={
+        "tikz": ["pylatex"],
+        "latex": ["latextools"],
+        "png": ["pycairo"],
+        "svg": ["cairosvg"],
+    },
     long_description=README,
     long_description_content_type="text/markdown",
     author="Dan Oneață",

@@ -41,9 +41,9 @@ def sunflower(n):
     return concat(flor.translate(cord[0], cord[1]) for cord, flor in zip(mkCoords(n), florets(n)))
         
 floret = sunflower(1900).center_xy().scale_uniform_to_x(1).center_xy()
-background = rectangle(1.5, 1).fill_color(black).line_width(0).translate(-0.25, 0)
-logo = text("Chalk", 0.35).fill_color(grey).line_width(0.1).line_color(black).translate(-0.15, -0.1)
-mask = rectangle(1.5, 0.6)
+background = rectangle(1.6, 1).fill_color(black).line_width(0).translate(-0.15, 0)
+logo = text("Chalk", 0.35).fill_color(grey).line_width(0.1).line_color(black).translate(-0.4, -0.1)
+mask = rectangle(1.6, 0.6).translate(-0.15, 0)
 
 # assemble
 d = (background + floret + logo).align_t().with_envelope(mask.align_t())
