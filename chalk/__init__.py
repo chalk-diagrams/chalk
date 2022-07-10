@@ -299,7 +299,7 @@ def cat(
 ) -> Diagram:
     diagrams = iter(diagrams)
     start = next(diagrams, None)
-    sep_dia = hstrut(sep).rotate((math.pi / 180) * v.angle)
+    sep_dia = hstrut(sep).rotate(v.angle)
     if start is None:
         return empty()
     return reduce(
