@@ -6,10 +6,10 @@ from planar.py import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 
 
 def to_cairo(affine: Affine) -> Any:
-    from cairo import Matrix
+    import cairo
 
     def convert(a, b, c, d, e, f):  # type: ignore
-        return Matrix(xx=a, yx=d, xy=b, yy=e, x0=c, y0=f)
+        return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
 
     return convert(*affine[:6])  # type: ignore
 
