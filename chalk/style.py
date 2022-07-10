@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, fields
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple
 
 from colour import Color
@@ -11,38 +14,35 @@ def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
 
 
+class WidthType(Enum):
+    LOCAL = auto()
+    NORMALIZED = auto()
+
+
 LC = Color("black")
-LW = 0.01
+LW = 0.1
 
 
 @dataclass
 class Style:
     """Style class."""
 
-    line_width: Optional[float] = None
+    line_width: Optional[Tuple[WidthType, float]] = None
     line_color: Optional[Color] = None
     fill_color: Optional[Color] = None
     fill_opacity: Optional[float] = None
     dashing: Optional[Tuple[List[float], float]] = None
-    scale: Optional[float] = 1.0
     output_size: Optional[float] = None
 
     @classmethod
-    def default(cls) -> "Style":
+    def empty(cls) -> Style:
         return cls()
 
-    def scale_style(self, s: float) -> "Style":
-        return Style(
-            self.line_width,
-            self.line_color,
-            self.fill_color,
-            self.fill_opacity,
-            self.dashing,
-            (1 if not self.scale else self.scale) * abs(s),
-            self.output_size,
-        )
+    @classmethod
+    def root(cls, output_size: float) -> Style:
+        return cls(output_size=output_size)
 
-    def merge(self, other: "Style") -> "Style":
+    def merge(self, other: Style) -> Style:
         """Merges two styles and returns the merged style.
 
         Args:
@@ -73,11 +73,18 @@ class Style:
             lc = LC
         else:
             lc = self.line_color
-
+        # Set by observation
+        assert self.output_size is not None
+        normalizer = self.output_size * (15 / 500)
         if self.line_width is None:
-            lw = LW
+            lw = LW * normalizer
         else:
-            lw = self.line_width
+            lwt, lw = self.line_width
+            if lwt == WidthType.NORMALIZED:
+                lw = lw * normalizer
+
+            elif lwt == WidthType.LOCAL:
+                lw = lw
 
         ctx.set_source_rgb(*lc.rgb)
         ctx.set_line_width(lw)
@@ -85,22 +92,35 @@ class Style:
         if self.dashing is not None:
             ctx.set_dash(self.dashing[0], self.dashing[1])
 
-        ctx.stroke()
-
     def to_svg(self) -> str:
         """Converts to SVG.
 
         Returns:
             str: A string notation of the SVG.
         """
+
         style = ""
         if self.fill_color is not None:
             style += f"fill: {self.fill_color.hex_l};"
         if self.line_color is not None:
             style += f"stroke: {self.line_color.hex_l};"
+        else:
+            style += "stroke: black;"
+
+        # Set by observation
+        assert self.output_size is not None
+        normalizer = self.output_size * (15 / 500)
         if self.line_width is not None:
-            assert self.output_size
-            style += f"stroke-width: {15 * self.line_width * (self.output_size / 500)};"
+            lwt, lw = self.line_width
+            if lwt == WidthType.NORMALIZED:
+                lw = lw * normalizer
+            elif lwt == WidthType.LOCAL:
+                lw = lw
+        else:
+            lw = LW * normalizer
+
+        style += f"stroke-width: {lw};"
+
         if self.fill_opacity is not None:
             style += f"fill-opacity: {self.fill_opacity};"
         if self.dashing is not None:
@@ -123,11 +143,17 @@ class Style:
         if self.line_color is not None:
             style["draw"] = tikz_color(self.line_color)
         # This constant was set based on observing TikZ output
-        width_scale = 20 * (1 if not self.scale else self.scale)
+        assert self.output_size is not None
+        normalizer = self.output_size * (175 / 500)
         if self.line_width is not None:
-            style["line width"] = f"{width_scale * self.line_width}pt"
+            lwt, lw = self.line_width
+            if lwt == WidthType.NORMALIZED:
+                lw = lw * normalizer
+            elif lwt == WidthType.LOCAL:
+                lw = lw
         else:
-            style["line width"] = f"{width_scale * LW}pt"
+            lw = normalizer * LW
+        style["line width"] = f"{lw}pt"
         if self.fill_opacity is not None:
             style["fill opacity"] = f"{self.fill_opacity}"
 

@@ -379,9 +379,7 @@ class Text(Shape):
         opts = {}
         opts["font"] = "\\small\\sffamily"
         opts["scale"] = str(
-            3.5
-            * (1 if self.font_size is None else self.font_size)
-            * (1 if style.scale is None else style.scale)
+            3.5 * (1 if self.font_size is None else self.font_size)
         )
         styles = style.to_tikz(pylatex)
         if styles["fill"] is not None:

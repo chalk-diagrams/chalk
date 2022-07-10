@@ -115,12 +115,6 @@ fish_u = cycle(fish["q"].rotate(θ))
 
 side_1 = quartet(blank, blank, fish_t.rotate(θ), fish_t)
 
-# output_path = "examples/output/fish.png"
-# side_1.show_origin().show_bounding_box().render(output_path, height=512)
-# output_path = "examples/output/square.png"
-# (fish_t.rotate_by(0.25).show_origin().show_bounding_box()).render(output_path, height=512)
-
-
 side_2 = quartet(side_1, side_1, fish_t.rotate(θ), fish_t)
 corner_1 = quartet(blank, blank, blank, fish_u)
 
@@ -128,7 +122,7 @@ corner_2 = quartet(corner_1, side_1, side_1.rotate(θ), fish_u)
 pseudocorner = quartet(corner_2, side_2, side_2.rotate(θ), fish_t.rotate(θ))
 
 
-pseudolimit = cycle(pseudocorner)
+pseudolimit = cycle(pseudocorner).line_width(0.05)
 
 output_path = "examples/output/escher-square-limit.png"
 pseudolimit.render(output_path, height=512)

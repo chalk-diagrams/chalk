@@ -15,7 +15,7 @@ grey = Color("#bbbbbb")
 
 def label(te):
     "Create text."
-    return text(te, 2).fill_color(black).line_color(white)
+    return text(te, 2).fill_color(black).line_width(0)
 
 def cover(d, a, b):
     "Draw a bounding_box around a subdiagram"
@@ -34,12 +34,12 @@ def connect_all(d, a, b):
     return concat([connect_outer(d, a, "NW", b, "NW"),
                    connect_outer(d, a, "NE", b, "NE"),
                    connect_outer(d, a, "SW", b, "SW"),
-                   connect_outer(d, a, "SE", b, "SE")]).line_color(black)
+                   connect_outer(d, a, "SE", b, "SE")]).line_color(black).line_width(0.02)
 
 
 # NN drawing
 def cell():
-    return rectangle(1, 1).line_width(0.05)
+    return rectangle(1, 1).line_width(0.01)
 
 def matrix(n, r, c):
     return tile(cell(), c, r, n)
@@ -49,7 +49,7 @@ def back(r, n):
     return concat((r.translate(-i/2, -i/2).fill_opacity((n - i + n /2) / n)
                    for i in range(n-1, -1, -1)))
 
-lw = 0.2
+lw = 0.05
 def stack(n, size, l, top, bot):
     "Feature map stack"
     m = matrix(n, size, size).fill_color(Color("#dddddd"))
@@ -62,7 +62,7 @@ def network(n, size, top, bot):
     return (label(top) /  rectangle(2, size).fill_color(grey).line_width(lw).named(n) / label(bot)).center_xy()
 
 # The number 7
-draw = make_path([(-10, -10), (10, -10 ), (-10, 10)]).line_width(0.9).line_color(blue).fill_opacity(0)
+draw = make_path([(-10, -10), (10, -10 ), (-10, 10)]).line_width(0.09).line_color(blue).fill_opacity(0)
 
 # Draw the main diagram.
 h = hstrut(6.5)
@@ -97,7 +97,7 @@ connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)] + \
 d += concat([connect_all(d, *b) for b in connect])
 d
 
-d.render("examples/output/lenet.png", 500)
+d.render("examples/output/lenet.png", 400)
 d.render_svg("examples/output/lenet.svg", 400)
 PILImage.open("examples/output/lenet.png")
 
