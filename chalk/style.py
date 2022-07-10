@@ -109,7 +109,7 @@ class Style:
 
         # Set by observation
         assert self.output_size is not None
-        normalizer = self.output_size * (17 / 500)
+        normalizer = self.output_size * (15 / 500)
         if self.line_width is not None:
             lwt, lw = self.line_width
             if lwt == WidthType.NORMALIZED:
@@ -144,7 +144,7 @@ class Style:
             style["draw"] = tikz_color(self.line_color)
         # This constant was set based on observing TikZ output
         assert self.output_size is not None
-        normalizer = self.output_size / 500
+        normalizer = self.output_size * (175 / 500)
         if self.line_width is not None:
             lwt, lw = self.line_width
             if lwt == WidthType.NORMALIZED:

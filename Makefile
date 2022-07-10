@@ -19,7 +19,7 @@
 # generate examples
 .PHONY: intro squares hanoi escher_square lattice lenet logo \
 		hilbert koch tensor latex hex_variation images \
-                tree
+                tree serve
 ####------------------------------------------------------------####
 
 # libname is either same as PACKAGE_NAME or
@@ -322,3 +322,6 @@ parade:
 
 images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation tree tournament parade
 	@echo "🎁 Generate all examples ... ⏳"
+
+serve:
+	python -m http.server 8080 -d examples/output/
