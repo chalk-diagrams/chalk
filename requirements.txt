@@ -1,5 +1,4 @@
 setuptools==45
-pycairo
 toolz
 colour
 svgwrite

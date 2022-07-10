@@ -158,7 +158,7 @@ check: style docs type test clean
 # .PHONY: install.e
 install.e: clean
 	@echo "📀🟢🔵 Installing $(PACKAGE_NAME) from local source ... ⏳"
-	python -m pip install -Ue "."
+	python -m pip install -Ue .[tikz,latex,png,svg]
 
 # .PHONY: install
 install: clean install.base install.e

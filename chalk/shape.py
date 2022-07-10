@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
-import cairo
-import cairosvg
 import PIL
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -23,6 +21,7 @@ from chalk.transform import P2, V2, BoundingBox, Ray, Vec2Array, origin
 PyLatex = Any
 PyLatexElement = Any
 PyCairoContext = Any
+PyCairoSurface = Any
 
 
 @dataclass
@@ -246,6 +245,14 @@ class Path(Shape, tx.Transformable):
         )
 
 
+def is_in_mod_360(x: float, a: float, b: float) -> bool:
+    """Checks if x ∈ [a, b] mod 360. See the following link for an
+    explanation:
+    https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
+    """
+    return (x - a) % 360 <= (b - a) % 360
+
+
 @dataclass
 class Arc(Shape):
     """Arc class."""
@@ -256,21 +263,27 @@ class Arc(Shape):
 
     def __post_init__(self) -> None:
         self.angle0, self.angle1 = -self.angle1, -self.angle0
-        surface = cairo.SVGSurface("undefined.svg", 1280, 200)
-        self.ctx = cairo.Context(surface)
 
-    def get_bounding_box(self) -> BoundingBox:
-        self.render(self.ctx)
-        l, t, r, b = self.ctx.path_extents()
-        return BoundingBox([P2(l, t), P2(r, b)])
+    def get_trace(self) -> Trace:
+        angle0_deg = self.angle0 * (180 / math.pi)
+        angle1_deg = self.angle1 * (180 / math.pi)
+
+        def f(p: P2, v: V2) -> List[SignedDistance]:
+            ray = Ray(p, v)
+            # Same as circle but check that angle is in arc.
+            return sorted(
+                [
+                    d / v.length
+                    for d in ray_circle_intersection(ray, self.radius)
+                    if is_in_mod_360(
+                        ((d * v) + p).angle, angle0_deg, angle1_deg
+                    )
+                ]
+            )
+
+        return Trace(f)
 
     def get_envelope(self) -> Envelope:
-        def is_in_mod_360(x: float, a: float, b: float) -> bool:
-            """Checks if x ∈ [a, b] mod 360. See the following link for an
-            explanation:
-            https://fgiesen.wordpress.com/2015/09/24/intervals-in-modular-arithmetic/
-            """
-            return (x - a) % 360 <= (b - a) % 360
 
         angle0_deg = self.angle0 * (180 / math.pi)
         angle1_deg = self.angle1 * (180 / math.pi)
@@ -335,21 +348,11 @@ class Text(Shape):
     text: str
     font_size: Optional[float]
 
-    def __post_init__(self) -> None:
-        surface = cairo.SVGSurface("undefined.svg", 1280, 200)
-        self.ctx = cairo.Context(surface)
-
     def get_bounding_box(self) -> BoundingBox:
-        self.ctx.select_font_face("sans-serif")
-        if self.font_size is not None:
-            self.ctx.set_font_size(self.font_size)
-        extents = self.ctx.text_extents(self.text)
-        left = extents.x_bearing - (extents.width / 2)
-        top = extents.y_bearing
-        tl = P2(left, top)
-        br = P2(left + extents.x_advance, top + extents.height)
-        self.bb = BoundingBox([tl, br])
-
+        # Text doesn't have a bounding box since we can't accurately know
+        # its size for all backends.
+        eps = 1e-4
+        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
         return self.bb
 
     def render(self, ctx: PyCairoContext) -> None:
@@ -366,7 +369,7 @@ class Text(Shape):
         return dwg.text(
             self.text,
             transform=f"translate({dx}, 0)",
-            style=f"""text-align:center; dominant-baseline:middle;
+            style=f"""text-align:center; text-anchor:middle; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
                       font-size:{self.font_size}px;
                       vector-effect: non-scaling-stroke;""",
@@ -391,16 +394,15 @@ class Text(Shape):
 def from_pil(
     im: PIL.Image,
     alpha: float = 1.0,
-    format: cairo.Format = cairo.FORMAT_ARGB32,
-) -> cairo.Surface:
-    assert format in (cairo.FORMAT_RGB24, cairo.FORMAT_ARGB32), (
-        "Unsupported pixel format: %s" % format
-    )
+) -> PyCairoSurface:
+    import cairo
+
+    format: cairo.Format = cairo.FORMAT_ARGB32
     if "A" not in im.getbands():
         im.putalpha(int(alpha * 256.0))
     arr = bytearray(im.tobytes("raw", "BGRa"))
     surface = cairo.ImageSurface.create_for_data(
-        arr, format, im.width, im.height  # type:ignore
+        arr, format, im.width, im.height  # type: ignore
     )
     return surface
 
@@ -414,6 +416,8 @@ class Image(Shape):
 
     def __post_init__(self) -> None:
         if self.local_path.endswith("svg"):
+            import cairosvg
+
             out = BytesIO()
             cairosvg.svg2png(url=self.local_path, write_to=out)
         else:
