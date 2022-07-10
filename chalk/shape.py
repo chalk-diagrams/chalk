@@ -432,7 +432,7 @@ class Image(Shape):
         top = origin.y - self.height / 2
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
-        return BoundingBox(tl, br)
+        return BoundingBox([tl, br])
 
     def render(self, ctx: PyCairoContext) -> None:
         surface = from_pil(self.im)
