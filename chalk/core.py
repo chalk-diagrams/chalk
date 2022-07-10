@@ -14,7 +14,7 @@ from svgwrite.base import BaseElement
 from chalk import transform as tx
 from chalk.envelope import Envelope
 from chalk.shape import Circle, Path, Shape, Spacer
-from chalk.style import Style
+from chalk.style import Style, WidthType
 from chalk.trace import Trace
 from chalk.transform import V2, Affine, Vec2Array, origin, unit_x, unit_y
 from chalk.utils import imgen
@@ -97,20 +97,21 @@ class Diagram(tx.Transformable):
         s = self.scale(α).center_xy().pad(1 + pad)
         e = s.get_envelope()
         assert e is not None
-        prims = s.translate(e(-unit_x), e(-unit_y)).to_list()
-
+        s = s.translate(e(-unit_x), e(-unit_y))
+        s = ApplyStyle(Style.root(max(width, height)), s)
+        prims = s.to_list()
         for prim in prims:
             # apply transformation
             matrix = tx.to_cairo(prim.transform)
             ctx.transform(matrix)
 
             prim.shape.render(ctx)
-            prim.style.render(ctx)
 
             # undo transformation
             matrix.invert()
             ctx.transform(matrix)
-
+            prim.style.render(ctx)
+            ctx.stroke()
         surface.write_to_png(path)
 
     def render_svg(
@@ -143,7 +144,7 @@ class Diagram(tx.Transformable):
         )
 
         outer = dwg.g(
-            style="fill:white; stroke: black; stroke-width: 1.00;",
+            style="fill:white;",
         )
         # Arrow marker
         marker = dwg.marker(
@@ -157,8 +158,7 @@ class Diagram(tx.Transformable):
         e = s.get_envelope()
         assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
-        style = Style.default()
-        style.output_size = height
+        style = Style.root(output_size=max(height, width))
         outer.add(s.to_svg(dwg, style))
         dwg.save()
 
@@ -196,7 +196,7 @@ class Diagram(tx.Transformable):
         ).translate(envelope.center.x, envelope.center.y)
         diagram = diagram + padding
         with doc.create(pylatex.TikZ()) as pic:
-            for x in diagram.to_tikz(pylatex, Style.default()):
+            for x in diagram.to_tikz(pylatex, Style.root(max(height, width))):
                 pic.append(x)
         doc.generate_tex(path.replace(".pdf", "") + ".tex")
         doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
@@ -529,8 +529,8 @@ class Diagram(tx.Transformable):
     #     return ApplyTransform(t, self.center_xy())
 
     def line_width(self, width: float) -> Diagram:
-        """Apply specified line-width to the edge of
-        the diagram.
+        """Apply specified line-width to the stroke.
+        Determined relative to final rendered size.
 
         Args:
             width (float): Amount of width.
@@ -538,7 +538,22 @@ class Diagram(tx.Transformable):
         Returns:
             Diagram: A diagram object.
         """
-        return ApplyStyle(Style(line_width=width), self)
+        return ApplyStyle(
+            Style(line_width=(WidthType.NORMALIZED, width)), self
+        )
+
+    def line_width_local(self, width: float) -> Diagram:
+        """Apply specified line-width to the edge of
+        the diagram.
+        Determined relative to local size.
+
+        Args:
+            width (float): Amount of width.
+
+        Returns:
+            Diagram: A diagram object.
+        """
+        return ApplyStyle(Style(line_width=(WidthType.LOCAL, width)), self)
 
     def line_color(self, color: Color) -> Diagram:
         """Apply specified line-color to the edge of
@@ -738,7 +753,7 @@ class Primitive(Diagram):
         Returns:
             Primitive: A primitive object.
         """
-        return cls(shape, Style.default(), Ident)
+        return cls(shape, Style.empty(), Ident)
 
     def apply_transform(self, t: Affine) -> "Primitive":  # type: ignore
         """Applies a transform and returns a primitive.
@@ -816,7 +831,6 @@ class Primitive(Diagram):
 
         transform = tx.to_tikz(self.transform)
         style = self.style.merge(other_style)
-        style = style.scale_style(max(self.transform[0], self.transform[4]))
         inner = self.shape.render_tikz(pylatex, style)
         if not style and not transform:
             return [inner]
@@ -931,7 +945,6 @@ class ApplyTransform(Diagram):
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         """Converts to SVG image."""
         g = dwg.g(transform=tx.to_svg(self.transform))
-        style = style.scale_style(max(self.transform[0], self.transform[4]))
         g.add(self.diagram.to_svg(dwg, style))
         return g
 
@@ -939,7 +952,6 @@ class ApplyTransform(Diagram):
         self, pylatex: PyLatexElement, style: Style
     ) -> List[PyLatexElement]:
         options = {}
-        style = style.scale_style(max(self.transform[0], self.transform[4]))
         options["cm"] = tx.to_tikz(self.transform)
         s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
         for x in self.diagram.to_tikz(pylatex, style):

@@ -41,4 +41,4 @@ diagram.render(path, height=256)
 PILImage.open(path)
 
 path = "examples/output/squares.pdf"
-diagram.render_pdf(path, height=100)
+diagram.render_pdf(path, height=256)

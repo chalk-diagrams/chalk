@@ -44,10 +44,10 @@ def draw_tree(tree, name="", ysep=5, xsep=1):
 
 
 _, d =  draw_tree((True, (True, None, None), (False, (True, None, None), None)))
-d.line_width(0.1)
+d.line_width(0.01)
 
 _, d = draw_tree(sample_tree())
-d = d.line_width(0.8)
+d = d.line_width(0.01)
 
 d.render_svg("examples/output/tree.svg", 1200)
 d.render("examples/output/tree.png", 1200)
