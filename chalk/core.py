@@ -23,13 +23,17 @@ PyLatex = Any
 PyLatexElement = Any
 Ident = Affine.identity()
 SVG_HEIGHT = 200
-
+SVG_OUTPUT_HEIGHT = None
 
 def set_svg_height(height: int) -> None:
     "Globally set the svg preview height for notebooks."
     global SVG_HEIGHT
     SVG_HEIGHT = height
 
+def set_svg_output_height(height: int) -> None:
+    "Globally set the svg preview height for notebooks."
+    global SVG_OUTPUT_HEIGHT
+    SVG_OUTPUT_HEIGHT = height
 
 @dataclass
 class Diagram(tx.Transformable):
@@ -159,7 +163,10 @@ class Diagram(tx.Transformable):
         e = s.get_envelope()
         assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
-        style = Style.root(output_size=max(height, width))
+        output_size = max(height, width)
+        if SVG_OUTPUT_HEIGHT is not None:
+            output_size = SVG_OUTPUT_HEIGHT
+        style = Style.root(output_size=output_size)
         outer.add(s.to_svg(dwg, style))
         dwg.save()
 
