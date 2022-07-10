@@ -402,7 +402,7 @@ def from_pil(
         im.putalpha(int(alpha * 256.0))
     arr = bytearray(im.tobytes("raw", "BGRa"))
     surface = cairo.ImageSurface.create_for_data(
-        arr, format, im.width, im.height  # type:ignore
+        arr, format, im.width, im.height
     )
     return surface
 
