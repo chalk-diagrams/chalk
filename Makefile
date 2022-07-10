@@ -87,7 +87,7 @@ test:
 
 type:
 	@ echo "✨ Applying type checker: mypy ... ⏳"
-	mypy --strict --ignore-missing-imports $(PACKAGE_NAME)/*.py \
+	mypy --ignore-missing-imports $(PACKAGE_NAME)/*.py \
 		# tests \
 
 ## Run darglint
