@@ -19,7 +19,6 @@ jobs:
         sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra
         python -m pip install --upgrade pip
         pip install -U pip wheel
-        pip install setuptools==45
         make install.dev install.base install.e
     - name: Format with [[ isort ]]
       run: |
