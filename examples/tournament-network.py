@@ -16,34 +16,14 @@ def make_node(n):
     return c + t
 
 
-def connect_diagrams(d1, d2, gap=0.1):
-    # TODO Make this functino work on named subdiagrams
-    c1 = d1.get_envelope().center
-    c2 = d2.get_envelope().center
-
-    v = (c2 - c1)
-    midpoint = c1 + 0.5 * v
-    vs = d1.get_trace().trace_v(midpoint, -v)
-    ve = d2.get_trace().trace_v(midpoint, +v)
-    if not vs:
-        s = midpoint
-    else:
-        s = midpoint + (1 - gap) * vs
-
-    if not ve:
-        e = midpoint
-    else:
-        e = midpoint + (1 - gap) * ve
-
-    return Primitive.from_shape(Path([s, e], True))
-
-
 n = 6
 hexagon = Path.regular_polygon(n, 1)
-nodes = [make_node(i) for i in range(n)]
+nodes = [make_node(i).named(i) for i in range(n)]
 nodes = [node.translate(point.x, point.y) for node, point in zip(nodes, hexagon.points)]
+dia = concat(nodes) 
 
-connections = concat(connect_diagrams(nodes[i], nodes[j]) for i in range(n) for j in range(i + 1, n))
-dia = concat(nodes) + connections
+for i in range(n):
+    for j in range(i + 1, n):
+        dia = dia.connect_outside(i, j, ArrowOpts(headPad=0.1, tailPad=0.1))
 
 dia.render_svg("examples/output/tournament-network.svg")

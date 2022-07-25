@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import math
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple, Union
 
 import svgwrite
 from colour import Color
@@ -12,15 +13,24 @@ from svgwrite.base import BaseElement
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.shape import Circle, Path, Shape, Spacer
+from chalk.shape import (
+    Arc,
+    ArrowHead,
+    Circle,
+    Path,
+    Shape,
+    Spacer,
+    render_cairo_prims,
+)
 from chalk.style import Style, WidthType
 from chalk.trace import Trace
-from chalk.transform import V2, Affine, Vec2Array, origin, unit_x, unit_y
+from chalk.transform import P2, V2, Affine, Vec2Array, origin, unit_x, unit_y
 from chalk.utils import imgen
 
 PyCairoContext = Any
 PyLatex = Any
 PyLatexElement = Any
+Trail = Any
 Ident = Affine.identity()
 SVG_HEIGHT = 200
 
@@ -29,6 +39,17 @@ def set_svg_height(height: int) -> None:
     "Globally set the svg preview height for notebooks."
     global SVG_HEIGHT
     SVG_HEIGHT = height
+
+
+@dataclass
+class ArrowOpts:
+    headStyle: Style = Style()
+    headPad: float = 0.0
+    tailPad: float = 0.0
+    headArrow: Optional[Diagram] = None
+    shaftStyle: Style = Style()
+    trail: Optional[Trail] = None
+    arcHeight: float = 0.0
 
 
 @dataclass
@@ -99,20 +120,7 @@ class Diagram(tx.Transformable):
         e = s.get_envelope()
         assert e is not None
         s = s.translate(e(-unit_x), e(-unit_y))
-        s = ApplyStyle(Style.root(max(width, height)), s)
-        prims = s.to_list()
-        for prim in prims:
-            # apply transformation
-            matrix = tx.to_cairo(prim.transform)
-            ctx.transform(matrix)
-
-            prim.shape.render(ctx)
-
-            # undo transformation
-            matrix.invert()
-            ctx.transform(matrix)
-            prim.style.render(ctx)
-            ctx.stroke()
+        render_cairo_prims(s, ctx, Style.root(max(width, height)))
         surface.write_to_png(path)
 
     def render_svg(
@@ -716,10 +724,63 @@ class Diagram(tx.Transformable):
         """
         return ApplyName(name, self)
 
+    # Arrow connections.
+
+    def connect(
+        self, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    ) -> Diagram:
+        bb1 = self.get_subdiagram_envelope(name1)
+        bb2 = self.get_subdiagram_envelope(name2)
+        return self + arrow_between(bb1.center, bb2.center, style)
+
+    def connect_outside(
+        self, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    ) -> Diagram:
+        env1 = self.get_subdiagram_envelope(name1)
+        env2 = self.get_subdiagram_envelope(name2)
+        tr1 = self.get_subdiagram_trace(name1)
+        tr2 = self.get_subdiagram_trace(name2)
+
+        v = env2.center - env1.center
+        vs = tr1.trace_v(env2.center, -v) + env2.center
+        ve = tr2.trace_v(env1.center, v) + env1.center
+        return self + arrow_between(vs, ve, style)
+
+    def connect_perim(
+        self,
+        name1: str,
+        name2: str,
+        v1: V2,
+        v2: V2,
+        style: ArrowOpts = ArrowOpts(),
+    ) -> Diagram:
+        env1 = self.get_subdiagram_envelope(name1)
+        env2 = self.get_subdiagram_envelope(name2)
+        tr1 = self.get_subdiagram_trace(name1)
+        tr2 = self.get_subdiagram_trace(name2)
+        vs = tr1.trace_v(env1.center, v1)
+        ve = tr2.trace_v(env2.center, v2)
+        return self + arrow_between(env1.center + vs, env2.center + ve, style)
+
     def get_subdiagram_envelope(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Envelope]:
+    ) -> Envelope:
         """Get the bounding envelope of the sub-diagram."""
+        subdiagram = self.get_subdiagram(name)
+        assert subdiagram is not None, "Subdiagram does not exist"
+        return subdiagram[0].get_envelope(subdiagram[1])
+
+    def get_subdiagram_trace(
+        self, name: str, t: Affine = Ident
+    ) -> Trace:
+        """Get the trace of the sub-diagram."""
+        subdiagram = self.get_subdiagram(name)
+        assert subdiagram is not None, "Subdiagram does not exist"
+        return subdiagram[0].get_trace(subdiagram[1])
+
+    def get_subdiagram(
+        self, name: str, t: Affine = Ident
+    ) -> Optional[Tuple[Diagram, Affine]]:
         return None
 
     def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
@@ -729,6 +790,9 @@ class Diagram(tx.Transformable):
     def to_tikz(self, pylatex: PyLatex, style: Style) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
         raise NotImplementedError
+
+    def _style(self, style: Style) -> Diagram:
+        return ApplyStyle(style, self)
 
 
 @dataclass
@@ -813,15 +877,16 @@ class Primitive(Diagram):
 
     def to_svg(self, dwg: Drawing, other_style: Style) -> BaseElement:
         """Convert a diagram to SVG image."""
-        style = self.style.merge(other_style).to_svg()
+        style = self.style.merge(other_style)
+        style_svg = style.to_svg()
         transform = tx.to_svg(self.transform)
-        inner = self.shape.render_svg(dwg)
-        if not style and not transform:
+        inner = self.shape.render_svg(dwg, style)
+        if not style_svg and not transform:
             return inner
         else:
-            if not style:
-                style = ";"
-            g = dwg.g(transform=transform, style=style)
+            if not style_svg:
+                style_svg = ";"
+            g = dwg.g(transform=transform, style=style_svg)
             g.add(inner)
             return g
 
@@ -885,13 +950,13 @@ class Compose(Diagram):
         # TODO Should we cache the trace?
         return self.diagram1.get_trace(t) + self.diagram2.get_trace(t)
 
-    def get_subdiagram_envelope(
+    def get_subdiagram(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Envelope]:
+    ) -> Optional[Tuple[Diagram, Affine]]:
         """Get the bounding envelope of the sub-diagram."""
-        bb = self.diagram1.get_subdiagram_envelope(name, t)
+        bb = self.diagram1.get_subdiagram(name, t)
         if bb is None:
-            bb = self.diagram2.get_subdiagram_envelope(name, t)
+            bb = self.diagram2.get_subdiagram(name, t)
         return bb
 
     def to_list(self, t: Affine = Ident) -> List["Primitive"]:
@@ -930,11 +995,11 @@ class ApplyTransform(Diagram):
         """Returns the bounding envelope of a diagram."""
         return self.diagram.get_trace(t * self.transform)
 
-    def get_subdiagram_envelope(
+    def get_subdiagram(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Envelope]:
+    ) -> Optional[Tuple[Diagram, Affine]]:
         """Get the bounding envelope of the sub-diagram."""
-        return self.diagram.get_subdiagram_envelope(name, t * self.transform)
+        return self.diagram.get_subdiagram(name, t * self.transform)
 
     def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
@@ -975,11 +1040,10 @@ class ApplyStyle(Diagram):
         """Returns the bounding envelope of a diagram."""
         return self.diagram.get_trace(t)
 
-    def get_subdiagram_envelope(
+    def get_subdiagram(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Envelope]:
-        """Get the bounding envelope of the sub-diagram."""
-        return self.diagram.get_subdiagram_envelope(name, t)
+    ) -> Optional[Tuple[Diagram, Affine]]:
+        return self.diagram.get_subdiagram(name, t)
 
     def to_list(self, t: Affine = Ident) -> List["Primitive"]:
         """Returns a list of primitives."""
@@ -1012,12 +1076,12 @@ class ApplyName(Diagram):
         """Returns the bounding envelope of a diagram."""
         return self.diagram.get_trace(t)
 
-    def get_subdiagram_envelope(
+    def get_subdiagram(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Envelope]:
+    ) -> Optional[Tuple[Diagram, Affine]]:
         """Get the bounding envelope of the sub-diagram."""
         if name == self.dname:
-            return self.diagram.get_envelope(t)
+            return self.diagram, t
         else:
             return None
 
@@ -1035,3 +1099,134 @@ class ApplyName(Diagram):
         self, pylatex: PyLatexElement, style: Style
     ) -> List[PyLatexElement]:
         return self.diagram.to_tikz(pylatex, style)
+
+
+# Arrow primitiv
+def make_path(
+    coords: Union[List[Tuple[float, float]], List[P2]], arrow: bool = False
+) -> Diagram:
+    if not coords or isinstance(coords[0], P2):
+        return Primitive.from_shape(Path.from_points(coords))
+    else:
+        return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
+
+
+def unit_arc_between(d: float, height: float) -> Tuple[Diagram, float]:
+    h = abs(height)
+    θ = 0.
+    if h < 1e-6:
+        # Draw a line if the height is too small
+        shape: Diagram = make_path([(0, 0), (d, 0)])
+    else:
+        # Determine the arc's angle θ and its radius r
+        θ = math.acos((d**2 - 4. * h**2) / (d**2 + 4. * h**2))
+        r = d / (2 * math.sin(θ))
+
+        if height > 0:
+            # bend left
+            φ = -math.pi / 2
+            dy = r - h
+        else:
+            # bend right
+            φ = +math.pi / 2
+            dy = h - r
+        Primitive.from_shape(Arc(r, -θ, θ))
+        shape = (
+            Primitive.from_shape(Arc(r, -θ, θ))
+            .rotate_rad(-φ)
+            .translate(d / 2, dy)
+        )
+    return shape, -θ if height > 0 else θ
+
+
+def arc_between(
+    point1: Union[P2, Tuple[float, float]],
+    point2: Union[P2, Tuple[float, float]],
+    height: float
+) -> Diagram:
+    """Makes an arc starting at point1 and ending at point2, with the midpoint
+    at a distance of abs(height) away from the straight line from point1 to
+    point2. A positive value of height results in an arc to the left of the
+    line from point1 to point2; a negative value yields one to the right.
+    The implementaion is based on the the function arcBetween from Haskell's
+    diagrams:
+    https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
+    """
+    if not isinstance(point1, P2):
+        p = P2(*point1)
+    else:
+        p = point1
+    if not isinstance(point2, P2):
+        q = P2(*point2)
+    else:
+        q = point2
+
+    v = q - p
+    d = v.length
+    shape, _ = unit_arc_between(d, height)
+    return shape.rotate(-v.angle).translate_by(p)
+
+
+def tri() -> Diagram:
+    return (
+        Primitive.from_shape(
+            Path.from_points([(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)])
+        )
+        .rotate_by(-0.25)
+        .fill_color(Color("black"))
+        .align_r()
+        .line_width(0)
+    )
+
+
+def dart(cut: float=0.2) -> Diagram:
+    return (
+        Primitive.from_shape(
+            Path.from_points(
+                [
+                    (0, -cut),
+                    (1.0, cut),
+                    (0.0, -1.0 - cut),
+                    (-1.0, +cut),
+                    (0, -cut),
+                ]
+            )
+        )
+        .rotate_by(-0.25)
+        .fill_color(Color("black"))
+        .align_r()
+        .line_width(0)
+    )
+
+
+def arrow(l: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
+    if style.headArrow is None:
+        arrow: Diagram = Primitive.from_shape(ArrowHead(dart()))
+    else:
+        arrow = style.headArrow
+    arrow = arrow._style(style.headStyle)
+    t = style.tailPad
+    l_adj = l - style.headPad - t
+    if style.trail is None:
+        shaft, φ = unit_arc_between(l_adj, style.arcHeight)
+        arrow = arrow.rotate_rad(φ)
+    else:
+        shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
+        arrow = arrow.rotate(-style.trail.offsets[-1].angle)
+
+    return shaft._style(style.shaftStyle).translate_by(t * unit_x) + arrow.translate_by((l_adj + t) * unit_x)
+
+
+def arrowV(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
+    arr = arrow(vec.length, style)
+    return arr.rotate(-vec.angle)
+
+
+def arrow_at(base: P2, vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
+    return arrowV(vec, style).translate_by(base)
+
+
+def arrow_between(
+    start: P2, end: P2, style: ArrowOpts = ArrowOpts()
+) -> Diagram:
+    return arrow_at(start, end - start, style)
