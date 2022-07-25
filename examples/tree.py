@@ -39,7 +39,8 @@ def draw_tree(tree, name="", ysep=5, xsep=1):
     x = node / vstrut(ysep) /  (l | hstrut(xsep) | r).translate(-off, 0)
 
     # Connect to children
-    x = connect(x, name, lname) + connect(x, name, rname) + x
+    x = x.connect(name, lname, ArrowOpts(headArrow=empty()))
+    x = x.connect(name, rname, ArrowOpts(headArrow=empty()))
     return name, x
 
 
