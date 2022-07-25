@@ -770,9 +770,7 @@ class Diagram(tx.Transformable):
         assert subdiagram is not None, "Subdiagram does not exist"
         return subdiagram[0].get_envelope(subdiagram[1])
 
-    def get_subdiagram_trace(
-        self, name: str, t: Affine = Ident
-    ) -> Trace:
+    def get_subdiagram_trace(self, name: str, t: Affine = Ident) -> Trace:
         """Get the trace of the sub-diagram."""
         subdiagram = self.get_subdiagram(name)
         assert subdiagram is not None, "Subdiagram does not exist"
@@ -1113,13 +1111,13 @@ def make_path(
 
 def unit_arc_between(d: float, height: float) -> Tuple[Diagram, float]:
     h = abs(height)
-    θ = 0.
+    θ = 0.0
     if h < 1e-6:
         # Draw a line if the height is too small
         shape: Diagram = make_path([(0, 0), (d, 0)])
     else:
         # Determine the arc's angle θ and its radius r
-        θ = math.acos((d**2 - 4. * h**2) / (d**2 + 4. * h**2))
+        θ = math.acos((d**2 - 4.0 * h**2) / (d**2 + 4.0 * h**2))
         r = d / (2 * math.sin(θ))
 
         if height > 0:
@@ -1142,7 +1140,7 @@ def unit_arc_between(d: float, height: float) -> Tuple[Diagram, float]:
 def arc_between(
     point1: Union[P2, Tuple[float, float]],
     point2: Union[P2, Tuple[float, float]],
-    height: float
+    height: float,
 ) -> Diagram:
     """Makes an arc starting at point1 and ending at point2, with the midpoint
     at a distance of abs(height) away from the straight line from point1 to
@@ -1179,7 +1177,7 @@ def tri() -> Diagram:
     )
 
 
-def dart(cut: float=0.2) -> Diagram:
+def dart(cut: float = 0.2) -> Diagram:
     return (
         Primitive.from_shape(
             Path.from_points(
@@ -1199,14 +1197,14 @@ def dart(cut: float=0.2) -> Diagram:
     )
 
 
-def arrow(l: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
+def arrow(length: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
     if style.headArrow is None:
         arrow: Diagram = Primitive.from_shape(ArrowHead(dart()))
     else:
         arrow = style.headArrow
     arrow = arrow._style(style.headStyle)
     t = style.tailPad
-    l_adj = l - style.headPad - t
+    l_adj = length - style.headPad - t
     if style.trail is None:
         shaft, φ = unit_arc_between(l_adj, style.arcHeight)
         arrow = arrow.rotate_rad(φ)
@@ -1214,7 +1212,9 @@ def arrow(l: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
         arrow = arrow.rotate(-style.trail.offsets[-1].angle)
 
-    return shaft._style(style.shaftStyle).translate_by(t * unit_x) + arrow.translate_by((l_adj + t) * unit_x)
+    return shaft._style(style.shaftStyle).translate_by(
+        t * unit_x
+    ) + arrow.translate_by((l_adj + t) * unit_x)
 
 
 def arrowV(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:

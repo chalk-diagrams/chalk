@@ -24,7 +24,10 @@ PyCairoContext = Any
 PyCairoSurface = Any
 Diagram = Any
 
-def render_cairo_prims(base: Diagram, ctx: PyCairoContext, style: Style) -> None:
+
+def render_cairo_prims(
+    base: Diagram, ctx: PyCairoContext, style: Style
+) -> None:
     base = base._style(style)
     for prim in base.to_list():
         # apply transformation
@@ -261,7 +264,7 @@ class Path(Shape, tx.Transformable):
 
             line.push(f"L {p.x} {p.y}")
         if self.is_closed():
-            line.push(f"Z")
+            line.push("Z")
         return line
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:

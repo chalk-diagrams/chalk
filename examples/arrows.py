@@ -13,6 +13,7 @@ dias = octagon.named("first") | hstrut(3) | octagon.named("second")
 ex1 = dias.connect("first", "second",
                    ArrowOpts(
                        trail=Trail(Vec2Array([(1, 0), (0, 0.25), (1, 0), (0, -0.25)]))))
+ex1
 
 ex1 = dias.connect("first", "second", ArrowOpts(headStyle=Style(fill_color=grey),
                                                 arcHeight=0.5,
