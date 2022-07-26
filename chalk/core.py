@@ -738,13 +738,16 @@ class Diagram(tx.Transformable):
     ) -> Diagram:
         env1 = self.get_subdiagram_envelope(name1)
         env2 = self.get_subdiagram_envelope(name2)
+
         tr1 = self.get_subdiagram_trace(name1)
         tr2 = self.get_subdiagram_trace(name2)
 
         v = env2.center - env1.center
-        vs = tr1.trace_v(env2.center, -v) + env2.center
-        ve = tr2.trace_v(env1.center, v) + env1.center
-        return self + arrow_between(vs, ve, style)
+
+        ps = tr1.max_trace_p(env1.center, v)
+        pe = tr2.max_trace_p(env2.center, -v)
+
+        return self + arrow_between(ps, pe, style)
 
     def connect_perim(
         self,
@@ -756,11 +759,14 @@ class Diagram(tx.Transformable):
     ) -> Diagram:
         env1 = self.get_subdiagram_envelope(name1)
         env2 = self.get_subdiagram_envelope(name2)
+
         tr1 = self.get_subdiagram_trace(name1)
         tr2 = self.get_subdiagram_trace(name2)
-        vs = tr1.trace_v(env1.center, v1)
-        ve = tr2.trace_v(env2.center, v2)
-        return self + arrow_between(env1.center + vs, env2.center + ve, style)
+
+        ps = tr1.max_trace_p(env1.center, v1)
+        pe = tr2.max_trace_p(env2.center, v2)
+
+        return self + arrow_between(ps, pe, style)
 
     def get_subdiagram_envelope(
         self, name: str, t: Affine = Ident

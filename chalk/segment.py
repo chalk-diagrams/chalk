@@ -31,7 +31,7 @@ def ray_ray_intersection(
     """Given two rays
 
     ray₁ = λ t . p₁ + t v₁
-    ray₂ = λ t . p₂ +o t v₂
+    ray₂ = λ t . p₂ + t v₂
 
     the function returns the parameters t₁ and t₂ at which the two rays meet,
     that is:
