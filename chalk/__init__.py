@@ -7,18 +7,15 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from chalk.core import (
+from chalk.arrows import (
     ArrowOpts,
-    Diagram,
-    Empty,
-    Primitive,
-    arc_between,
     arrow_at,
     arrow_between,
     arrowV,
     make_path,
-    set_svg_height,
+    unit_arc_between,
 )
+from chalk.core import Empty, Primitive, set_svg_height
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -43,6 +40,7 @@ from chalk.transform import (
     unit_x,
     unit_y,
 )
+from chalk.types import Diagram
 
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
@@ -305,50 +303,29 @@ def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return cat(diagrams, unit_y, sep)
 
 
-def cardinal(env: Envelope, dir: str) -> P2:
-    """Returns the position of an edge or a corner of the Envelope
-    based on a labeled direction (``dir``).
-
-    Only really works for box envelopes.
-
-    Args:
-        env (Envelope): Envelope to check.
-        dir (str): Direction of the edge or the corner.
-
-    Choose `dir` from the following table.
-
-    Click to expand:
-
-        | `dir`  |   Directon   |  Type  |
-        |:-------|:-------------|:------:|
-        | ``N``  | North        | edge   |
-        | ``S``  | South        | edge   |
-        | ``W``  | West         | edge   |
-        | ``E``  | East         | edge   |
-        | ``NW`` | North West   | corner |
-        | ``NE`` | North East   | corner |
-        | ``SW`` | South West   | corner |
-        | ``SE`` | South East   | corner |
-
-    Returns:
-        P2: A point object.
-
+def arc_between(
+    point1: Union[P2, Tuple[float, float]],
+    point2: Union[P2, Tuple[float, float]],
+    height: float,
+) -> Diagram:
+    """Makes an arc starting at point1 and ending at point2, with the midpoint
+    at a distance of abs(height) away from the straight line from point1 to
+    point2. A positive value of height results in an arc to the left of the
+    line from point1 to point2; a negative value yields one to the right.
+    The implementaion is based on the the function arcBetween from Haskell's
+    diagrams:
+    https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
+    if not isinstance(point1, P2):
+        p = P2(*point1)
+    else:
+        p = point1
+    if not isinstance(point2, P2):
+        q = P2(*point2)
+    else:
+        q = point2
 
-    def min_point(env: Envelope) -> P2:
-        return P2(-env(-unit_x), -env(-unit_y))
-
-    def max_point(env: Envelope) -> P2:
-        return P2(env(unit_x), env(unit_y))
-
-    return {
-        "N": unit_y * min_point(env),
-        "S": unit_y * max_point(env),
-        "W": unit_x * min_point(env),
-        "E": unit_x * max_point(env),
-        "NW": min_point(env),
-        "NE": unit_y * min_point(env) + unit_x * max_point(env),
-        "SW": unit_y * max_point(env) + unit_x * min_point(env),
-        "SE": max_point(env),
-        "C": env.center,
-    }[dir]
+    v = q - p
+    d = v.length
+    shape, _ = unit_arc_between(d, height)
+    return shape.rotate(-v.angle).translate_by(p)

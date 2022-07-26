@@ -1,5 +1,5 @@
 import math
-from typing import Any, TypeVar
+from typing import Any, Protocol, TypeVar
 
 from planar.py import Affine as Affine
 from planar.py import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
@@ -56,10 +56,51 @@ def apply_affine(aff: Affine, x: Any) -> Any:
     return aff * x
 
 
-TTrans = TypeVar("TTrans", bound="Transformable")
+TTrans = TypeVar("TTrans", bound="TransformableProtocol")
 
 
-class Transformable:
+class TransformableProtocol(Protocol):
+    def scale(self: TTrans, α: float) -> TTrans:
+        ...
+
+    def scale_x(self: TTrans, α: float) -> TTrans:
+        ...
+
+    def scale_y(self: TTrans, α: float) -> TTrans:
+        ...
+
+    def rotate(self: TTrans, θ: float) -> TTrans:
+        ...
+
+    def rotate_rad(self: TTrans, θ: float) -> TTrans:
+        ...
+
+    def rotate_by(self: TTrans, turns: float) -> TTrans:
+        ...
+
+    def reflect_x(self: TTrans) -> TTrans:
+        ...
+
+    def reflect_y(self: TTrans) -> TTrans:
+        ...
+
+    def shear_y(self: TTrans, λ: float) -> TTrans:
+        ...
+
+    def shear_x(self: TTrans, λ: float) -> TTrans:
+        ...
+
+    def translate(self: TTrans, dx: float, dy: float) -> TTrans:
+        ...
+
+    def translate_by(self: TTrans, vector) -> TTrans:
+        ...  # type: ignore
+
+    def _app(self, t: Affine) -> TTrans:
+        ...
+
+
+class Transformable(TransformableProtocol):
     """Transformable class."""
 
     def apply_transform(self, t: Affine) -> TTrans:

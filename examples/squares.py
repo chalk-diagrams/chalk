@@ -32,6 +32,7 @@ make_group()
 
 disps = range(4)
 diagram = concat(make_group().translate(x, y) for x, y in product(disps, disps))
+
 diagram = diagram.line_width(0.02)
 
 path = "examples/output/squares.svg"

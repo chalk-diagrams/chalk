@@ -2,12 +2,64 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple, TypeVar
 
 from colour import Color
 
 PyCairoContext = Any
 PyLatex = Any
+
+
+TStyle = TypeVar("TStyle", bound="StylableProtocol")
+
+
+class StylableProtocol(Protocol):
+    def line_width(self: TStyle, width: float) -> TStyle:
+        ...
+
+    def line_width_local(self: TStyle, width: float) -> TStyle:
+        ...
+
+    def line_color(self: TStyle, color: Color) -> TStyle:
+        ...
+
+    def fill_color(self: TStyle, color: Color) -> TStyle:
+        ...
+
+    def fill_opacity(self: TStyle, opacity: float) -> TStyle:
+        ...
+
+    def dashing(
+        self: TStyle, dashing_strokes: List[float], offset: float
+    ) -> TStyle:
+        ...
+
+    def apply_style(self: TStyle, style: Style) -> TStyle:
+        ...
+
+
+class Stylable:
+    def line_width(self: TStyle, width: float) -> TStyle:
+        return self.apply_style(
+            Style(line_width_=(WidthType.NORMALIZED, width))
+        )
+
+    def line_width_local(self: TStyle, width: float) -> TStyle:
+        return self.apply_style(Style(line_width_=(WidthType.LOCAL, width)))
+
+    def line_color(self: TStyle, color: Color) -> TStyle:
+        return self.apply_style(Style(line_color_=color))
+
+    def fill_color(self: TStyle, color: Color) -> TStyle:
+        return self.apply_style(Style(fill_color_=color))
+
+    def fill_opacity(self: TStyle, opacity: float) -> TStyle:
+        return self.apply_style(Style(fill_opacity_=opacity))
+
+    def dashing(
+        self: TStyle, dashing_strokes: List[float], offset: float
+    ) -> TStyle:
+        return self.apply_style(Style(dashing_=(dashing_strokes, offset)))
 
 
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
@@ -24,14 +76,14 @@ LW = 0.1
 
 
 @dataclass
-class Style:
+class Style(Stylable):
     """Style class."""
 
-    line_width: Optional[Tuple[WidthType, float]] = None
-    line_color: Optional[Color] = None
-    fill_color: Optional[Color] = None
-    fill_opacity: Optional[float] = None
-    dashing: Optional[Tuple[List[float], float]] = None
+    line_width_: Optional[Tuple[WidthType, float]] = None
+    line_color_: Optional[Color] = None
+    fill_color_: Optional[Color] = None
+    fill_opacity_: Optional[float] = None
+    dashing_: Optional[Tuple[List[float], float]] = None
     output_size: Optional[float] = None
 
     @classmethod
@@ -41,6 +93,9 @@ class Style:
     @classmethod
     def root(cls, output_size: float) -> Style:
         return cls(output_size=output_size)
+
+    def apply_style(self, other: Style) -> Style:
+        return self.merge(other)
 
     def merge(self, other: Style) -> Style:
         """Merges two styles and returns the merged style.
@@ -64,22 +119,22 @@ class Style:
         Args:
             ctx (PyCairoContext): A context.
         """
-        if self.fill_color:
-            ctx.set_source_rgb(*self.fill_color.rgb)
+        if self.fill_color_:
+            ctx.set_source_rgb(*self.fill_color_.rgb)
             ctx.fill_preserve()
 
         # set default values if they are not provided
-        if self.line_color is None:
+        if self.line_color_ is None:
             lc = LC
         else:
-            lc = self.line_color
+            lc = self.line_color_
         # Set by observation
         assert self.output_size is not None
         normalizer = self.output_size * (15 / 500)
-        if self.line_width is None:
+        if self.line_width_ is None:
             lw = LW * normalizer
         else:
-            lwt, lw = self.line_width
+            lwt, lw = self.line_width_
             if lwt == WidthType.NORMALIZED:
                 lw = lw * normalizer
 
@@ -89,8 +144,8 @@ class Style:
         ctx.set_source_rgb(*lc.rgb)
         ctx.set_line_width(lw)
 
-        if self.dashing is not None:
-            ctx.set_dash(self.dashing[0], self.dashing[1])
+        if self.dashing_ is not None:
+            ctx.set_dash(self.dashing_[0], self.dashing_[1])
 
     def to_svg(self) -> str:
         """Converts to SVG.
@@ -100,18 +155,18 @@ class Style:
         """
 
         style = ""
-        if self.fill_color is not None:
-            style += f"fill: {self.fill_color.hex_l};"
-        if self.line_color is not None:
-            style += f"stroke: {self.line_color.hex_l};"
+        if self.fill_color_ is not None:
+            style += f"fill: {self.fill_color_.hex_l};"
+        if self.line_color_ is not None:
+            style += f"stroke: {self.line_color_.hex_l};"
         else:
             style += "stroke: black;"
 
         # Set by observation
         assert self.output_size is not None
         normalizer = self.output_size * (15 / 500)
-        if self.line_width is not None:
-            lwt, lw = self.line_width
+        if self.line_width_ is not None:
+            lwt, lw = self.line_width_
             if lwt == WidthType.NORMALIZED:
                 lw = lw * normalizer
             elif lwt == WidthType.LOCAL:
@@ -121,11 +176,11 @@ class Style:
 
         style += f"stroke-width: {lw};"
 
-        if self.fill_opacity is not None:
-            style += f"fill-opacity: {self.fill_opacity};"
-        if self.dashing is not None:
+        if self.fill_opacity_ is not None:
+            style += f"fill-opacity: {self.fill_opacity_};"
+        if self.dashing_ is not None:
             style += (
-                f"stroke-dasharray: {' '.join(map(str, self.dashing[0]))};"
+                f"stroke-dasharray: {' '.join(map(str, self.dashing_[0]))};"
             )
 
         return style
@@ -138,15 +193,15 @@ class Style:
             r, g, b = color.rgb
             return f"{{rgb,1:red,{r}; green,{g}; blue,{b}}}"
 
-        if self.fill_color is not None:
-            style["fill"] = tikz_color(self.fill_color)
-        if self.line_color is not None:
-            style["draw"] = tikz_color(self.line_color)
+        if self.fill_color_ is not None:
+            style["fill"] = tikz_color(self.fill_color_)
+        if self.line_color_ is not None:
+            style["draw"] = tikz_color(self.line_color_)
         # This constant was set based on observing TikZ output
         assert self.output_size is not None
         normalizer = self.output_size * (175 / 500)
-        if self.line_width is not None:
-            lwt, lw = self.line_width
+        if self.line_width_ is not None:
+            lwt, lw = self.line_width_
             if lwt == WidthType.NORMALIZED:
                 lw = lw * normalizer
             elif lwt == WidthType.LOCAL:
@@ -154,7 +209,7 @@ class Style:
         else:
             lw = normalizer * LW
         style["line width"] = f"{lw}pt"
-        if self.fill_opacity is not None:
-            style["fill opacity"] = f"{self.fill_opacity}"
+        if self.fill_opacity_ is not None:
+            style["fill opacity"] = f"{self.fill_opacity_}"
 
         return style
