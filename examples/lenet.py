@@ -35,7 +35,7 @@ def connect_all(d, a, b):
     for x_border in [-unit_x, unit_x]:
         for y_border in [-unit_y, unit_y]:
             p = x_border + y_border
-            d = d.connect_perim(a, b, p, p, ArrowOpts(headArrow=empty()))
+            d = d.connect_perim(a, b, p, p, ArrowOpts(head_arrow=empty()))
     return d
 
 # NN drawing

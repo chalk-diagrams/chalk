@@ -43,13 +43,13 @@ def set_svg_height(height: int) -> None:
 
 @dataclass
 class ArrowOpts:
-    headStyle: Style = Style()
-    headPad: float = 0.0
-    tailPad: float = 0.0
-    headArrow: Optional[Diagram] = None
-    shaftStyle: Style = Style()
+    head_style: Style = Style()
+    head_pad: float = 0.0
+    tail_pad: float = 0.0
+    head_arrow: Optional[Diagram] = None
+    shaft_style: Style = Style()
     trail: Optional[Trail] = None
-    arcHeight: float = 0.0
+    arc_height: float = 0.0
 
 
 @dataclass
@@ -1198,21 +1198,21 @@ def dart(cut: float = 0.2) -> Diagram:
 
 
 def arrow(length: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
-    if style.headArrow is None:
+    if style.head_arrow is None:
         arrow: Diagram = Primitive.from_shape(ArrowHead(dart()))
     else:
-        arrow = style.headArrow
-    arrow = arrow._style(style.headStyle)
-    t = style.tailPad
-    l_adj = length - style.headPad - t
+        arrow = style.head_arrow
+    arrow = arrow._style(style.head_style)
+    t = style.tail_pad
+    l_adj = length - style.head_pad - t
     if style.trail is None:
-        shaft, φ = unit_arc_between(l_adj, style.arcHeight)
+        shaft, φ = unit_arc_between(l_adj, style.arc_height)
         arrow = arrow.rotate_rad(φ)
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
         arrow = arrow.rotate(-style.trail.offsets[-1].angle)
 
-    return shaft._style(style.shaftStyle).translate_by(
+    return shaft._style(style.shaft_style).translate_by(
         t * unit_x
     ) + arrow.translate_by((l_adj + t) * unit_x)
 

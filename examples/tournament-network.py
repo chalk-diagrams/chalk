@@ -24,6 +24,6 @@ dia = concat(nodes)
 
 for i in range(n):
     for j in range(i + 1, n):
-        dia = dia.connect_outside(i, j, ArrowOpts(headPad=0.1, tailPad=0.1))
+        dia = dia.connect_outside(i, j, ArrowOpts(head_pad=0.1, tail_pad=0.1))
 
 dia.render_svg("examples/output/tournament-network.svg")
