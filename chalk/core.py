@@ -744,8 +744,8 @@ class Diagram(tx.Transformable):
 
         v = env2.center - env1.center
 
-        ps = tr1.max_trace_p(env1.center, v)
-        pe = tr2.max_trace_p(env2.center, -v)
+        ps = tr1.trace_p(env2.center, -v)
+        pe = tr2.trace_p(env1.center, v)
 
         return self + arrow_between(ps, pe, style)
 
