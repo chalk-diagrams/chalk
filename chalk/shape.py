@@ -20,28 +20,6 @@ from chalk.types import (
 )
 
 
-def render_cairo_prims(
-    base: Diagram, ctx: PyCairoContext, style: Style
-) -> None:
-    from chalk.core import Primitive
-
-    base = base._style(style)
-    for element in base.to_list():
-        # apply transformation
-        prim = element
-        assert isinstance(prim, Primitive)
-        matrix = tx.to_cairo(prim.transform)
-        ctx.transform(matrix)
-
-        prim.shape.render(ctx, prim.style)
-
-        # undo transformation
-        matrix.invert()
-        ctx.transform(matrix)
-        prim.style.render(ctx)
-        ctx.stroke()
-
-
 @dataclass
 class Shape:
     """Shape class."""
