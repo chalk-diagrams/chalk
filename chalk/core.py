@@ -9,15 +9,24 @@ import chalk.align
 import chalk.arrow
 import chalk.combinators
 import chalk.model
+import chalk.padding
+import chalk.subdiagram
 import chalk.types
+
 from chalk import transform as tx
-from chalk.envelope import Envelope
+from chalk.envelope import Envelope, GetEnvelope
 from chalk.shape import Shape
 from chalk.style import Stylable, Style
-from chalk.trace import Trace
+from chalk.subdiagram import Subdiagram, GetSubdiagram
+from chalk.trace import Trace, GetTrace
 from chalk.transform import Affine, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.utils import imgen
+
+from chalk.backend.cairo import render as render_cairo
+from chalk.backend.svg import render as render_svg, ToSVG
+from chalk.backend.tikz import render as render_tikz
+
 
 Trail = Any
 Ident = Affine.identity()
@@ -125,13 +134,12 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         imgen(self, **kwargs)
 
     # Rendering
-    from chalk.backend.cairo import render as render_cairo
-    from chalk.backend.svg import render as render_svg
-    from chalk.backend.tikz import render as render_tikz
-
     render = render_cairo
     render_svg = render_svg
     render_pdf = render_tikz
+
+    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        return self.accept(ToSVG(), dwg=dwg, style=style)
 
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
@@ -143,24 +151,19 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         return svg
 
     # Getters
-    def get_subdiagram_envelope(
-        self, name: str, t: Affine = Ident
-    ) -> Envelope:
-        """Get the bounding envelope of the sub-diagram."""
-        subdiagram = self.get_subdiagram(name)
-        assert subdiagram is not None, "Subdiagram does not exist"
-        return subdiagram[0].get_envelope(subdiagram[1])
+    def get_envelope(self, t: Affine = Ident) -> Envelope:
+        return self.accept(GetEnvelope(), t)
 
-    def get_subdiagram_trace(self, name: str, t: Affine = Ident) -> Trace:
-        """Get the trace of the sub-diagram."""
-        subdiagram = self.get_subdiagram(name)
-        assert subdiagram is not None, "Subdiagram does not exist"
-        return subdiagram[0].get_trace(subdiagram[1])
+    def get_trace(self, t: Affine = Ident) -> Trace:
+        return self.accept(GetTrace(), t)
 
     def get_subdiagram(
         self, name: str, t: Affine = Ident
-    ) -> Optional[Tuple[Diagram, Affine]]:
-        return None
+    ) -> Optional[Subdiagram]:
+        return self.accept(GetSubdiagram(), name, t)
+
+    get_subdiagram_envelope = chalk.subdiagram.get_subdiagram_envelope
+    get_subdiagram_trace = chalk.subdiagram.get_subdiagram_trace
 
 
 @dataclass
@@ -213,24 +216,6 @@ class Primitive(BaseDiagram):
             self.shape, self.style.merge(other_style), self.transform
         )
 
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Apply a transform and return a bounding envelope.
-
-        Args:
-            t (Transform): A transform object
-                           Defaults to Ident.
-
-        Returns:
-            Envelope: A bounding envelope object.
-        """
-
-        new_transform = t * self.transform
-        return self.shape.get_envelope().apply_transform(new_transform)
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        new_transform = t * self.transform
-        return self.shape.get_trace().apply_transform(new_transform)
-
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_primitive(self, *args, **kwargs)
 
@@ -238,13 +223,6 @@ class Primitive(BaseDiagram):
 @dataclass
 class Empty(BaseDiagram):
     """An Empty diagram class."""
-
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Returns the bounding envelope of a diagram."""
-        return Envelope.empty()
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        return Trace.empty()
 
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_empty(self, *args, **kwargs)
@@ -262,23 +240,6 @@ class Compose(BaseDiagram):
     diagram1: Diagram
     diagram2: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Returns the bounding envelope of a diagram."""
-        return self.envelope.apply_transform(t)
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        # TODO Should we cache the trace?
-        return self.diagram1.get_trace(t) + self.diagram2.get_trace(t)
-
-    def get_subdiagram(
-        self, name: str, t: Affine = Ident
-    ) -> Optional[Tuple[Diagram, Affine]]:
-        """Get the bounding envelope of the sub-diagram."""
-        bb = self.diagram1.get_subdiagram(name, t)
-        if bb is None:
-            bb = self.diagram2.get_subdiagram(name, t)
-        return bb
-
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_compose(self, *args, **kwargs)
 
@@ -289,21 +250,6 @@ class ApplyTransform(BaseDiagram):
 
     transform: Affine
     diagram: Diagram
-
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Returns the bounding envelope of a diagram."""
-        n = t * self.transform
-        return self.diagram.get_envelope(n)
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        """Returns the bounding envelope of a diagram."""
-        return self.diagram.get_trace(t * self.transform)
-
-    def get_subdiagram(
-        self, name: str, t: Affine = Ident
-    ) -> Optional[Tuple[Diagram, Affine]]:
-        """Get the bounding envelope of the sub-diagram."""
-        return self.diagram.get_subdiagram(name, t * self.transform)
 
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_apply_transform(self, *args, **kwargs)
@@ -316,19 +262,6 @@ class ApplyStyle(BaseDiagram):
     style: Style
     diagram: Diagram
 
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Returns the bounding envelope of a diagram."""
-        return self.diagram.get_envelope(t)
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        """Returns the bounding envelope of a diagram."""
-        return self.diagram.get_trace(t)
-
-    def get_subdiagram(
-        self, name: str, t: Affine = Ident
-    ) -> Optional[Tuple[Diagram, Affine]]:
-        return self.diagram.get_subdiagram(name, t)
-
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_apply_style(self, *args, **kwargs)
 
@@ -339,23 +272,6 @@ class ApplyName(BaseDiagram):
 
     dname: str
     diagram: Diagram
-
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        """Returns the bounding envelope of a diagram."""
-        return self.diagram.get_envelope(t)
-
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        """Returns the bounding envelope of a diagram."""
-        return self.diagram.get_trace(t)
-
-    def get_subdiagram(
-        self, name: str, t: Affine = Ident
-    ) -> Optional[Tuple[Diagram, Affine]]:
-        """Get the bounding envelope of the sub-diagram."""
-        if name == self.dname:
-            return self.diagram, t
-        else:
-            return None
 
     def accept(self, visitor, *args, **kwargs):
         return visitor.visit_apply_name(self, *args, **kwargs)

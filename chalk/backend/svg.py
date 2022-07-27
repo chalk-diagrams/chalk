@@ -10,9 +10,14 @@ from chalk.style import Style
 from chalk.transform import unit_x, unit_y
 from chalk.types import DiagramVisitor
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from chalk.core import Primitive
+
 
 class ToSVG(DiagramVisitor):
-    def visit_primitive(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
+    def visit_primitive(self, diagram: "Primitive", dwg: Drawing, style: Style) -> BaseElement:
         """Convert a diagram to SVG image."""
         style = diagram.style.merge(style)
         style_svg = style.to_svg()
@@ -47,7 +52,7 @@ class ToSVG(DiagramVisitor):
 
     def visit_apply_name(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
         g = dwg.g()
-        g.add(diagram.diagram.accept(dwg=dwg, style=style))
+        g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
         return g
 
 

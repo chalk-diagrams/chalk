@@ -20,6 +20,7 @@ from chalk.transform import (
 )
 
 SignedDistance = float
+Ident = Affine.identity()
 
 
 class Envelope(Transformable):
@@ -140,3 +141,25 @@ class Envelope(Transformable):
             v = V2.polar(i)
             segments.append(Vec2Array([origin, self(v) * v]))
         return segments
+
+
+class GetEnvelope:
+    def visit_primitive(self, diagram, t: Affine = Ident) -> Envelope:
+        new_transform = t * diagram.transform
+        return diagram.shape.get_envelope().apply_transform(new_transform)
+
+    def visit_empty(self, diagram, t: Affine = Ident) -> Envelope:
+        return Envelope.empty()
+
+    def visit_compose(self, diagram, t: Affine = Ident) -> Envelope:
+        return diagram.envelope.apply_transform(t)
+
+    def visit_apply_transform(self, diagram, t: Affine = Ident) -> Envelope:
+        n = t * diagram.transform
+        return diagram.diagram.accept(self, n)
+
+    def visit_apply_style(self, diagram, t: Affine = Ident) -> Envelope:
+        return diagram.diagram.accept(self, t)
+
+    def visit_apply_name(self, diagram, t: Affine = Ident) -> Envelope:
+        return diagram.diagram.accept(self, t)
