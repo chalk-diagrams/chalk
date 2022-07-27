@@ -17,7 +17,7 @@ c
 
 arrow_v(unit_y).render_pdf("test.pdf", 200)
 
-octagon = polygon(8, 1).rotate_by(1 / 16).line_color(grey).line_width(0.25).show_origin()
+octagon = polygon(8, 1.5).rotate_by(1 / 16).line_color(grey).line_width(0.5).show_origin()
 dias = octagon.named("first") | hstrut(3) | octagon.named("second")
 
 ex1 = dias.connect(
@@ -43,7 +43,7 @@ ex12 = ex1.connect_perim(
     unit_x.rotate_by(9 / 16),
     ArrowOpts(head_pad=0.1),
 )
-ex3 = arrow_v(unit_y.scale(0.8))
+ex3 = arrow_v(unit_y)
 d = ex12 + ex3
 
 d
