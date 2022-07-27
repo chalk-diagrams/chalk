@@ -31,11 +31,12 @@ def tile(d, m, n, name = ""):
 
 def connect_all(d, a, b):
     "Connect all corners of two diagrams"
-    return concat([connect_outer(d, a, "NW", b, "NW"),
-                   connect_outer(d, a, "NE", b, "NE"),
-                   connect_outer(d, a, "SW", b, "SW"),
-                   connect_outer(d, a, "SE", b, "SE")]).line_color(black).line_width(0.02)
-
+    
+    for x_border in [-unit_x, unit_x]:
+        for y_border in [-unit_y, unit_y]:
+            p = x_border + y_border
+            d = d.connect_perim(a, b, p, p, ArrowOpts(head_arrow=empty()))
+    return d
 
 # NN drawing
 def cell():
@@ -90,11 +91,11 @@ boxes = [(("a", 2, 2), ("a", 6, 6)),
 d += concat([cover(d, *b).fill_color(papaya).fill_opacity(0.3).named(("box", i))
              for i, b in enumerate(boxes)])
 
-connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)] + \
-    [("dense1", "dense2"),
-     ("dense2", "dense3")]
- 
-d += concat([connect_all(d, *b) for b in connect])
+connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)]
+
+
+for b in connect:
+    d = connect_all(d, *b)
 d
 
 d.render("examples/output/lenet.png", 400)

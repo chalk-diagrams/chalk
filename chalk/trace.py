@@ -59,8 +59,14 @@ class Trace(Transformable):
             return None
 
     def trace_p(self, p: P2, v: V2) -> Optional[P2]:
-        v = v.scaled_to(1)
         u = self.trace_v(p, v)
+        return p + u if u else None
+
+    def max_trace_v(self, p: P2, v: V2) -> Optional[V2]:
+        return self.trace_v(p, -v)
+
+    def max_trace_p(self, p: P2, v: V2) -> Optional[P2]:
+        u = self.max_trace_v(p, v)
         return p + u if u else None
 
 

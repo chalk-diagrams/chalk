@@ -7,7 +7,18 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
-from chalk.core import Diagram, Empty, Primitive, set_svg_height
+from chalk.core import (
+    ArrowOpts,
+    Diagram,
+    Empty,
+    Primitive,
+    arc_between,
+    arrow_at,
+    arrow_between,
+    arrow_v,
+    make_path,
+    set_svg_height,
+)
 from chalk.envelope import Envelope
 from chalk.shape import (
     Arc,
@@ -19,6 +30,7 @@ from chalk.shape import (
     Spacer,
     Text,
 )
+from chalk.style import Style
 from chalk.trail import Trail
 from chalk.transform import (
     P2,
@@ -43,15 +55,6 @@ ignore = [Trail, V2]
 
 def empty() -> Diagram:
     return Empty()
-
-
-def make_path(
-    coords: Union[List[Tuple[float, float]], List[P2]], arrow: bool = False
-) -> Diagram:
-    if not coords or isinstance(coords[0], P2):
-        return Primitive.from_shape(Path.from_points(coords))
-    else:
-        return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
 
 
 def circle(radius: float) -> Diagram:
@@ -84,57 +87,6 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
     return Primitive.from_shape(
         Arc(radius, to_radians(angle0), to_radians(angle1))
     )
-
-
-def arc_between(
-    point1: Union[P2, Tuple[float, float]],
-    point2: Union[P2, Tuple[float, float]],
-    height: float,
-) -> Diagram:
-    """Makes an arc starting at point1 and ending at point2, with the midpoint
-    at a distance of abs(height) away from the straight line from point1 to
-    point2. A positive value of height results in an arc to the left of the
-    line from point1 to point2; a negative value yields one to the right.
-    The implementaion is based on the the function arcBetween from Haskell's
-    diagrams:
-    https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
-    """
-    if not isinstance(point1, P2):
-        p = P2(*point1)
-    else:
-        p = point1
-    if not isinstance(point2, P2):
-        q = P2(*point2)
-    else:
-        q = point2
-
-    h = abs(height)
-    v = q - p
-    d = v.length
-
-    if h < 1e-6:
-        # Draw a line if the height is too small
-        shape: Diagram = make_path([(0, 0), (d, 0)])
-    else:
-        # Determine the arc's angle θ and its radius r
-        θ = math.acos((d**2 - 4 * h**2) / (d**2 + 4 * h**2))
-        r = d / (2 * math.sin(θ))
-
-        if height > 0:
-            # bend left
-            φ = -math.pi / 2
-            dy = r - h
-        else:
-            # bend right
-            φ = +math.pi / 2
-            dy = h - r
-
-        shape = (
-            Primitive.from_shape(Arc(r, -θ, θ))
-            .rotate_rad(-φ)
-            .translate(d / 2, dy)
-        )
-    return shape.rotate(-v.angle).translate_by(p)
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
@@ -400,23 +352,3 @@ def cardinal(env: Envelope, dir: str) -> P2:
         "SE": max_point(env),
         "C": env.center,
     }[dir]
-
-
-def connect(diagram: Diagram, name1: str, name2: str) -> Diagram:
-    return connect_outer(diagram, name1, "C", name2, "C")
-
-
-def connect_outer(
-    diagram: Diagram,
-    name1: str,
-    c1: str,
-    name2: str,
-    c2: str,
-    arrow: bool = False,
-) -> Diagram:
-    bb1 = diagram.get_subdiagram_envelope(name1)
-    bb2 = diagram.get_subdiagram_envelope(name2)
-    assert bb1 is not None, f"Name {name1} not found"
-    assert bb2 is not None, f"Name {name2} not found"
-    points = [cardinal(bb1, c1), cardinal(bb2, c2)]
-    return Primitive.from_shape(Path(points, arrow))

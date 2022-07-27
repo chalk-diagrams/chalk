@@ -39,7 +39,8 @@ def draw_tree(tree, name="", ysep=5, xsep=1):
     x = node / vstrut(ysep) /  (l | hstrut(xsep) | r).translate(-off, 0)
 
     # Connect to children
-    x = connect(x, name, lname) + connect(x, name, rname) + x
+    x = x.connect_outside(name, lname, ArrowOpts(head_arrow=empty()))
+    x = x.connect_outside(name, rname, ArrowOpts(head_arrow=empty()))
     return name, x
 
 
@@ -52,6 +53,3 @@ d = d.line_width(0.01)
 d.render_svg("examples/output/tree.svg", 1200)
 d.render("examples/output/tree.png", 1200)
 PILImage.open("examples/output/tree.png")
-
-
-

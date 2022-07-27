@@ -22,6 +22,25 @@ PyLatex = Any
 PyLatexElement = Any
 PyCairoContext = Any
 PyCairoSurface = Any
+Diagram = Any
+
+
+def render_cairo_prims(
+    base: Diagram, ctx: PyCairoContext, style: Style
+) -> None:
+    base = base._style(style)
+    for prim in base.to_list():
+        # apply transformation
+        matrix = tx.to_cairo(prim.transform)
+        ctx.transform(matrix)
+
+        prim.shape.render(ctx, prim.style)
+
+        # undo transformation
+        matrix.invert()
+        ctx.transform(matrix)
+        prim.style.render(ctx)
+        ctx.stroke()
 
 
 @dataclass
@@ -39,10 +58,10 @@ class Shape:
         box = self.get_bounding_box()
         return Path.rectangle(box.width, box.height).get_trace()
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         pass
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         return dwg.g()
 
     def render_tikz(self, p: PyLatex, style: Style) -> PyLatexElement:
@@ -70,10 +89,10 @@ class Circle(Shape):
 
         return Trace(f)
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         ctx.arc(origin.x, origin.y, self.radius, 0, 2 * math.pi)
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         return dwg.circle(
             (origin.x, origin.y),
             self.radius,
@@ -108,7 +127,7 @@ class Rectangle(Shape):
         # FIXME For rounded corners the following trace is not accurate
         return Path.rectangle(self.width, self.height).get_trace()
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         x = left = origin.x - self.width / 2
         y = top = origin.y - self.height / 2
         if self.radius is None:
@@ -121,7 +140,7 @@ class Rectangle(Shape):
             ctx.arc(x + r, y + self.height - r, r, math.pi / 2, math.pi)
             ctx.close_path()
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         left = origin.x - self.width / 2
         top = origin.y - self.height / 2
         return dwg.rect(
@@ -219,29 +238,46 @@ class Path(Shape, tx.Transformable):
     def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
         return Path(tx.apply_affine(t, self.points))
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def is_closed(self) -> bool:
+        if self.points:
+            diff = self.points[0] - self.points[-1]
+            if diff.length < 1e-3:
+                return True
+        return False
+
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         p, *rest = self.points
         ctx.move_to(p.x, p.y)
         for p in rest:
             ctx.line_to(p.x, p.y)
+        if self.is_closed():
+            ctx.close_path()
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
-        line = dwg.polyline(
-            [(p.x, p.y) for p in self.points],
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        line = dwg.path(
             style="vector-effect: non-scaling-stroke;",
         )
-        if self.arrow:
-            line.set_markers((None, False, dwg.defs.elements[0]))
+        if self.points:
+            p = self.points[0]
+            line.push(f"M {p.x} {p.y}")
+        for p in self.points:
+
+            line.push(f"L {p.x} {p.y}")
+        if self.is_closed():
+            line.push("Z")
         return line
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        pts = []
+        pts = pylatex.TikZPathList()
         for p in self.points:
             pts.append(pylatex.TikZCoordinate(p.x, p.y))
             pts.append("--")
-
+        if self.is_closed():
+            pts._arg_list.append(pylatex.TikZUserPath("cycle"))
+        else:
+            pts._arg_list = pts._arg_list[:-1]
         return pylatex.TikZDraw(
-            pts[:-1], options=pylatex.TikZOptions(**style.to_tikz(pylatex))
+            pts, options=pylatex.TikZOptions(**style.to_tikz(pylatex))
         )
 
 
@@ -303,10 +339,10 @@ class Arc(Shape):
 
         return Envelope(wrapped)
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         ctx.arc(0, 0, self.radius, self.angle0, self.angle1)
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         u = V2.polar(self.angle0 * (180 / math.pi), self.radius)
         v = V2.polar(self.angle1 * (180 / math.pi), self.radius)
         path = dwg.path(
@@ -355,7 +391,7 @@ class Text(Shape):
         self.bb = BoundingBox([origin, origin + P2(eps, eps)])
         return self.bb
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         ctx.select_font_face("sans-serif")
         if self.font_size is not None:
             ctx.set_font_size(self.font_size)
@@ -364,7 +400,7 @@ class Text(Shape):
         ctx.move_to(-(extents.width / 2), (extents.height / 2))
         ctx.text_path(self.text)
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         dx = -(self.bb.width / 2)
         return dwg.text(
             self.text,
@@ -434,12 +470,12 @@ class Image(Shape):
         br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         surface = from_pil(self.im)
         ctx.set_source_surface(surface, -(self.width / 2), -(self.height / 2))
         ctx.paint()
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         dx = -self.width / 2
         dy = -self.height / 2
         return dwg.image(
@@ -523,11 +559,43 @@ class Latex(Shape):
         br = P2(left + self.width, top + self.height)
         return BoundingBox(tl, br).scale(0.05)
 
-    def render(self, ctx: PyCairoContext) -> None:
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
         raise NotImplementedError
 
-    def render_svg(self, dwg: Drawing) -> BaseElement:
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
         dx, dy = -self.width / 2, -self.height / 2
         g = dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
         g.add(Raw(self.content))
         return g
+
+
+@dataclass
+class ArrowHead(Shape):
+    """Arrow Head."""
+
+    arrow_shape: Diagram
+
+    def get_bounding_box(self) -> BoundingBox:
+        # Arrow head don't have a bounding box since we can't accurately know
+        # the size until rendering
+        eps = 1e-4
+        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
+        return self.bb
+
+    def render(self, ctx: PyCairoContext, style: Style) -> None:
+        assert style.output_size
+        scale = 0.01 * (15 / 500) * style.output_size
+        render_cairo_prims(self.arrow_shape.scale(scale), ctx, style)
+
+    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
+        assert style.output_size
+        scale = 0.01 * (15 / 500) * style.output_size
+        return self.arrow_shape.scale(scale).to_svg(dwg, style)
+
+    def render_tikz(self, p: PyLatex, style: Style) -> PyLatexElement:
+        assert style.output_size
+        scale = 0.01 * 3 * (15 / 500) * style.output_size
+        s = p.TikZScope()
+        for inner in self.arrow_shape.scale(scale).to_tikz(p, style):
+            s.append(inner)
+        return s

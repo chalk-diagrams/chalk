@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from planar import Point, Vec2
 from planar.py import Ray
@@ -24,6 +24,10 @@ class Segment:
     def to_ray(self) -> "Ray":
         return Ray(self.p, self.q - self.p)
 
+    @property
+    def length(self) -> Any:
+        return (self.q - self.p).length
+
 
 def ray_ray_intersection(
     ray1: Ray, ray2: Ray
@@ -31,7 +35,7 @@ def ray_ray_intersection(
     """Given two rays
 
     ray₁ = λ t . p₁ + t v₁
-    ray₂ = λ t . p₂ +o t v₂
+    ray₂ = λ t . p₂ + t v₂
 
     the function returns the parameters t₁ and t₂ at which the two rays meet,
     that is:
@@ -52,10 +56,17 @@ def ray_ray_intersection(
 
 
 def line_segment(ray: Ray, segment: Segment) -> List[float]:
-    """Given a ray and a segment, return the parameter t for which the ray
+    """Given a ray and a segment, return the parameter `t` for which the ray
     meets the segment, that is:
 
-    ray t = ray t', with t' ∈ [0, 1]
+    ray t₁ = segment.to_ray t₂, with t₂ ∈ [0, segment.length]
+
+    Note: We need to consider the segment's length separately since `Ray`
+    normalizes the direction to unit and hences looses this information. The
+    length is important to determine whether the intersection point falls
+    within the given segment.
+
+    See also: https://github.com/danoneata/chalk/issues/91
 
     """
     ray_s = segment.to_ray()
@@ -64,10 +75,14 @@ def line_segment(ray: Ray, segment: Segment) -> List[float]:
         return []
     else:
         t1, t2 = t
-        if 0 <= t2 <= 1:
-            # p = ray_s.p + t2 * ray_s.v
+        # the intersection point is given by any of the two expressions:
+        # ray.anchor   + t1 * ray.direction
+        # ray_s.anchor + t2 * ray_s.direction
+        if 0 <= t2 <= segment.length:
+            # intersection point is in segment
             return [t1]
         else:
+            # intersection point outside
             return []
 
 
@@ -106,7 +121,7 @@ def ray_circle_intersection(ray: Ray, circle_radius: float) -> List[float]:
         # no intersection
         return []
     elif -eps <= Δ < eps:
-        # tagent
+        # tangent
         return [-b / (2 * a)]
     else:
         # the ray intersects at two points
