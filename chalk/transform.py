@@ -93,7 +93,7 @@ class TransformableProtocol(Protocol):
     def translate(self: TTrans, dx: float, dy: float) -> TTrans:
         ...
 
-    def translate_by(self: TTrans, vector) -> TTrans: # type: ignore
+    def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
         ...
 
     def _app(self, t: Affine) -> TTrans:

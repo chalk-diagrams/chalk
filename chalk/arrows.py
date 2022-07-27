@@ -43,13 +43,17 @@ def connect_outside(
 ) -> Diagram:
     env1 = self.get_subdiagram_envelope(name1)
     env2 = self.get_subdiagram_envelope(name2)
+
     tr1 = self.get_subdiagram_trace(name1)
     tr2 = self.get_subdiagram_trace(name2)
 
     v = env2.center - env1.center
-    vs = tr1.trace_v(env2.center, -v) + env2.center
-    ve = tr2.trace_v(env1.center, v) + env1.center
-    return self + arrow_between(vs, ve, style)
+    midpoint = env1.center + v / 2
+
+    ps = tr1.trace_p(midpoint, -v)
+    pe = tr2.trace_p(midpoint, v)
+
+    return self + arrow_between(ps, pe, style)
 
 
 def connect_perim(
@@ -62,14 +66,17 @@ def connect_perim(
 ) -> Diagram:
     env1 = self.get_subdiagram_envelope(name1)
     env2 = self.get_subdiagram_envelope(name2)
+
     tr1 = self.get_subdiagram_trace(name1)
     tr2 = self.get_subdiagram_trace(name2)
-    vs = tr1.trace_v(env1.center, v1)
-    ve = tr2.trace_v(env2.center, v2)
-    return self + arrow_between(env1.center + vs, env2.center + ve, style)
+
+    ps = tr1.max_trace_p(env1.center, v1)
+    pe = tr2.max_trace_p(env2.center, v2)
+
+    return self + arrow_between(ps, pe, style)
 
 
-# Arrow primitive
+# Arrow primitiv
 def make_path(
     coords: Union[List[Tuple[float, float]], List[P2]], arrow: bool = False
 ) -> Diagram:
@@ -169,13 +176,13 @@ def arrow(length: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
     ) + arrow.translate_by((l_adj + t) * unit_x)
 
 
-def arrowV(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
+def arrow_v(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
     arr = arrow(vec.length, style)
     return arr.rotate(-vec.angle)
 
 
 def arrow_at(base: P2, vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
-    return arrowV(vec, style).translate_by(base)
+    return arrow_v(vec, style).translate_by(base)
 
 
 def arrow_between(

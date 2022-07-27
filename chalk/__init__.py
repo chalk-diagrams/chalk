@@ -11,7 +11,7 @@ from chalk.arrows import (
     ArrowOpts,
     arrow_at,
     arrow_between,
-    arrowV,
+    arrow_v,
     make_path,
     unit_arc_between,
 )
