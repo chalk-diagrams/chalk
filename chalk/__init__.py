@@ -15,7 +15,7 @@ from chalk.core import (
     arc_between,
     arrow_at,
     arrow_between,
-    arrowV,
+    arrow_v,
     make_path,
     set_svg_height,
 )

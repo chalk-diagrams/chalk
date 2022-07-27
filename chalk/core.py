@@ -1223,13 +1223,13 @@ def arrow(length: int, style: ArrowOpts = ArrowOpts()) -> Diagram:
     ) + arrow.translate_by((l_adj + t) * unit_x)
 
 
-def arrowV(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
+def arrow_v(vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
     arr = arrow(vec.length, style)
     return arr.rotate(-vec.angle)
 
 
 def arrow_at(base: P2, vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
-    return arrowV(vec, style).translate_by(base)
+    return arrow_v(vec, style).translate_by(base)
 
 
 def arrow_between(
