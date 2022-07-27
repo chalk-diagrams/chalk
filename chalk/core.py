@@ -743,9 +743,10 @@ class Diagram(tx.Transformable):
         tr2 = self.get_subdiagram_trace(name2)
 
         v = env2.center - env1.center
+        midpoint = env1.center + v / 2
 
-        ps = tr1.trace_p(env2.center, -v)
-        pe = tr2.trace_p(env1.center, v)
+        ps = tr1.trace_p(midpoint, -v)
+        pe = tr2.trace_p(midpoint, v)
 
         return self + arrow_between(ps, pe, style)
 
