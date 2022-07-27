@@ -11,8 +11,10 @@ from chalk.transform import (
     apply_affine,
     remove_translation,
 )
+# from chalk.types import DiagramVisitor
 
 SignedDistance = float
+Ident = Affine.identity()
 
 
 class Trace(Transformable):
@@ -65,5 +67,23 @@ class Trace(Transformable):
         return p + u if u else None
 
 
-class Traceable:
-    pass
+class GetTrace:
+    def visit_primitive(self, diagram, t: Affine = Ident) -> Trace:
+        new_transform = t * diagram.transform
+        return diagram.shape.get_trace().apply_transform(new_transform)
+
+    def visit_empty(self, diagram, t: Affine = Ident) -> Trace:
+        return Trace.empty()
+
+    def visit_compose(self, diagram, t: Affine = Ident) -> Trace:
+        # TODO Should we cache the trace?
+        return diagram.diagram1.accept(self, t) + diagram.diagram2.accept(self, t)
+
+    def visit_apply_transform(self, diagram, t: Affine = Ident) -> Trace:
+        return diagram.diagram.accept(self, t * diagram.transform)
+
+    def visit_apply_style(self, diagram, t: Affine = Ident) -> Trace:
+        return diagram.diagram.accept(self, t)
+
+    def visit_apply_name(self, diagram, t: Affine = Ident) -> Trace:
+        return diagram.diagram.accept(self, t)
