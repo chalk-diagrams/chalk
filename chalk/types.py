@@ -147,23 +147,3 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
     @staticmethod
     def from_shape(shape: Shape) -> Diagram:
         ...
-
-
-class DiagramVisitor:
-    def visit_primitive(self, diagram, *args, **kwargs):
-        raise NotImplementedError
-
-    def visit_empty(self, diagram, *args, **kwargs):
-        raise NotImplementedError
-
-    def visit_compose(self, diagram, *args, **kwargs):
-        raise NotImplementedError
-
-    def visit_apply_transform(self, diagram, *args, **kwargs):
-        raise NotImplementedError
-
-    def visit_apply_style(self, diagram, *args, **kwargs):
-        raise NotImplementedError
-
-    def visit_apply_name(self, diagram, *args, **kwargs):
-        raise NotImplementedError

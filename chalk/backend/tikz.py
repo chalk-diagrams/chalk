@@ -3,14 +3,14 @@ from typing import Any, List, Optional, Tuple
 from chalk import transform as tx
 from chalk.shape import Spacer
 from chalk.style import Style
-from chalk.types import DiagramVisitor
+from chalk.visitor import DiagramVisitor
 
 
 PyLatex = Any
 PyLatexElement = Any
 
 
-class ToTikZ(DiagramVisitor):
+class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
     def visit_primitive(
         self, diagram, pylatex: PyLatexElement, other_style: Style
     ) -> List[PyLatexElement]:

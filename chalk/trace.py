@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Callable, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Optional, TYPE_CHECKING
 
 from chalk.transform import (
     P2,
@@ -11,7 +11,11 @@ from chalk.transform import (
     apply_affine,
     remove_translation,
 )
-# from chalk.types import DiagramVisitor
+from chalk.visitor import DiagramVisitor
+
+if TYPE_CHECKING:
+    from chalk.core import Primitive, Empty, Compose, ApplyTransform, ApplyStyle, ApplyName
+
 
 SignedDistance = float
 Ident = Affine.identity()
@@ -67,23 +71,23 @@ class Trace(Transformable):
         return p + u if u else None
 
 
-class GetTrace:
-    def visit_primitive(self, diagram, t: Affine = Ident) -> Trace:
+class GetTrace(DiagramVisitor[Trace]):
+    def visit_primitive(self, diagram: "Primitive", t: Affine = Ident, **kwargs: Any) -> Trace:
         new_transform = t * diagram.transform
         return diagram.shape.get_trace().apply_transform(new_transform)
 
-    def visit_empty(self, diagram, t: Affine = Ident) -> Trace:
+    def visit_empty(self, _: "Empty", t: Affine = Ident, **kwargs: Any) -> Trace:
         return Trace.empty()
 
-    def visit_compose(self, diagram, t: Affine = Ident) -> Trace:
+    def visit_compose(self, diagram: "Compose", t: Affine = Ident, **kwargs: Any) -> Trace:
         # TODO Should we cache the trace?
-        return diagram.diagram1.accept(self, t) + diagram.diagram2.accept(self, t)
+        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(self, t=t)
 
-    def visit_apply_transform(self, diagram, t: Affine = Ident) -> Trace:
-        return diagram.diagram.accept(self, t * diagram.transform)
+    def visit_apply_transform(self, diagram: "ApplyTransform", t: Affine = Ident, **kwargs: Any) -> Trace:
+        return diagram.diagram.accept(self, t=t * diagram.transform)
 
-    def visit_apply_style(self, diagram, t: Affine = Ident) -> Trace:
-        return diagram.diagram.accept(self, t)
+    def visit_apply_style(self, diagram: "ApplyStyle", t: Affine = Ident, **kwargs: Any) -> Trace:
+        return diagram.diagram.accept(self, t=t)
 
-    def visit_apply_name(self, diagram, t: Affine = Ident) -> Trace:
-        return diagram.diagram.accept(self, t)
+    def visit_apply_name(self, diagram: "ApplyName", t: Affine = Ident, **kwargs: Any) -> Trace:
+        return diagram.diagram.accept(self, t=t)
