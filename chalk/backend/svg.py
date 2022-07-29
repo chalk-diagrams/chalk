@@ -8,7 +8,7 @@ from chalk import transform as tx
 
 from chalk.style import Style
 from chalk.transform import unit_x, unit_y
-from chalk.types import DiagramVisitor
+from chalk.visitor import DiagramVisitor
 
 from typing import TYPE_CHECKING
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from chalk.core import Primitive
 
 
-class ToSVG(DiagramVisitor):
+class ToSVG(DiagramVisitor[BaseElement]):
     def visit_primitive(self, diagram: "Primitive", dwg: Drawing, style: Style) -> BaseElement:
         """Convert a diagram to SVG image."""
         style = diagram.style.merge(style)

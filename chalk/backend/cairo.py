@@ -1,15 +1,18 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, TYPE_CHECKING
 
 from chalk.style import Style
-from chalk.types import Diagram, DiagramVisitor
+from chalk.types import Diagram
 from chalk.transform import Affine, unit_x, unit_y
 from chalk import transform as tx
+
+from chalk.visitor import DiagramVisitor
+
 
 Ident = Affine.identity()
 PyCairoContext = Any
 
 
-class ToList(DiagramVisitor):
+class ToList(DiagramVisitor[List[Diagram]]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
     is accumulated upwards, from the tree's leaves.
     """
