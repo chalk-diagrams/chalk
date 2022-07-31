@@ -7,10 +7,10 @@ from svgwrite.base import BaseElement
 from chalk.shape import Rectangle, Shape
 from chalk.style import Style
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import PyCairoContext, Diagram
+from chalk.types import Diagram, PyCairoContext
 
 
-class Raw(Rectangle):  # type: ignore
+class Raw(Rectangle):
     """Shape class.
 
     A fake SVG node for importing latex.

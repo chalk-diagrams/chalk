@@ -9,7 +9,7 @@ from svgwrite.base import BaseElement
 from chalk.shape import Shape
 from chalk.style import Style
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import PyCairoContext, PyCairoSurface, Diagram
+from chalk.types import Diagram, PyCairoContext, PyCairoSurface
 
 
 def from_pil(

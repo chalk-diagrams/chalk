@@ -6,6 +6,8 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore
 
+import chalk.align as align
+from chalk.align import *  # noqa: F403
 from chalk.arrow import (
     ArrowOpts,
     arrow_at,
@@ -14,8 +16,6 @@ from chalk.arrow import (
     make_path,
     unit_arc_between,
 )
-from chalk.align import *  # noqa: F403
-import chalk.align as align
 from chalk.combinators import *  # noqa: F403
 from chalk.core import empty, set_svg_height
 from chalk.envelope import Envelope
@@ -23,7 +23,7 @@ from chalk.image import image
 from chalk.latex import latex
 from chalk.path import Path
 from chalk.shape import Arc, Circle, Rectangle, Spacer
-from chalk.shapes import *   # noqa: F403
+from chalk.shapes import *  # noqa: F403
 from chalk.style import Style
 from chalk.text import text
 from chalk.trail import Trail

@@ -11,7 +11,6 @@ from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
 from chalk.transform import V2
 
-
 __all__ = ["BaseElement", "Drawing"]
 PyLatexElement = Any
 PyLatex = Any

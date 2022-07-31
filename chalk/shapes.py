@@ -1,11 +1,11 @@
 from typing import Optional, Tuple, Union
 
+from chalk.arrow import unit_arc_between
 from chalk.core import Primitive
 from chalk.path import Path
 from chalk.shape import Arc, Circle, Rectangle
 from chalk.transform import P2, to_radians
 from chalk.types import Diagram
-from chalk.arrow import unit_arc_between
 
 # Functions mirroring Diagrams.2d.Shapes
 

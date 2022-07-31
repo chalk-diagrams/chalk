@@ -7,7 +7,7 @@ from svgwrite.base import BaseElement
 from chalk.shape import Shape
 from chalk.style import Style
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import PyCairoContext, PyLatex, PyLatexElement, Diagram
+from chalk.types import Diagram, PyCairoContext, PyLatex, PyLatexElement
 
 
 @dataclass

@@ -24,10 +24,11 @@ def render_cairo_prims(
     base: Diagram, ctx: PyCairoContext, style: Style
 ) -> None:
     from chalk.core import Primitive
+
     base = base._style(style)
     for element in base.to_list():
         # apply transformation
-        prim = element 
+        prim = element
         assert isinstance(prim, Primitive)
         matrix = tx.to_cairo(prim.transform)
         ctx.transform(matrix)
@@ -54,6 +55,7 @@ class Shape:
     def get_trace(self) -> Trace:
         # default trace based on bounding box
         from chalk.path import Path
+
         box = self.get_bounding_box()
         return Path.rectangle(box.width, box.height).get_trace()
 
@@ -125,6 +127,7 @@ class Rectangle(Shape):
     def get_trace(self) -> Trace:
         # FIXME For rounded corners the following trace is not accurate
         from chalk.path import Path
+
         return Path.rectangle(self.width, self.height).get_trace()
 
     def render(self, ctx: PyCairoContext, style: Style) -> None:

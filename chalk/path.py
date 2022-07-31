@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import List, Tuple
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -13,11 +14,9 @@ from chalk.transform import P2, Vec2Array
 from chalk.types import (
     BaseElement,
     Drawing,
-    List,
     PyCairoContext,
     PyLatex,
     PyLatexElement,
-    Tuple,
 )
 
 
