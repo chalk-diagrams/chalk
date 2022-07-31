@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from chalk.shape import Path
+from chalk.path import Path
 from chalk.transform import (
     P2,
     V2,

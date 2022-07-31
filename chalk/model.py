@@ -1,6 +1,7 @@
 from colour import Color
 
-from chalk.shape import Circle, Path
+from chalk.path import Path
+from chalk.shape import Circle
 from chalk.transform import V2, Vec2Array, origin
 from chalk.types import Diagram
 
@@ -50,6 +51,9 @@ def show_envelope(
     if phantom:
         new.with_envelope(self)
     return new
+
+
+# show_label
 
 
 def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:

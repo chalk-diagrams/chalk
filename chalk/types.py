@@ -7,14 +7,16 @@ from svgwrite.base import BaseElement
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
-from chalk.shape import Shape
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
 from chalk.transform import V2
 
+
+__all__ = ["BaseElement", "Drawing"]
 PyLatexElement = Any
 PyLatex = Any
-
+PyCairoContext = Any
+PyCairoSurface = Any
 Ident = tx.Affine.identity()
 
 
@@ -142,8 +144,4 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
         ...
 
     def to_list(self, t: tx.Affine = Ident) -> List[Diagram]:
-        ...
-
-    @staticmethod
-    def from_shape(shape: Shape) -> Diagram:
         ...

@@ -4,7 +4,9 @@ from typing import List, Optional, Tuple, Union
 
 from colour import Color
 
-from chalk.shape import Arc, ArrowHead, Path
+from chalk.arrowheads import ArrowHead, dart
+from chalk.path import Path
+from chalk.shape import Arc
 from chalk.style import Style
 from chalk.trail import Trail
 from chalk.transform import P2, V2, unit_x
@@ -24,8 +26,6 @@ class ArrowOpts:
     trail: Optional[Trail] = None
     arc_height: float = 0.0
 
-
-# arrow connectors
 
 # Arrow connections.
 
@@ -116,42 +116,6 @@ def unit_arc_between(d: float, height: float) -> Tuple[Diagram, float]:
             .translate(d / 2, dy)
         )
     return shape, -θ if height > 0 else θ
-
-
-def tri() -> Diagram:
-    from chalk.core import Primitive
-
-    return (
-        Primitive.from_shape(
-            Path.from_points([(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)])
-        )
-        .rotate_by(-0.25)
-        .fill_color(Color("black"))
-        .align_r()
-        .line_width(0)
-    )
-
-
-def dart(cut: float = 0.2) -> Diagram:
-    from chalk.core import Primitive
-
-    return (
-        Primitive.from_shape(
-            Path.from_points(
-                [
-                    (0, -cut),
-                    (1.0, cut),
-                    (0.0, -1.0 - cut),
-                    (-1.0, +cut),
-                    (0, -cut),
-                ]
-            )
-        )
-        .rotate_by(-0.25)
-        .fill_color(Color("black"))
-        .align_r()
-        .line_width(0)
-    )
 
 
 def arrow(length: int, style: ArrowOpts = ArrowOpts()) -> Diagram:

@@ -120,37 +120,3 @@ def pad(self: Diagram, extra: float) -> Diagram:
 
     new_envelope = Envelope(f, envelope.is_empty)
     return self.compose(new_envelope)
-
-
-def scale_uniform_to_x(self: Diagram, x: float) -> Diagram:
-    """Apply uniform scaling along the x-axis.
-
-    Args:
-        self (Diagram): Diagram object.
-        x (float): Amount of scaling along the x-axis.
-
-    Returns:
-        Diagram: A diagram object.
-    """
-    envelope = self.get_envelope()
-    if envelope.is_empty:
-        return self
-    α = x / envelope.width
-    return self.scale(α)
-
-
-def scale_uniform_to_y(self: Diagram, y: float) -> Diagram:
-    """Apply uniform scaling along the y-axis.
-
-    Args:
-        self (Diagram): Diagram object.
-        y (float): Amount of scaling along the y-axis.
-
-    Returns:
-        Diagram: A diagram object.
-    """
-    envelope = self.get_envelope()
-    if envelope.is_empty:
-        return self
-    α = y / envelope.height
-    return self.scale(α)

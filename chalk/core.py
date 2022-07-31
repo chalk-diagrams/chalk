@@ -10,10 +10,9 @@ from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
 import chalk.align
-import chalk.arrows
-import chalk.debug
-import chalk.juxtapose
-import chalk.padding
+import chalk.arrow
+import chalk.combinators
+import chalk.model
 import chalk.types
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -68,16 +67,17 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         """
         return ApplyName(name, self)
 
-    # Juxtapose
-    juxtapose_snug = chalk.juxtapose.juxtapose_snug
-    beside_snug = chalk.juxtapose.beside_snug
-    above = chalk.juxtapose.above
-    atop = chalk.juxtapose.atop
-    beside = chalk.juxtapose.beside
-    above = chalk.juxtapose.above
+    # Combinators
+    with_envelope = chalk.combinators.with_envelope
+    juxtapose_snug = chalk.combinators.juxtapose_snug
+    beside_snug = chalk.combinators.beside_snug
+    above = chalk.combinators.above
+    atop = chalk.combinators.atop
+    beside = chalk.combinators.beside
+    above = chalk.combinators.above
 
     # Align
-    align = chalk.align.align
+    align = chalk.align.align_to
     align_t = chalk.align.align_t
     align_b = chalk.align.align_b
     align_l = chalk.align.align_l
@@ -87,31 +87,31 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
     align_bl = chalk.align.align_bl
     align_br = chalk.align.align_br
     center_xy = chalk.align.center_xy
-    with_envelope = chalk.align.with_envelope
+    center = chalk.align.center
+    scale_uniform_to_y = chalk.align.scale_uniform_to_y
+    scale_uniform_to_x = chalk.align.scale_uniform_to_x
 
     # Arrows
-    connect = chalk.arrows.connect
-    connect_outside = chalk.arrows.connect_outside
-    connect_perim = chalk.arrows.connect_perim
+    connect = chalk.arrow.connect
+    connect_outside = chalk.arrow.connect_outside
+    connect_perim = chalk.arrow.connect_perim
 
-    # Debug
-    show_origin = chalk.debug.show_origin
-    show_envelope = chalk.debug.show_envelope
-    show_beside = chalk.debug.show_beside
+    # Model
+    show_origin = chalk.model.show_origin
+    show_envelope = chalk.model.show_envelope
+    show_beside = chalk.model.show_beside
 
-    # Padding
-    frame = chalk.padding.frame
-    pad = chalk.padding.pad
-    scale_uniform_to_y = chalk.padding.scale_uniform_to_y
-    scale_uniform_to_x = chalk.padding.scale_uniform_to_x
+    # Combinators
+    frame = chalk.combinators.frame
+    pad = chalk.combinators.pad
 
     # Infix
     def __or__(self, d: Diagram) -> Diagram:
-        return chalk.juxtapose.beside(self, d, unit_x)
+        return chalk.combinators.beside(self, d, unit_x)
 
-    __truediv__ = chalk.juxtapose.above
-    __floordiv__ = chalk.juxtapose.above2
-    __add__ = chalk.juxtapose.atop
+    __truediv__ = chalk.combinators.above
+    __floordiv__ = chalk.combinators.above2
+    __add__ = chalk.combinators.atop
 
     # Core rendering (factor out later)
     def to_list(self, t: Affine = Ident) -> List[Diagram]:
@@ -435,6 +435,10 @@ class Empty(BaseDiagram):
     ) -> List[PyLatexElement]:
         """Converts to SVG image."""
         return []
+
+
+def empty() -> Diagram:
+    return Empty()
 
 
 @dataclass
