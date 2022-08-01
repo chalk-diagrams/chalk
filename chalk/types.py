@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, TYPE_CHECKING
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -10,6 +10,9 @@ from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
 from chalk.transform import V2
+
+if TYPE_CHECKING:
+    from chalk.shape import Shape
 
 __all__ = ["BaseElement", "Drawing"]
 PyLatexElement = Any

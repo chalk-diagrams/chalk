@@ -168,7 +168,9 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
     get_subdiagram_envelope = chalk.subdiagram.get_subdiagram_envelope
     get_subdiagram_trace = chalk.subdiagram.get_subdiagram_trace
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         raise NotImplementedError
 
 
@@ -222,7 +224,9 @@ class Primitive(BaseDiagram):
             self.shape, self.style.merge(other_style), self.transform
         )
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_primitive(self, *args, **kwargs)
 
 
@@ -230,7 +234,9 @@ class Primitive(BaseDiagram):
 class Empty(BaseDiagram):
     """An Empty diagram class."""
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_empty(self, *args, **kwargs)
 
 
@@ -246,7 +252,9 @@ class Compose(BaseDiagram):
     diagram1: BaseDiagram
     diagram2: BaseDiagram
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_compose(self, *args, **kwargs)
 
 
@@ -257,7 +265,9 @@ class ApplyTransform(BaseDiagram):
     transform: Affine
     diagram: BaseDiagram
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_apply_transform(self, *args, **kwargs)
 
 
@@ -268,7 +278,9 @@ class ApplyStyle(BaseDiagram):
     style: Style
     diagram: BaseDiagram
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_apply_style(self, *args, **kwargs)
 
 
@@ -279,5 +291,7 @@ class ApplyName(BaseDiagram):
     dname: str
     diagram: BaseDiagram
 
-    def accept(self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any) -> A:
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         return visitor.visit_apply_name(self, *args, **kwargs)

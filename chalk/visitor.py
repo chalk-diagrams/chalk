@@ -4,7 +4,14 @@ from typing import Any, Generic, TypeVar, TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from chalk.core import Primitive, Empty, Compose, ApplyTransform, ApplyStyle, ApplyName
+    from chalk.core import (
+        Primitive,
+        Empty,
+        Compose,
+        ApplyTransform,
+        ApplyStyle,
+        ApplyName,
+    )
 
 
 A = TypeVar("A")
@@ -20,7 +27,9 @@ class DiagramVisitor(Generic[A]):
     def visit_compose(self, diagram: "Compose", **kwargs: Any) -> A:
         raise NotImplementedError
 
-    def visit_apply_transform(self, diagram: "ApplyTransform", **kwargs: Any) -> A:
+    def visit_apply_transform(
+        self, diagram: "ApplyTransform", **kwargs: Any
+    ) -> A:
         raise NotImplementedError
 
     def visit_apply_style(self, diagram: "ApplyStyle", **kwargs: Any) -> A:
