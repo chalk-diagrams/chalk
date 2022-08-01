@@ -16,10 +16,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra
+        sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra 
         python -m pip install --upgrade pip
         pip install -U pip wheel
-        make install.dev install.base install.e
+        make install.dev install.base install.e install.docs
     - name: Format with [[ isort ]]
       run: |
         # stop the build if there are errors raised by isort
@@ -47,3 +47,6 @@ jobs:
     - name: Make sure examples run
       run: |
         make images
+    - name: Make sure docs run
+      run: |
+        make docsapi

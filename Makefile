@@ -325,3 +325,6 @@ images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_var
 
 serve:
 	python -m http.server 8080 -d examples/output/
+
+docsapi:
+	python docs/api/*.py

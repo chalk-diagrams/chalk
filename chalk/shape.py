@@ -1,36 +1,35 @@
 from __future__ import annotations
 
 import math
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from io import BytesIO
-from typing import Any, List, Optional, Tuple
-
-import PIL
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
-from svgwrite.shapes import Rect
+from typing import List, Optional
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.segment import Segment, ray_circle_intersection
+from chalk.segment import ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
-from chalk.transform import P2, V2, BoundingBox, Ray, Vec2Array, origin
-
-PyLatex = Any
-PyLatexElement = Any
-PyCairoContext = Any
-PyCairoSurface = Any
-Diagram = Any
+from chalk.transform import P2, V2, BoundingBox, Ray, origin
+from chalk.types import (
+    BaseElement,
+    Diagram,
+    Drawing,
+    PyCairoContext,
+    PyLatex,
+    PyLatexElement,
+)
 
 
 def render_cairo_prims(
     base: Diagram, ctx: PyCairoContext, style: Style
 ) -> None:
+    from chalk.core import Primitive
+
     base = base._style(style)
-    for prim in base.to_list():
+    for element in base.to_list():
         # apply transformation
+        prim = element
+        assert isinstance(prim, Primitive)
         matrix = tx.to_cairo(prim.transform)
         ctx.transform(matrix)
 
@@ -55,6 +54,8 @@ class Shape:
 
     def get_trace(self) -> Trace:
         # default trace based on bounding box
+        from chalk.path import Path
+
         box = self.get_bounding_box()
         return Path.rectangle(box.width, box.height).get_trace()
 
@@ -125,6 +126,8 @@ class Rectangle(Shape):
 
     def get_trace(self) -> Trace:
         # FIXME For rounded corners the following trace is not accurate
+        from chalk.path import Path
+
         return Path.rectangle(self.width, self.height).get_trace()
 
     def render(self, ctx: PyCairoContext, style: Style) -> None:
@@ -161,123 +164,6 @@ class Rectangle(Shape):
                 pylatex.TikZCoordinate(left + self.width, top + self.height),
             ],
             options=pylatex.TikZOptions(**style.to_tikz(pylatex)),
-        )
-
-
-@dataclass
-class Path(Shape, tx.Transformable):
-    """Path class."""
-
-    points: Vec2Array
-    arrow: bool = False
-
-    @classmethod
-    def from_point(cls, point: P2) -> Path:
-        return cls(Vec2Array([point]))
-
-    @classmethod
-    def from_points(cls, points: List[P2]) -> Path:
-        return cls(Vec2Array(points))
-
-    @classmethod
-    def from_list_of_tuples(
-        cls, coords: List[Tuple[float, float]], arrow: bool = False
-    ) -> Path:
-        points = [P2(x, y) for x, y in coords]
-        return cls(Vec2Array(points), arrow)
-
-    @property
-    def segments(self) -> List[Segment]:
-        return [
-            Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])
-        ]
-
-    @staticmethod
-    def hrule(length: float) -> Path:
-        return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
-
-    @staticmethod
-    def vrule(length: float) -> Path:
-        return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
-
-    @staticmethod
-    def rectangle(width: float, height: float) -> Path:
-        # Should I reuse the `polygon` function to define `rectangle`?
-        # polygon(4, 1, math.pi / 4).scale_x(width).scale_y(height)
-        x = width / 2
-        y = height / 2
-        return Path.from_list_of_tuples(
-            [(-x, y), (x, y), (x, -y), (-x, -y), (-x, y)]
-        )
-
-    @staticmethod
-    def polygon(sides: int, radius: float, rotation: float = 0) -> Path:
-        coords = []
-        n = sides + 1
-        for s in range(n):
-            # Rotate to align with x axis.
-            t = 2.0 * math.pi * s / sides + (math.pi / 2 * sides) + rotation
-            coords.append((radius * math.cos(t), radius * math.sin(t)))
-        return Path.from_list_of_tuples(coords)
-
-    @staticmethod
-    def regular_polygon(sides: int, side_length: float) -> Path:
-        return Path.polygon(
-            sides, side_length / (2 * math.sin(math.pi / sides))
-        )
-
-    def get_envelope(self) -> Envelope:
-        return Envelope.from_path(self.points)
-
-    # def get_bounding_box(self) -> BoundingBox:
-    #     return BoundingBox.from_points(self.points)
-
-    def get_trace(self) -> Trace:
-        return Trace.concat(segment.get_trace() for segment in self.segments)
-
-    def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
-        return Path(tx.apply_affine(t, self.points))
-
-    def is_closed(self) -> bool:
-        if self.points:
-            diff = self.points[0] - self.points[-1]
-            if diff.length < 1e-3:
-                return True
-        return False
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        p, *rest = self.points
-        ctx.move_to(p.x, p.y)
-        for p in rest:
-            ctx.line_to(p.x, p.y)
-        if self.is_closed():
-            ctx.close_path()
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        line = dwg.path(
-            style="vector-effect: non-scaling-stroke;",
-        )
-        if self.points:
-            p = self.points[0]
-            line.push(f"M {p.x} {p.y}")
-        for p in self.points:
-
-            line.push(f"L {p.x} {p.y}")
-        if self.is_closed():
-            line.push("Z")
-        return line
-
-    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        pts = pylatex.TikZPathList()
-        for p in self.points:
-            pts.append(pylatex.TikZCoordinate(p.x, p.y))
-            pts.append("--")
-        if self.is_closed():
-            pts._arg_list.append(pylatex.TikZUserPath("cycle"))
-        else:
-            pts._arg_list = pts._arg_list[:-1]
-        return pylatex.TikZDraw(
-            pts, options=pylatex.TikZOptions(**style.to_tikz(pylatex))
         )
 
 
@@ -378,112 +264,6 @@ class Arc(Shape):
 
 
 @dataclass
-class Text(Shape):
-    """Text class."""
-
-    text: str
-    font_size: Optional[float]
-
-    def get_bounding_box(self) -> BoundingBox:
-        # Text doesn't have a bounding box since we can't accurately know
-        # its size for all backends.
-        eps = 1e-4
-        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
-        return self.bb
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        ctx.select_font_face("sans-serif")
-        if self.font_size is not None:
-            ctx.set_font_size(self.font_size)
-        extents = ctx.text_extents(self.text)
-
-        ctx.move_to(-(extents.width / 2), (extents.height / 2))
-        ctx.text_path(self.text)
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        dx = -(self.bb.width / 2)
-        return dwg.text(
-            self.text,
-            transform=f"translate({dx}, 0)",
-            style=f"""text-align:center; text-anchor:middle; dominant-baseline:middle;
-                      font-family:sans-serif; font-weight: bold;
-                      font-size:{self.font_size}px;
-                      vector-effect: non-scaling-stroke;""",
-        )
-
-    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        opts = {}
-        opts["font"] = "\\small\\sffamily"
-        opts["scale"] = str(
-            3.5 * (1 if self.font_size is None else self.font_size)
-        )
-        styles = style.to_tikz(pylatex)
-        if styles["fill"] is not None:
-            opts["text"] = styles["fill"]
-        return pylatex.TikZNode(
-            text=self.text,
-            # Scale parameters based on observations
-            options=pylatex.TikZOptions(**opts),
-        )
-
-
-def from_pil(
-    im: PIL.Image,
-    alpha: float = 1.0,
-) -> PyCairoSurface:
-    import cairo
-
-    format: cairo.Format = cairo.FORMAT_ARGB32
-    if "A" not in im.getbands():
-        im.putalpha(int(alpha * 256.0))
-    arr = bytearray(im.tobytes("raw", "BGRa"))
-    surface = cairo.ImageSurface.create_for_data(
-        arr, format, im.width, im.height  # type: ignore
-    )
-    return surface
-
-
-@dataclass
-class Image(Shape):
-    """Image class."""
-
-    local_path: str
-    url_path: Optional[str]
-
-    def __post_init__(self) -> None:
-        if self.local_path.endswith("svg"):
-            import cairosvg
-
-            out = BytesIO()
-            cairosvg.svg2png(url=self.local_path, write_to=out)
-        else:
-            out = open(self.local_path, "rb")  # type:ignore
-
-        self.im = PIL.Image.open(out)
-        self.height = self.im.height
-        self.width = self.im.width
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = origin.x - self.width / 2
-        top = origin.y - self.height / 2
-        tl = P2(left, top)
-        br = P2(left + self.width, top + self.height)
-        return BoundingBox([tl, br])
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        surface = from_pil(self.im)
-        ctx.set_source_surface(surface, -(self.width / 2), -(self.height / 2))
-        ctx.paint()
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        dx = -self.width / 2
-        dy = -self.height / 2
-        return dwg.image(
-            href=self.url_path, transform=f"translate({dx}, {dy})"
-        )
-
-
-@dataclass
 class Spacer(Shape):
     """Spacer class."""
 
@@ -507,95 +287,3 @@ class Spacer(Shape):
                 pylatex.TikZCoordinate(left + self.width, top + self.height),
             ]
         )
-
-
-class Raw(Rect):  # type: ignore
-    """Shape class.
-
-    A fake SVG node for importing latex.
-    """
-
-    def __init__(self, st: str):
-        self.xml = ET.fromstring(st)
-
-    def get_xml(self) -> ET.Element:
-        return self.xml
-
-
-@dataclass
-class Latex(Shape):
-    """Latex class."""
-
-    text: str
-
-    def __post_init__(self) -> None:
-        # Need to install latextools for this to run.
-        import latextools
-
-        # Border ensures no cropping.
-        latex_eq = latextools.render_snippet(
-            f"{self.text}",
-            commands=[latextools.cmd.all_math],
-            config=latextools.DocumentConfig(
-                "standalone", {"crop=true,border=0.1cm"}
-            ),
-        )
-        self.eq = latex_eq.as_svg()
-        self.width = self.eq.width
-        self.height = self.eq.height
-        self.content = self.eq.content
-        # From latextools Ensures no clash between multiple math statements
-        id_prefix = f"embed-{hash(self.content)}-"
-        self.content = (
-            self.content.replace('id="', f'id="{id_prefix}')
-            .replace('="url(#', f'="url(#{id_prefix}')
-            .replace('xlink:href="#', f'xlink:href="#{id_prefix}')
-        )
-
-    def get_bounding_box(self) -> BoundingBox:
-        left = origin.x - self.width / 2
-        top = origin.y - self.height / 2
-        tl = P2(left, top)
-        br = P2(left + self.width, top + self.height)
-        return BoundingBox(tl, br).scale(0.05)
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        raise NotImplementedError
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        dx, dy = -self.width / 2, -self.height / 2
-        g = dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
-        g.add(Raw(self.content))
-        return g
-
-
-@dataclass
-class ArrowHead(Shape):
-    """Arrow Head."""
-
-    arrow_shape: Diagram
-
-    def get_bounding_box(self) -> BoundingBox:
-        # Arrow head don't have a bounding box since we can't accurately know
-        # the size until rendering
-        eps = 1e-4
-        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
-        return self.bb
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        assert style.output_size
-        scale = 0.01 * (15 / 500) * style.output_size
-        render_cairo_prims(self.arrow_shape.scale(scale), ctx, style)
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        assert style.output_size
-        scale = 0.01 * (15 / 500) * style.output_size
-        return self.arrow_shape.scale(scale).to_svg(dwg, style)
-
-    def render_tikz(self, p: PyLatex, style: Style) -> PyLatexElement:
-        assert style.output_size
-        scale = 0.01 * 3 * (15 / 500) * style.output_size
-        s = p.TikZScope()
-        for inner in self.arrow_shape.scale(scale).to_tikz(p, style):
-            s.append(inner)
-        return s

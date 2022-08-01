@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from chalk.core import Primitive
-from chalk.shape import Path
+from chalk.path import Path
 from chalk.transform import (
     P2,
     V2,
@@ -13,6 +12,7 @@ from chalk.transform import (
     apply_affine,
     remove_translation,
 )
+from chalk.types import Diagram
 
 
 @dataclass
@@ -74,12 +74,14 @@ class Trail(Transformable):
             points.append(points[-1] + s)
         return Path(points)
 
-    def stroke(self) -> Primitive:
+    def stroke(self) -> Diagram:
         """Returns a primitive (shape) with strokes
 
         Returns:
-            Primitive: A primitive object with strokes.
+            Diagram: A diagram.
         """
+        from chalk.core import Primitive
+
         return Primitive.from_shape(self.to_path())
 
     def apply_transform(self, t: Affine) -> Trail:  # type: ignore
