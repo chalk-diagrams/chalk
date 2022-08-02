@@ -18,22 +18,20 @@ A = TypeVar("A")
 
 
 class DiagramVisitor(Generic[A]):
-    def visit_primitive(self, diagram: "Primitive", **kwargs: Any) -> A:
+    def visit_primitive(self, diagram: Primitive) -> A:
         raise NotImplementedError
 
-    def visit_empty(self, diagram: "Empty", **kwargs: Any) -> A:
+    def visit_empty(self, diagram: Empty) -> A:
         raise NotImplementedError
 
-    def visit_compose(self, diagram: "Compose", **kwargs: Any) -> A:
+    def visit_compose(self, diagram: Compose) -> A:
         raise NotImplementedError
 
-    def visit_apply_transform(
-        self, diagram: "ApplyTransform", **kwargs: Any
-    ) -> A:
+    def visit_apply_transform(self, diagram: ApplyTransform) -> A:
         raise NotImplementedError
 
-    def visit_apply_style(self, diagram: "ApplyStyle", **kwargs: Any) -> A:
+    def visit_apply_style(self, diagram: ApplyStyle) -> A:
         raise NotImplementedError
 
-    def visit_apply_name(self, diagram: "ApplyName", **kwargs: Any) -> A:
+    def visit_apply_name(self, diagram: ApplyName) -> A:
         raise NotImplementedError

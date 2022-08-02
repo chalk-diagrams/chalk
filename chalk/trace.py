@@ -84,36 +84,28 @@ class Trace(Transformable):
 
 
 class GetTrace(DiagramVisitor[Trace]):
-    def visit_primitive(
-        self, diagram: "Primitive", t: Affine = Ident, **kwargs: Any
-    ) -> Trace:
+    def visit_primitive(self, diagram: Primitive, t: Affine = Ident) -> Trace:
         new_transform = t * diagram.transform
         return diagram.shape.get_trace().apply_transform(new_transform)
 
-    def visit_empty(
-        self, diagram: "Empty", t: Affine = Ident, **kwargs: Any
-    ) -> Trace:
+    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Trace:
         return Trace.empty()
 
-    def visit_compose(
-        self, diagram: "Compose", t: Affine = Ident, **kwargs: Any
-    ) -> Trace:
+    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Trace:
         # TODO Should we cache the trace?
         return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
             self, t=t
         )
 
     def visit_apply_transform(
-        self, diagram: "ApplyTransform", t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyTransform, t: Affine = Ident
     ) -> Trace:
         return diagram.diagram.accept(self, t=t * diagram.transform)
 
     def visit_apply_style(
-        self, diagram: "ApplyStyle", t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyStyle, t: Affine = Ident
     ) -> Trace:
         return diagram.diagram.accept(self, t=t)
 
-    def visit_apply_name(
-        self, diagram: "ApplyName", t: Affine = Ident, **kwargs: Any
-    ) -> Trace:
+    def visit_apply_name(self, diagram: ApplyName, t: Affine = Ident) -> Trace:
         return diagram.diagram.accept(self, t=t)

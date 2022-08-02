@@ -157,33 +157,29 @@ class Envelope(Transformable):
 
 class GetEnvelope(DiagramVisitor[Envelope]):
     def visit_primitive(
-        self, diagram: "Primitive", t: Affine = Ident, **kwargs: Any
+        self, diagram: Primitive, t: Affine = Ident
     ) -> Envelope:
         new_transform = t * diagram.transform
         return diagram.shape.get_envelope().apply_transform(new_transform)
 
-    def visit_empty(
-        self, diagram: "Empty", t: Affine = Ident, **kwargs: Any
-    ) -> Envelope:
+    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Envelope:
         return Envelope.empty()
 
-    def visit_compose(
-        self, diagram: "Compose", t: Affine = Ident, **kwargs: Any
-    ) -> Envelope:
+    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Envelope:
         return diagram.envelope.apply_transform(t)
 
     def visit_apply_transform(
-        self, diagram: "ApplyTransform", t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyTransform, t: Affine = Ident
     ) -> Envelope:
         n = t * diagram.transform
         return diagram.diagram.accept(self, n)
 
     def visit_apply_style(
-        self, diagram: "ApplyStyle", t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyStyle, t: Affine = Ident
     ) -> Envelope:
         return diagram.diagram.accept(self, t)
 
     def visit_apply_name(
-        self, diagram: "ApplyName", t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyName, t: Affine = Ident
     ) -> Envelope:
         return diagram.diagram.accept(self, t)

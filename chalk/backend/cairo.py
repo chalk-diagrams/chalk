@@ -85,8 +85,9 @@ def render_cairo_prims(
         prim.style.render(ctx)
         ctx.stroke()
 
+
 def render(
-    self, path: str, height: int = 128, width: Optional[int] = None
+    self: Diagram, path: str, height: int = 128, width: Optional[int] = None
 ) -> None:
     """Render the diagram to a PNG file.
 

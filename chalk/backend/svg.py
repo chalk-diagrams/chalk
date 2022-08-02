@@ -1,23 +1,37 @@
-from typing import Any, List, Optional, Tuple
+from __future__ import annotations
+
+from typing import Any, List, Optional, Tuple, TYPE_CHECKING
 
 import svgwrite
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
 from chalk import transform as tx
-
 from chalk.style import Style
 from chalk.transform import unit_x, unit_y
+from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from chalk.core import Primitive
+    from chalk.core import (
+        Primitive,
+        Empty,
+        Compose,
+        ApplyTransform,
+        ApplyStyle,
+        ApplyName,
+    )
 
 
 class ToSVG(DiagramVisitor[BaseElement]):
-    def visit_primitive(self, diagram: "Primitive", dwg: Drawing, style: Style) -> BaseElement:
+    def visit_primitive(
+        self,
+        diagram: Primitive,
+        dwg: Drawing,
+        style: Style,
+    ) -> BaseElement:
         """Convert a diagram to SVG image."""
         style = diagram.style.merge(style)
         style_svg = style.to_svg()
@@ -32,32 +46,48 @@ class ToSVG(DiagramVisitor[BaseElement]):
             g.add(inner)
             return g
 
-    def visit_empty(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
+    def visit_empty(
+        self, diagram: Empty, dwg: Drawing, style: Style, **kwargs: Any
+    ) -> BaseElement:
         """Converts to SVG image."""
         return dwg.g()
 
-    def visit_compose(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
+    def visit_compose(
+        self, diagram: Compose, dwg: Drawing, style: Style, **kwargs: Any
+    ) -> BaseElement:
         g = dwg.g()
         g.add(diagram.diagram1.accept(self, dwg=dwg, style=style))
         g.add(diagram.diagram2.accept(self, dwg=dwg, style=style))
         return g
 
-    def visit_apply_transform(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
+    def visit_apply_transform(
+        self,
+        diagram: ApplyTransform,
+        dwg: Drawing,
+        style: Style,
+        **kwargs: Any,
+    ) -> BaseElement:
         g = dwg.g(transform=tx.to_svg(diagram.transform))
         g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
         return g
 
-    def visit_apply_style(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
-        return diagram.diagram.accept(self, dwg=dwg, style=diagram.style.merge(style))
+    def visit_apply_style(
+        self, diagram: ApplyStyle, dwg: Drawing, style: Style, **kwargs: Any
+    ) -> BaseElement:
+        return diagram.diagram.accept(
+            self, dwg=dwg, style=diagram.style.merge(style)
+        )
 
-    def visit_apply_name(self, diagram, dwg: Drawing, style: Style) -> BaseElement:
+    def visit_apply_name(
+        self, diagram: ApplyName, dwg: Drawing, style: Style, **kwargs: Any
+    ) -> BaseElement:
         g = dwg.g()
         g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
         return g
 
 
 def render(
-    self, path: str, height: int = 128, width: Optional[int] = None
+    self: Diagram, path: str, height: int = 128, width: Optional[int] = None
 ) -> None:
     """Render the diagram to an SVG file.
 

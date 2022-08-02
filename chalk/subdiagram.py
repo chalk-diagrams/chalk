@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 from chalk.envelope import Envelope
@@ -40,28 +42,25 @@ def get_subdiagram_trace(self: Diagram, name: str, t: Affine = Ident) -> Trace:
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
     def visit_primitive(
         self,
-        diagram: "Primitive",
-        name: str = "",
+        diagram: Primitive,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         return None
 
     def visit_empty(
         self,
-        diagram: "Empty",
-        name: str = "",
+        diagram: Empty,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         return None
 
     def visit_compose(
         self,
-        diagram: "Compose",
-        name: str = "",
+        diagram: Compose,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         """Get the bounding envelope of the sub-diagram."""
         bb = diagram.diagram1.accept(self, name, t)
@@ -71,29 +70,26 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
 
     def visit_apply_transform(
         self,
-        diagram: "ApplyTransform",
-        name: str = "",
+        diagram: ApplyTransform,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         """Get the bounding envelope of the sub-diagram."""
         return diagram.diagram.accept(self, name, t * diagram.transform)
 
     def visit_apply_style(
         self,
-        diagram: "ApplyStyle",
-        name: str = "",
+        diagram: ApplyStyle,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         return diagram.diagram.accept(self, name, t)
 
     def visit_apply_name(
         self,
-        diagram: "ApplyName",
-        name: str = "",
+        diagram: ApplyName,
+        name: str,
         t: Affine = Ident,
-        **kwargs: Any,
     ) -> Optional[Subdiagram]:
         """Get the bounding envelope of the sub-diagram."""
         if name == diagram.dname:
