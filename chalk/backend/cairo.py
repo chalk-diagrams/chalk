@@ -1,42 +1,70 @@
+from __future__ import annotations
+
 from typing import Any, Optional, List, TYPE_CHECKING
 
+from chalk import transform as tx
 from chalk.style import Style
 from chalk.types import Diagram
 from chalk.transform import Affine, unit_x, unit_y
-from chalk import transform as tx
-
 from chalk.visitor import DiagramVisitor
+
+if TYPE_CHECKING:
+    from chalk.core import (
+        Primitive,
+        Empty,
+        Compose,
+        ApplyTransform,
+        ApplyStyle,
+        ApplyName,
+    )
 
 
 Ident = Affine.identity()
 PyCairoContext = Any
 
 
-class ToList(DiagramVisitor[List[Diagram]]):
+class ToList(DiagramVisitor[List[Primitive]]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
     is accumulated upwards, from the tree's leaves.
     """
-    def visit_primitive(self, diagram, t: Affine = Ident) -> List[Diagram]:
+
+    def visit_primitive(
+        self, diagram: Primitive, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
         return [diagram.apply_transform(t)]
 
-    def visit_empty(self, diagram, t: Affine = Ident) -> List[Diagram]:
+    def visit_empty(
+        self, diagram: Empty, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
         return []
 
-    def visit_compose(self, diagram, t: Affine = Ident) -> List[Diagram]:
-        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(self, t=t)
+    def visit_compose(
+        self, diagram: Compose, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
+        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
+            self, t=t
+        )
 
-    def visit_apply_transform(self, diagram, t: Affine = Ident) -> List[Diagram]:
+    def visit_apply_transform(
+        self, diagram: ApplyTransform, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
         t_new = t * diagram.transform
         return [
-            prim.apply_transform(t_new) for prim in diagram.diagram.accept(self, t=t)
+            prim.apply_transform(t_new)
+            for prim in diagram.diagram.accept(self, t=t)
         ]
 
-    def visit_apply_style(self, diagram, t: Affine = Ident) -> List[Diagram]:
+    def visit_apply_style(
+        self, diagram: ApplyStyle, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
         return [
-            prim.apply_style(diagram.style) for prim in diagram.diagram.accept(self, t=t)
+            prim.apply_style(diagram.style)
+            for prim in diagram.diagram.accept(self, t=t)
         ]
 
-    def visit_apply_name(self, diagram, t: Affine = Ident) -> List[Diagram]:
+    def visit_apply_name(
+        self, diagram: ApplyName, t: Affine = Ident, **kwargs: Any
+    ) -> List[Primitive]:
         return [prim for prim in diagram.diagram.accept(self, t=t)]
 
 

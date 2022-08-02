@@ -188,7 +188,7 @@ class Primitive(BaseDiagram):
     transform: Affine
 
     @classmethod
-    def from_shape(cls, shape: Shape) -> Diagram:
+    def from_shape(cls, shape: Shape) -> Primitive:
         """Create and return a primitive from a shape.
 
         Args:
@@ -199,7 +199,7 @@ class Primitive(BaseDiagram):
         """
         return cls(shape, Style.empty(), Ident)
 
-    def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
+    def apply_transform(self, t: Affine) -> Primitive:  # type: ignore
         """Applies a transform and returns a primitive.
 
         Args:
