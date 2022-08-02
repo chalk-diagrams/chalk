@@ -67,7 +67,7 @@ isort:
 
 black:
 	@ echo "✨ Applying formatter: black ... ⏳"
-	black --target-version py38 --line-length 79 $(PACKAGE_NAME)/*.py setup.py \
+	black --target-version py38 --line-length 79 $(PACKAGE_NAME) setup.py \
 		# tests \
 
 ## Run flake8
@@ -87,7 +87,7 @@ test:
 
 type:
 	@ echo "✨ Applying type checker: mypy ... ⏳"
-	mypy --strict --ignore-missing-imports $(PACKAGE_NAME)/*.py \
+	mypy --strict --ignore-missing-imports $(PACKAGE_NAME) \
 		# tests \
 
 ## Run darglint
