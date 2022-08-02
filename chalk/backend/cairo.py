@@ -23,7 +23,7 @@ Ident = Affine.identity()
 PyCairoContext = Any
 
 
-class ToList(DiagramVisitor[List[Primitive]]):
+class ToList(DiagramVisitor[List["Primitive"]]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
     is accumulated upwards, from the tree's leaves.
     """
