@@ -249,8 +249,8 @@ class Compose(BaseDiagram):
     """Compose class."""
 
     envelope: Envelope
-    diagram1: BaseDiagram
-    diagram2: BaseDiagram
+    diagram1: Diagram
+    diagram2: Diagram
 
     def accept(
         self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
@@ -263,7 +263,7 @@ class ApplyTransform(BaseDiagram):
     """ApplyTransform class."""
 
     transform: Affine
-    diagram: BaseDiagram
+    diagram: Diagram
 
     def accept(
         self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
@@ -276,7 +276,7 @@ class ApplyStyle(BaseDiagram):
     """ApplyStyle class."""
 
     style: Style
-    diagram: BaseDiagram
+    diagram: Diagram
 
     def accept(
         self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
@@ -289,7 +289,7 @@ class ApplyName(BaseDiagram):
     """ApplyName class."""
 
     dname: str
-    diagram: BaseDiagram
+    diagram: Diagram
 
     def accept(
         self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any

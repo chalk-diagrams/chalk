@@ -13,6 +13,7 @@ from chalk.transform import V2
 
 if TYPE_CHECKING:
     from chalk.shape import Shape
+    from chalk.visitor import A, DiagramVisitor
 
 __all__ = ["BaseElement", "Drawing"]
 PyLatexElement = Any
@@ -150,4 +151,9 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
 
     @staticmethod
     def from_shape(shape: Shape) -> Diagram:
+        ...
+
+    def accept(
+        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
+    ) -> A:
         ...
