@@ -47,13 +47,13 @@ class ToSVG(DiagramVisitor[BaseElement]):
             return g
 
     def visit_empty(
-        self, diagram: Empty, dwg: Drawing, style: Style, **kwargs: Any
+        self, diagram: Empty, dwg: Drawing, style: Style
     ) -> BaseElement:
         """Converts to SVG image."""
         return dwg.g()
 
     def visit_compose(
-        self, diagram: Compose, dwg: Drawing, style: Style, **kwargs: Any
+        self, diagram: Compose, dwg: Drawing, style: Style
     ) -> BaseElement:
         g = dwg.g()
         g.add(diagram.diagram1.accept(self, dwg=dwg, style=style))
@@ -65,21 +65,20 @@ class ToSVG(DiagramVisitor[BaseElement]):
         diagram: ApplyTransform,
         dwg: Drawing,
         style: Style,
-        **kwargs: Any,
     ) -> BaseElement:
         g = dwg.g(transform=tx.to_svg(diagram.transform))
         g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
         return g
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, dwg: Drawing, style: Style, **kwargs: Any
+        self, diagram: ApplyStyle, dwg: Drawing, style: Style
     ) -> BaseElement:
         return diagram.diagram.accept(
             self, dwg=dwg, style=diagram.style.merge(style)
         )
 
     def visit_apply_name(
-        self, diagram: ApplyName, dwg: Drawing, style: Style, **kwargs: Any
+        self, diagram: ApplyName, dwg: Drawing, style: Style
     ) -> BaseElement:
         g = dwg.g()
         g.add(diagram.diagram.accept(self, dwg=dwg, style=style))

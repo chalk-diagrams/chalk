@@ -29,24 +29,24 @@ class ToList(DiagramVisitor[List["Primitive"]]):
     """
 
     def visit_primitive(
-        self, diagram: Primitive, t: Affine = Ident, **kwargs: Any
+        self, diagram: Primitive, t: Affine = Ident
     ) -> List[Primitive]:
         return [diagram.apply_transform(t)]
 
     def visit_empty(
-        self, diagram: Empty, t: Affine = Ident, **kwargs: Any
+        self, diagram: Empty, t: Affine = Ident
     ) -> List[Primitive]:
         return []
 
     def visit_compose(
-        self, diagram: Compose, t: Affine = Ident, **kwargs: Any
+        self, diagram: Compose, t: Affine = Ident
     ) -> List[Primitive]:
         return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
             self, t=t
         )
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyTransform, t: Affine = Ident
     ) -> List[Primitive]:
         t_new = t * diagram.transform
         return [
@@ -55,7 +55,7 @@ class ToList(DiagramVisitor[List["Primitive"]]):
         ]
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyStyle, t: Affine = Ident
     ) -> List[Primitive]:
         return [
             prim.apply_style(diagram.style)
@@ -63,7 +63,7 @@ class ToList(DiagramVisitor[List["Primitive"]]):
         ]
 
     def visit_apply_name(
-        self, diagram: ApplyName, t: Affine = Ident, **kwargs: Any
+        self, diagram: ApplyName, t: Affine = Ident
     ) -> List[Primitive]:
         return [prim for prim in diagram.diagram.accept(self, t=t)]
 
