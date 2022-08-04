@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -10,6 +10,10 @@ from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
 from chalk.transform import V2
+
+if TYPE_CHECKING:
+    from chalk.shape import Shape
+    from chalk.visitor import A, DiagramVisitor
 
 __all__ = ["BaseElement", "Drawing"]
 PyLatexElement = Any
@@ -143,4 +147,11 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
         ...
 
     def to_list(self, t: tx.Affine = Ident) -> List[Diagram]:
+        ...
+
+    @staticmethod
+    def from_shape(shape: Shape) -> Diagram:
+        ...
+
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         ...

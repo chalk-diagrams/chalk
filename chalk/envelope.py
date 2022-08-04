@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Callable, Iterable
+from typing import TYPE_CHECKING, Callable, Iterable
 
 from chalk.transform import (
     P2,
@@ -18,8 +18,22 @@ from chalk.transform import (
     unit_x,
     unit_y,
 )
+from chalk.visitor import DiagramVisitor
+
+if TYPE_CHECKING:
+    from chalk.core import (
+        ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
+    )
+    from chalk.types import Diagram
+
 
 SignedDistance = float
+Ident = Affine.identity()
 
 
 class Envelope(Transformable):
@@ -140,3 +154,37 @@ class Envelope(Transformable):
             v = V2.polar(i)
             segments.append(Vec2Array([origin, self(v) * v]))
         return segments
+
+
+class GetEnvelope(DiagramVisitor[Envelope]):
+    def visit_primitive(
+        self, diagram: Primitive, t: Affine = Ident
+    ) -> Envelope:
+        new_transform = t * diagram.transform
+        return diagram.shape.get_envelope().apply_transform(new_transform)
+
+    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Envelope:
+        return Envelope.empty()
+
+    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Envelope:
+        return diagram.envelope.apply_transform(t)
+
+    def visit_apply_transform(
+        self, diagram: ApplyTransform, t: Affine = Ident
+    ) -> Envelope:
+        n = t * diagram.transform
+        return diagram.diagram.accept(self, t=n)
+
+    def visit_apply_style(
+        self, diagram: ApplyStyle, t: Affine = Ident
+    ) -> Envelope:
+        return diagram.diagram.accept(self, t=t)
+
+    def visit_apply_name(
+        self, diagram: ApplyName, t: Affine = Ident
+    ) -> Envelope:
+        return diagram.diagram.accept(self, t=t)
+
+
+def get_envelope(self: Diagram, t: Affine = Ident) -> Envelope:
+    return self.accept(GetEnvelope(), t=t)
