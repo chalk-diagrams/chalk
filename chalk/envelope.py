@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Callable, Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Iterable
 
 from chalk.transform import (
     P2,
@@ -21,15 +21,15 @@ from chalk.transform import (
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.types import Diagram
     from chalk.core import (
-        Primitive,
-        Empty,
-        Compose,
-        ApplyTransform,
-        ApplyStyle,
         ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
     )
+    from chalk.types import Diagram
 
 
 SignedDistance = float

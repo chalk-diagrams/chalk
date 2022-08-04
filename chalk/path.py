@@ -11,13 +11,7 @@ from chalk.shape import Shape
 from chalk.style import Style
 from chalk.trace import Trace
 from chalk.transform import P2, Vec2Array
-from chalk.types import (
-    BaseElement,
-    Drawing,
-    PyCairoContext,
-    PyLatex,
-    PyLatexElement,
-)
+from chalk.types import BaseElement, Drawing, PyCairoContext, PyLatex, PyLatexElement
 
 
 @dataclass

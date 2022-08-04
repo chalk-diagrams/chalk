@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
@@ -10,12 +10,12 @@ from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
     from chalk.core import (
-        Primitive,
-        Empty,
-        Compose,
-        ApplyTransform,
-        ApplyStyle,
         ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
     )
 
 

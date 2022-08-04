@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement

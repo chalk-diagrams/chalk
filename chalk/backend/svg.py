@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 import svgwrite
 from svgwrite import Drawing
@@ -12,16 +12,14 @@ from chalk.transform import unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from chalk.core import (
-        Primitive,
-        Empty,
-        Compose,
-        ApplyTransform,
-        ApplyStyle,
         ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
     )
 
 

@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from chalk import transform as tx
 from chalk.style import Style
-from chalk.types import Diagram
 from chalk.transform import Affine, unit_x, unit_y
+from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
     from chalk.core import (
-        Primitive,
-        Empty,
-        Compose,
-        ApplyTransform,
-        ApplyStyle,
         ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
     )
 
 
