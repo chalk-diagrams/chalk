@@ -174,13 +174,14 @@ class Primitive(BaseDiagram):
 
     @classmethod
     def from_shape(cls, shape: Shape) -> Primitive:
-        """Create and return a primitive from a shape.
+        """Creates a primitive from a shape using the default style (only line
+        stroke, no fill) and the identity transformation.
 
         Args:
             shape (Shape): A shape object.
 
         Returns:
-            Diagram: A diagram object.
+            Primitive: A diagram object.
         """
         return cls(shape, Style.empty(), Ident)
 
@@ -191,7 +192,7 @@ class Primitive(BaseDiagram):
             t (Transform): A transform object.
 
         Returns:
-            Diagram
+            Primitive
         """
         new_transform = t * self.transform
         return Primitive(self.shape, self.style, new_transform)
@@ -203,7 +204,7 @@ class Primitive(BaseDiagram):
             other_style (Style): A style object.
 
         Returns:
-            Diagram
+            Primitive
         """
         return Primitive(
             self.shape, self.style.merge(other_style), self.transform

@@ -91,6 +91,7 @@ def render(
     """Render the diagram to an SVG file.
 
     Args:
+        self (Diagram): Given ``Diagram`` instance.
         path (str): Path of the .svg file.
         height (int, optional): Height of the rendered image.
                                 Defaults to 128.
