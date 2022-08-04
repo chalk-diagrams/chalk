@@ -5,6 +5,9 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar
 
+import chalk.backend.cairo
+import chalk.backend.svg
+import chalk.backend.tikz
 import chalk.align
 import chalk.arrow
 import chalk.combinators
@@ -13,6 +16,7 @@ import chalk.padding
 import chalk.subdiagram
 import chalk.trace
 import chalk.types
+
 from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -127,10 +131,10 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         imgen(self, **kwargs)
 
     # Rendering
-    render = backend.cairo.render
-    render_png = backend.cairo.render
-    render_svg = backend.svg.render
-    render_pdf = backend.tikz.render
+    render = chalk.backend.cairo.render
+    render_png = chalk.backend.cairo.render
+    render_svg = chalk.backend.svg.render
+    render_pdf = chalk.backend.tikz.render
 
     to_svg = backend.svg.to_svg
     to_tikz = backend.tikz.to_tikz
