@@ -25,7 +25,7 @@ PyLatexElement = Any
 
 class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
     def visit_primitive(
-        self, diagram: Primitive, pylatex: PyLatexElement, other_style: Style
+        self, diagram: Primitive, pylatex: PyLatex, other_style: Style
     ) -> List[PyLatexElement]:
         """Convert a diagram to SVG image."""
         transform = tx.to_tikz(diagram.transform)
@@ -41,13 +41,13 @@ class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
             return [s]
 
     def visit_empty(
-        self, diagram: Empty, pylatex: PyLatexElement, style: Style
+        self, diagram: Empty, pylatex: PyLatex, style: Style
     ) -> List[PyLatexElement]:
         """Converts to SVG image."""
         return []
 
     def visit_compose(
-        self, diagram: Compose, pylatex: PyLatexElement, style: Style
+        self, diagram: Compose, pylatex: PyLatex, style: Style
     ) -> List[PyLatexElement]:
         """Converts to tikz image."""
         return diagram.diagram1.accept(
@@ -55,7 +55,7 @@ class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
         ) + diagram.diagram2.accept(self, pylatex, style)
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, pylatex: PyLatexElement, style: Style
+        self, diagram: ApplyTransform, pylatex: PyLatex, style: Style
     ) -> List[PyLatexElement]:
         options = {}
         options["cm"] = tx.to_tikz(diagram.transform)
@@ -65,14 +65,14 @@ class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
         return [s]
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, pylatex: PyLatexElement, style: Style
+        self, diagram: ApplyStyle, pylatex: PyLatex, style: Style
     ) -> List[PyLatexElement]:
         return diagram.diagram.accept(
             self, pylatex, diagram.style.merge(style)
         )
 
     def visit_apply_name(
-        self, diagram: ApplyName, pylatex: PyLatexElement, style: Style
+        self, diagram: ApplyName, pylatex: PyLatex, style: Style
     ) -> List[PyLatexElement]:
         return diagram.diagram.accept(self, pylatex=pylatex, style=style)
 
