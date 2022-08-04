@@ -1,7 +1,7 @@
 from colour import Color
 
 from chalk.path import Path
-from chalk.shape import Circle
+from chalk.shapes import circle
 from chalk.transform import V2, Vec2Array, origin
 from chalk.types import Diagram
 
@@ -14,7 +14,7 @@ def show_origin(self: Diagram) -> Diagram:
     if envelope.is_empty:
         return self
     origin_size = min(envelope.height, envelope.width) / 50
-    origin = Primitive.from_shape(Circle(origin_size)).line_color(Color("red"))
+    origin = circle(origin_size).line_color(Color("red"))
     return self + origin
 
 

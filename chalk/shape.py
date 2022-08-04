@@ -70,46 +70,6 @@ class Shape:
 
 
 @dataclass
-class Circle(Shape):
-    """Circle class."""
-
-    radius: float
-
-    def get_envelope(self) -> Envelope:
-        return Envelope.from_circle(self.radius)
-
-    def get_trace(self) -> Trace:
-        def f(p: P2, v: V2) -> List[SignedDistance]:
-            ray = Ray(p, v)
-            return sorted(
-                [
-                    d / v.length
-                    for d in ray_circle_intersection(ray, self.radius)
-                ]
-            )
-
-        return Trace(f)
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        ctx.arc(origin.x, origin.y, self.radius, 0, 2 * math.pi)
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        return dwg.circle(
-            (origin.x, origin.y),
-            self.radius,
-            style="vector-effect: non-scaling-stroke",
-        )
-
-    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        return pylatex.TikZDraw(
-            [pylatex.TikZCoordinate(0, 0), "circle"],
-            options=pylatex.TikZOptions(
-                radius=self.radius, **style.to_tikz(pylatex)
-            ),
-        )
-
-
-@dataclass
 class Rectangle(Shape):
     """Rectangle class."""
 

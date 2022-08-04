@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Protocol, Tuple
 
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
@@ -19,13 +19,19 @@ PyCairoSurface = Any
 Ident = tx.Affine.identity()
 
 
-class Diagram(StylableProtocol, tx.TransformableProtocol):
+class Enveloped(Protocol):
     def get_envelope(self, t: tx.Affine = Ident) -> Envelope:
         ...
 
+
+class Traceable(Protocol):
     def get_trace(self, t: tx.Affine = Ident) -> Trace:
         ...
 
+
+class Diagram(
+    Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol
+):
     def apply_transform(self, t: tx.Affine) -> Diagram:
         ...
 

@@ -110,21 +110,6 @@ class Envelope(Transformable):
 
         return Envelope(wrapped)
 
-    @staticmethod
-    def from_path(path: Vec2Array) -> Envelope:
-        if len(path) > 2:
-            hull = Polygon.convex_hull(path)
-
-            def wrapped(d: V2) -> SignedDistance:
-                v: float = apply_affine(
-                    Affine.rotation(d.angle), hull
-                ).bounding_box.max_point.x
-                return v / d.length  # type: ignore
-
-            return Envelope(wrapped)
-        else:
-            return Envelope.from_bounding_box(BoundingBox(path))
-
     def to_path(self, angle: int = 45) -> Vec2Array:
         "Draws an envelope by sampling every 10 degrees."
         pts = []

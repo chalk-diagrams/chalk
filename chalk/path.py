@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Protocol, Tuple
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -10,43 +10,42 @@ from chalk.segment import Segment
 from chalk.shape import Shape
 from chalk.style import Style
 from chalk.trace import Trace
-from chalk.transform import P2, Vec2Array
+from chalk.transform import P2, Transformable, Vec2Array
 from chalk.types import (
     BaseElement,
+    Diagram,
     Drawing,
+    Enveloped,
     PyCairoContext,
     PyLatex,
     PyLatexElement,
+    Traceable,
 )
+
+
+class SegmentLike(Enveloped, Traceable, Transformable):
+    p: P2
+    q: P2
 
 
 @dataclass
 class Path(Shape, tx.Transformable):
     """Path class."""
 
-    points: Vec2Array
-    arrow: bool = False
+    segments: List[SegmentLike]
 
     @classmethod
     def from_point(cls, point: P2) -> Path:
-        return cls(Vec2Array([point]))
+        return cls(Segment(point, point))
 
     @classmethod
     def from_points(cls, points: List[P2]) -> Path:
-        return cls(Vec2Array(points))
+        return cls(Segment(pt1, pt2) for pt1, pt2 in zip(points, points[1:]))
 
     @classmethod
-    def from_list_of_tuples(
-        cls, coords: List[Tuple[float, float]], arrow: bool = False
-    ) -> Path:
+    def from_list_of_tuples(cls, coords: List[Tuple[float, float]]) -> Path:
         points = [P2(x, y) for x, y in coords]
-        return cls(Vec2Array(points), arrow)
-
-    @property
-    def segments(self) -> List[Segment]:
-        return [
-            Segment(p, q) for p, q in zip(self.points[1:], self.points[:-1])
-        ]
+        return cls.from_points(points)
 
     @staticmethod
     def hrule(length: float) -> Path:
@@ -83,29 +82,39 @@ class Path(Shape, tx.Transformable):
         )
 
     def get_envelope(self) -> Envelope:
-        return Envelope.from_path(self.points)
-
-    # def get_bounding_box(self) -> BoundingBox:
-    #     return BoundingBox.from_points(self.points)
+        return Envelope.concat(
+            segment.get_envelope() for segment in self.segments
+        )
 
     def get_trace(self) -> Trace:
         return Trace.concat(segment.get_trace() for segment in self.segments)
 
+    def stroke(self) -> Diagram:
+        """Returns a primitive (shape) with strokes
+
+        Returns:
+            Diagram: A diagram.
+        """
+        from chalk.core import Primitive
+
+        return Primitive.from_shape(self)
+
     def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
-        return Path(tx.apply_affine(t, self.points))
+        return Path([segment.apply_transform(t) for segment in self.segments])
 
     def is_closed(self) -> bool:
-        if self.points:
-            diff = self.points[0] - self.points[-1]
+        if self.segments:
+            diff = self.segments[0].p - self.segments[-1].q
             if diff.length < 1e-3:
                 return True
         return False
 
     def render(self, ctx: PyCairoContext, style: Style) -> None:
-        p, *rest = self.points
-        ctx.move_to(p.x, p.y)
-        for p in rest:
-            ctx.line_to(p.x, p.y)
+        if self.segments:
+            p = self.segments[0].p
+            ctx.move_to(p.x, p.y)
+        for seg in self.segments:
+            seg.render_path(ctx)
         if self.is_closed():
             ctx.close_path()
 
@@ -113,25 +122,28 @@ class Path(Shape, tx.Transformable):
         line = dwg.path(
             style="vector-effect: non-scaling-stroke;",
         )
-        if self.points:
-            p = self.points[0]
+        if self.segments:
+            p = self.segments[0].p
             line.push(f"M {p.x} {p.y}")
-        for p in self.points:
-
-            line.push(f"L {p.x} {p.y}")
+        for seg in self.segments:
+            line.push(seg.render_svg_path())
         if self.is_closed():
             line.push("Z")
         return line
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         pts = pylatex.TikZPathList()
-        for p in self.points:
+        if self.segments:
+            p = self.segments[0].p
             pts.append(pylatex.TikZCoordinate(p.x, p.y))
-            pts.append("--")
+
+        for seg in self.segments:
+            seg.render_tikz_path(pts, pylatex)
+            # pts.append("--")
+            # pts.append(pylatex.TikZCoordinate(p.x, p.y))
         if self.is_closed():
+            pts.append("--")
             pts._arg_list.append(pylatex.TikZUserPath("cycle"))
-        else:
-            pts._arg_list = pts._arg_list[:-1]
         return pylatex.TikZDraw(
             pts, options=pylatex.TikZOptions(**style.to_tikz(pylatex))
         )
