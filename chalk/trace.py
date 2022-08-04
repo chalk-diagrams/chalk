@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Any, Callable, Iterable, List, Optional, TYPE_CHECKING
+from typing import Callable, Iterable, List, Optional, TYPE_CHECKING
 
 from chalk.transform import (
     P2,

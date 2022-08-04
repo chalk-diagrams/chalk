@@ -4,10 +4,7 @@ import os
 import tempfile
 
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple, TypeVar
-
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
+from typing import Any, Optional, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -20,10 +17,10 @@ import chalk.types
 
 from chalk import backend
 from chalk import transform as tx
-from chalk.envelope import Envelope, GetEnvelope
+from chalk.envelope import Envelope
 from chalk.shape import Shape
 from chalk.style import Stylable, Style
-from chalk.transform import Affine, unit_x, unit_y
+from chalk.transform import Affine, unit_x
 from chalk.types import Diagram
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
