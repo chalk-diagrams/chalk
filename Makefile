@@ -60,7 +60,7 @@ DOCS_REQ_FILE := "docs.txt"
 isort:
 	@ echo "✨ Applying import sorter: isort ... ⏳"
 	# The settings are maintained in setup.cfg file.
-	isort $(PACKAGE_NAME)/*.py setup.py \
+	isort $(PACKAGE_NAME) setup.py \
 		# tests \
 
 ## Run black
@@ -74,7 +74,7 @@ black:
 
 flake:
 	@ echo "✨ Applying formatter: flake8 ... ⏳"
-	flake8 --show-source chalk/*.py setup.py \
+	flake8 --show-source $(PACKAGE_NAME) setup.py \
 		# tests \
 
 ## Run pytest
@@ -95,7 +95,7 @@ type:
 darglint:
 	@ echo "✨ Applying docstring type checker: darglint ... ⏳"
 	# The settings are maintained in setup.cfg file.
-	darglint -v 2 $(PACKAGE_NAME)/*.py --ignore-properties
+	darglint -v 2 $(PACKAGE_NAME) --ignore-properties
 
 ## Run interrogate
 
