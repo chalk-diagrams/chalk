@@ -9,7 +9,13 @@ from chalk.segment import ray_circle_intersection
 from chalk.style import Style
 from chalk.trace import SignedDistance, Trace
 from chalk.transform import P2, V2, BoundingBox, Ray, origin
-from chalk.types import BaseElement, Drawing, PyCairoContext, PyLatex, PyLatexElement
+from chalk.types import (
+    BaseElement,
+    Drawing,
+    PyCairoContext,
+    PyLatex,
+    PyLatexElement,
+)
 
 
 @dataclass
