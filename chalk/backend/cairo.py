@@ -28,44 +28,35 @@ class ToList(DiagramVisitor[List["Primitive"]]):
     is accumulated upwards, from the tree's leaves.
     """
 
-    def visit_primitive(
-        self, diagram: Primitive, t: Affine = Ident
-    ) -> List[Primitive]:
-        return [diagram.apply_transform(t)]
+    def __init__(self, t: Affine = Ident):
+        self.t = t
 
-    def visit_empty(
-        self, diagram: Empty, t: Affine = Ident
-    ) -> List[Primitive]:
+    def visit_primitive(self, diagram: Primitive) -> List[Primitive]:
+        return [diagram.apply_transform(self.t)]
+
+    def visit_empty(self, diagram: Empty) -> List[Primitive]:
         return []
 
-    def visit_compose(
-        self, diagram: Compose, t: Affine = Ident
-    ) -> List[Primitive]:
-        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
-            self, t=t
-        )
+    def visit_compose(self, diagram: Compose) -> List[Primitive]:
+        return diagram.diagram1.accept(self) + diagram.diagram2.accept(self)
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = Ident
+        self, diagram: ApplyTransform
     ) -> List[Primitive]:
-        t_new = t * diagram.transform
+        t_new = self.t * diagram.transform
         return [
             prim.apply_transform(t_new)
-            for prim in diagram.diagram.accept(self, t=t)
+            for prim in diagram.diagram.accept(self)
         ]
 
-    def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident
-    ) -> List[Primitive]:
+    def visit_apply_style(self, diagram: ApplyStyle) -> List[Primitive]:
         return [
             prim.apply_style(diagram.style)
-            for prim in diagram.diagram.accept(self, t=t)
+            for prim in diagram.diagram.accept(self)
         ]
 
-    def visit_apply_name(
-        self, diagram: ApplyName, t: Affine = Ident
-    ) -> List[Primitive]:
-        return [prim for prim in diagram.diagram.accept(self, t=t)]
+    def visit_apply_name(self, diagram: ApplyName) -> List[Primitive]:
+        return [prim for prim in diagram.diagram.accept(self)]
 
 
 def render_cairo_prims(

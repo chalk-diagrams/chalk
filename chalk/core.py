@@ -15,22 +15,18 @@ import chalk.combinators
 import chalk.model
 import chalk.padding
 import chalk.subdiagram
+import chalk.trace
 import chalk.types
 
+from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope, GetEnvelope
 from chalk.shape import Shape
 from chalk.style import Stylable, Style
-from chalk.subdiagram import Subdiagram, GetSubdiagram
-from chalk.trace import Trace, GetTrace
 from chalk.transform import Affine, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
-
-from chalk.backend.cairo import render as render_cairo
-from chalk.backend.svg import render as render_svg, ToSVG
-from chalk.backend.tikz import render as render_tikz
 
 
 Trail = Any
@@ -137,12 +133,13 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         imgen(self, **kwargs)
 
     # Rendering
-    render = render_cairo
-    render_svg = render_svg
-    render_pdf = render_tikz
+    render = backend.cairo.render
+    render_png = backend.cairo.render
+    render_svg = backend.svg.render
+    render_pdf = backend.tikz.render
 
-    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        return self.accept(ToSVG(), dwg=dwg, style=style)
+    to_svg = backend.svg.to_svg
+    to_tikz = backend.tikz.to_tikz
 
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
@@ -154,23 +151,14 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
         return svg
 
     # Getters
-    def get_envelope(self, t: Affine = Ident) -> Envelope:
-        return self.accept(GetEnvelope(), t)
+    get_envelope = chalk.envelope.get_envelope
+    get_trace = chalk.trace.get_trace
 
-    def get_trace(self, t: Affine = Ident) -> Trace:
-        return self.accept(GetTrace(), t)
-
-    def get_subdiagram(
-        self, name: str, t: Affine = Ident
-    ) -> Optional[Subdiagram]:
-        return self.accept(GetSubdiagram(), name, t)
-
+    get_subdiagram = chalk.subdiagram.get_subdiagram
     get_subdiagram_envelope = chalk.subdiagram.get_subdiagram_envelope
     get_subdiagram_trace = chalk.subdiagram.get_subdiagram_trace
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         raise NotImplementedError
 
 
@@ -224,20 +212,16 @@ class Primitive(BaseDiagram):
             self.shape, self.style.merge(other_style), self.transform
         )
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_primitive(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_primitive(self, **kwargs)
 
 
 @dataclass
 class Empty(BaseDiagram):
     """An Empty diagram class."""
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_empty(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_empty(self, **kwargs)
 
 
 def empty() -> Diagram:
@@ -252,10 +236,8 @@ class Compose(BaseDiagram):
     diagram1: Diagram
     diagram2: Diagram
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_compose(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_compose(self, **kwargs)
 
 
 @dataclass
@@ -265,10 +247,8 @@ class ApplyTransform(BaseDiagram):
     transform: Affine
     diagram: Diagram
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_apply_transform(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_apply_transform(self, **kwargs)
 
 
 @dataclass
@@ -278,10 +258,8 @@ class ApplyStyle(BaseDiagram):
     style: Style
     diagram: Diagram
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_apply_style(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_apply_style(self, **kwargs)
 
 
 @dataclass
@@ -291,7 +269,5 @@ class ApplyName(BaseDiagram):
     dname: str
     diagram: Diagram
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
-        return visitor.visit_apply_name(self, *args, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_apply_name(self, **kwargs)

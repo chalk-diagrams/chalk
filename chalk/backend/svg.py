@@ -25,64 +25,64 @@ if TYPE_CHECKING:
     )
 
 
+EMTPY_STYLE = Style.empty()
+
+
 class ToSVG(DiagramVisitor[BaseElement]):
+    def __init__(self, dwg: Drawing):
+        self.dwg = dwg
+
     def visit_primitive(
-        self,
-        diagram: Primitive,
-        dwg: Drawing,
-        style: Style,
+        self, diagram: Primitive, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        """Convert a diagram to SVG image."""
-        style = diagram.style.merge(style)
-        style_svg = style.to_svg()
+        style_new = diagram.style.merge(style)
+        style_svg = style_new.to_svg()
         transform = tx.to_svg(diagram.transform)
-        inner = diagram.shape.render_svg(dwg, style)
+        inner = diagram.shape.render_svg(self.dwg, style_new)
         if not style_svg and not transform:
             return inner
         else:
             if not style_svg:
                 style_svg = ";"
-            g = dwg.g(transform=transform, style=style_svg)
+            g = self.dwg.g(transform=transform, style=style_svg)
             g.add(inner)
             return g
 
     def visit_empty(
-        self, diagram: Empty, dwg: Drawing, style: Style
+        self, diagram: Empty, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        """Converts to SVG image."""
-        return dwg.g()
+        return self.dwg.g()
 
     def visit_compose(
-        self, diagram: Compose, dwg: Drawing, style: Style
+        self, diagram: Compose, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        g = dwg.g()
-        g.add(diagram.diagram1.accept(self, dwg=dwg, style=style))
-        g.add(diagram.diagram2.accept(self, dwg=dwg, style=style))
+        g = self.dwg.g()
+        g.add(diagram.diagram1.accept(self, style=style))
+        g.add(diagram.diagram2.accept(self, style=style))
         return g
 
     def visit_apply_transform(
-        self,
-        diagram: ApplyTransform,
-        dwg: Drawing,
-        style: Style,
+        self, diagram: ApplyTransform, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        g = dwg.g(transform=tx.to_svg(diagram.transform))
-        g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
+        g = self.dwg.g(transform=tx.to_svg(diagram.transform))
+        g.add(diagram.diagram.accept(self, style=style))
         return g
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, dwg: Drawing, style: Style
+        self, diagram: ApplyStyle, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        return diagram.diagram.accept(
-            self, dwg=dwg, style=diagram.style.merge(style)
-        )
+        return diagram.diagram.accept(self, style=diagram.style.merge(style))
 
     def visit_apply_name(
-        self, diagram: ApplyName, dwg: Drawing, style: Style
+        self, diagram: ApplyName, style: Style = EMTPY_STYLE
     ) -> BaseElement:
-        g = dwg.g()
-        g.add(diagram.diagram.accept(self, dwg=dwg, style=style))
+        g = self.dwg.g()
+        g.add(diagram.diagram.accept(self, style=style))
         return g
+
+
+def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
+    return self.accept(ToSVG(dwg), style=style)
 
 
 def render(
@@ -109,14 +109,10 @@ def render(
         α = height / ((1 + pad) * envelope.height)
     else:
         α = width / ((1 + pad) * envelope.width)
-    dwg = svgwrite.Drawing(
-        path,
-        size=(width, height),
-    )
 
-    outer = dwg.g(
-        style="fill:white;",
-    )
+    dwg = svgwrite.Drawing(path, size=(width, height))
+
+    outer = dwg.g(style="fill:white;")
     # Arrow marker
     marker = dwg.marker(
         id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
@@ -130,5 +126,5 @@ def render(
     assert e is not None
     s = s.translate(e(-unit_x), e(-unit_y))
     style = Style.root(output_size=max(height, width))
-    outer.add(s.accept(ToSVG(), dwg=dwg, style=style))
+    outer.add(to_svg(s, dwg, style))
     dwg.save()

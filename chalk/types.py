@@ -153,7 +153,5 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
     def from_shape(shape: Shape) -> Diagram:
         ...
 
-    def accept(
-        self, visitor: DiagramVisitor[A], *args: Any, **kwargs: Any
-    ) -> A:
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         ...

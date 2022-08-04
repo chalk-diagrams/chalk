@@ -14,6 +14,7 @@ from chalk.transform import (
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
+    from chalk.types import Diagram
     from chalk.core import (
         Primitive,
         Empty,
@@ -109,3 +110,7 @@ class GetTrace(DiagramVisitor[Trace]):
 
     def visit_apply_name(self, diagram: ApplyName, t: Affine = Ident) -> Trace:
         return diagram.diagram.accept(self, t=t)
+
+
+def get_trace(self: Diagram, t: Affine = Ident) -> Trace:
+    return self.accept(GetTrace(), t=t)

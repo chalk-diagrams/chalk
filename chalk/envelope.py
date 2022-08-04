@@ -21,6 +21,7 @@ from chalk.transform import (
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
+    from chalk.types import Diagram
     from chalk.core import (
         Primitive,
         Empty,
@@ -172,14 +173,18 @@ class GetEnvelope(DiagramVisitor[Envelope]):
         self, diagram: ApplyTransform, t: Affine = Ident
     ) -> Envelope:
         n = t * diagram.transform
-        return diagram.diagram.accept(self, n)
+        return diagram.diagram.accept(self, t=n)
 
     def visit_apply_style(
         self, diagram: ApplyStyle, t: Affine = Ident
     ) -> Envelope:
-        return diagram.diagram.accept(self, t)
+        return diagram.diagram.accept(self, t=t)
 
     def visit_apply_name(
         self, diagram: ApplyName, t: Affine = Ident
     ) -> Envelope:
-        return diagram.diagram.accept(self, t)
+        return diagram.diagram.accept(self, t=t)
+
+
+def get_envelope(self: Diagram, t: Affine = Ident) -> Envelope:
+    return self.accept(GetEnvelope(), t=t)

@@ -22,59 +22,66 @@ if TYPE_CHECKING:
 PyLatex = Any
 PyLatexElement = Any
 
+EMPTY_STYLE = Style.empty()
+
 
 class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
+    def __init__(self, pylatex: PyLatex):
+        self.pylatex = pylatex
+
     def visit_primitive(
-        self, diagram: Primitive, pylatex: PyLatex, other_style: Style
+        self, diagram: Primitive, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        """Convert a diagram to SVG image."""
         transform = tx.to_tikz(diagram.transform)
-        style = diagram.style.merge(other_style)
-        inner = diagram.shape.render_tikz(pylatex, style)
-        if not style and not transform:
+        style_new = diagram.style.merge(style)
+        inner = diagram.shape.render_tikz(self.pylatex, style_new)
+        if not style_new and not transform:
             return [inner]
         else:
-            options = {}
-            options["cm"] = tx.to_tikz(diagram.transform)
-            s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
+            options = {"cm": tx.to_tikz(diagram.transform)}
+            s = self.pylatex.TikZScope(
+                options=self.pylatex.TikZOptions(**options)
+            )
             s.append(inner)
             return [s]
 
     def visit_empty(
-        self, diagram: Empty, pylatex: PyLatex, style: Style
+        self, diagram: Empty, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        """Converts to SVG image."""
         return []
 
     def visit_compose(
-        self, diagram: Compose, pylatex: PyLatex, style: Style
+        self, diagram: Compose, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        """Converts to tikz image."""
-        return diagram.diagram1.accept(
-            self, pylatex, style
-        ) + diagram.diagram2.accept(self, pylatex, style)
+        elems1 = diagram.diagram1.accept(self, style=style)
+        elems2 = diagram.diagram2.accept(self, style=style)
+        return elems1 + elems2
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, pylatex: PyLatex, style: Style
+        self, diagram: ApplyTransform, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        options = {}
-        options["cm"] = tx.to_tikz(diagram.transform)
-        s = pylatex.TikZScope(options=pylatex.TikZOptions(**options))
-        for x in diagram.diagram.accept(self, pylatex, style):
+        options = {"cm": tx.to_tikz(diagram.transform)}
+        s = self.pylatex.TikZScope(options=self.pylatex.TikZOptions(**options))
+        for x in diagram.diagram.accept(self, style=style):
             s.append(x)
         return [s]
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, pylatex: PyLatex, style: Style
+        self, diagram: ApplyStyle, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        return diagram.diagram.accept(
-            self, pylatex, diagram.style.merge(style)
-        )
+        style_new = diagram.style.merge(style)
+        return diagram.diagram.accept(self, style=style_new)
 
     def visit_apply_name(
-        self, diagram: ApplyName, pylatex: PyLatex, style: Style
+        self, diagram: ApplyName, style: Style = EMPTY_STYLE
     ) -> List[PyLatexElement]:
-        return diagram.diagram.accept(self, pylatex=pylatex, style=style)
+        return diagram.diagram.accept(self, style=style)
+
+
+def to_tikz(
+    self: Diagram, pylatex: PyLatex, style: Style
+) -> List[PyLatexElement]:
+    return self.accept(ToTikZ(pylatex), style=style)
 
 
 def render(self: Diagram, path: str, height: int = 128) -> None:
@@ -113,9 +120,7 @@ def render(self: Diagram, path: str, height: int = 128) -> None:
     ).translate(envelope.center.x, envelope.center.y)
     diagram = diagram + padding
     with doc.create(pylatex.TikZ()) as pic:
-        for x in diagram.accept(
-            ToTikZ(), pylatex, Style.root(max(height, width))
-        ):
+        for x in to_tikz(diagram, pylatex, Style.root(max(height, width))):
             pic.append(x)
     doc.generate_tex(path.replace(".pdf", "") + ".tex")
     doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)
