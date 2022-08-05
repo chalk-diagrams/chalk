@@ -72,7 +72,7 @@ class Trail(Transformable):
         points = [origin]
         for s in self.offsets:
             points.append(points[-1] + s)
-        return Path(points)
+        return Path.from_points(points)
 
     def stroke(self) -> Diagram:
         """Returns a primitive (shape) with strokes

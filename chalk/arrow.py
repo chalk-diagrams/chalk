@@ -80,12 +80,10 @@ def connect_perim(
 def make_path(
     coords: Union[List[Tuple[float, float]], List[P2]], arrow: bool = False
 ) -> Diagram:
-    from chalk.core import Primitive
-
     if not coords or isinstance(coords[0], P2):
-        return Primitive.from_shape(Path.from_points(coords))
+        return Path.from_points(coords).stroke()
     else:
-        return Primitive.from_shape(Path.from_list_of_tuples(coords, arrow))
+        return Path.from_list_of_tuples(coords).stroke()
 
 
 def unit_arc_between(d: float, height: float) -> Tuple[Diagram, float]:

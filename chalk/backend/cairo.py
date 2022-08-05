@@ -76,7 +76,6 @@ def render_cairo_prims(
         # apply transformation
         matrix = tx.to_cairo(prim.transform)
         ctx.transform(matrix)
-
         prim.shape.render(ctx, prim.style)
 
         # undo transformation

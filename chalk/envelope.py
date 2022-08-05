@@ -137,7 +137,7 @@ class Envelope(Transformable):
         segments = []
         for i in range(0, 361, angle):
             v = V2.polar(i)
-            segments.append(Vec2Array([origin, self(v) * v]))
+            segments.append((origin, self(v) * v))
         return segments
 
 

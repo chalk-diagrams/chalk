@@ -38,14 +38,13 @@ def show_envelope(
     if envelope.is_empty:
         return self
     outer: Diagram = (
-        Primitive.from_shape(Path(envelope.to_path(angle)))
+        Primitive.from_shape(Path.from_points(envelope.to_path(angle)))
         .fill_opacity(0)
         .line_color(Color("red"))
     )
-    for segment in envelope.to_segments(angle):
-        outer = outer + Primitive.from_shape(Path(segment)).line_color(
-            Color("red")
-        ).dashing([0.01, 0.01], 0)
+    outer = Path.from_pairs(envelope.to_segments(angle)).stroke().line_color(
+        Color("red")
+    ).dashing([0.01, 0.01], 0)
 
     new = self + outer
     if phantom:

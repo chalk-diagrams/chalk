@@ -15,12 +15,9 @@ black = Color("black")
 
 
 def tri() -> Diagram:
-    from chalk.core import Primitive
-
     return (
-        Primitive.from_shape(
-            Path.from_points([(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)])
-        )
+        Path.from_list_of_tuples([(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)])
+        .stroke()
         .rotate_by(-0.25)
         .fill_color(Color("black"))
         .align_r()
@@ -29,11 +26,8 @@ def tri() -> Diagram:
 
 
 def dart(cut: float = 0.2) -> Diagram:
-    from chalk.core import Primitive
-
     return (
-        Primitive.from_shape(
-            Path.from_points(
+        Path.from_list_of_tuples(
                 [
                     (0, -cut),
                     (1.0, cut),
@@ -42,7 +36,8 @@ def dart(cut: float = 0.2) -> Diagram:
                     (0, -cut),
                 ]
             )
-        )
+        
+        .stroke()
         .rotate_by(-0.25)
         .fill_color(Color("black"))
         .align_r()

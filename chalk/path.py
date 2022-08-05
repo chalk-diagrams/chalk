@@ -28,6 +28,9 @@ class SegmentLike(Enveloped, Traceable, Transformable):
     q: P2
 
 
+def make_path(segments):
+    return Path.from_list_of_tuples(segments).stroke()
+    
 @dataclass
 class Path(Shape, tx.Transformable):
     """Path class."""
@@ -40,17 +43,29 @@ class Path(Shape, tx.Transformable):
 
     @classmethod
     def from_points(cls, points: List[P2]) -> Path:
-        return cls(Segment(pt1, pt2) for pt1, pt2 in zip(points, points[1:]))
+        return cls(list([Segment(pt1, pt2) for pt1, pt2 in zip(points, points[1:])]))
+
+    @classmethod
+    def from_pairs(cls, points: List[Tuple[P2, P2]]) -> Path:
+        return cls(list([Segment(pt1, pt2) for pt1, pt2 in points]))
 
     @classmethod
     def from_list_of_tuples(cls, coords: List[Tuple[float, float]]) -> Path:
-        points = [P2(x, y) for x, y in coords]
+        points = list([P2(x, y) for x, y in coords])
         return cls.from_points(points)
 
+    def points(self) -> List[P2]:
+        points = []
+        for i, seg in enumerate(self.segments):
+            if i == 0:
+                points.append(seg.p)
+            points.append(seg.q)
+        return points
+    
     @staticmethod
     def hrule(length: float) -> Path:
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
-
+    
     @staticmethod
     def vrule(length: float) -> Path:
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
@@ -103,6 +118,7 @@ class Path(Shape, tx.Transformable):
         return Path([segment.apply_transform(t) for segment in self.segments])
 
     def is_closed(self) -> bool:
+        self.segments = list(self.segments)
         if self.segments:
             diff = self.segments[0].p - self.segments[-1].q
             if diff.length < 1e-3:
@@ -110,10 +126,11 @@ class Path(Shape, tx.Transformable):
         return False
 
     def render(self, ctx: PyCairoContext, style: Style) -> None:
-        if self.segments:
-            p = self.segments[0].p
-            ctx.move_to(p.x, p.y)
-        for seg in self.segments:
+
+        for i, seg in enumerate(self.segments):
+            if i == 0:
+                p = seg.p
+                ctx.move_to(p.x, p.y)                
             seg.render_path(ctx)
         if self.is_closed():
             ctx.close_path()
@@ -122,10 +139,10 @@ class Path(Shape, tx.Transformable):
         line = dwg.path(
             style="vector-effect: non-scaling-stroke;",
         )
-        if self.segments:
-            p = self.segments[0].p
-            line.push(f"M {p.x} {p.y}")
-        for seg in self.segments:
+        for i, seg in enumerate(self.segments):
+            if i == 0:
+                p = seg.p
+                line.push(f"M {p.x} {p.y}")
             line.push(seg.render_svg_path())
         if self.is_closed():
             line.push("Z")
@@ -133,11 +150,10 @@ class Path(Shape, tx.Transformable):
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
         pts = pylatex.TikZPathList()
-        if self.segments:
-            p = self.segments[0].p
-            pts.append(pylatex.TikZCoordinate(p.x, p.y))
-
-        for seg in self.segments:
+        for i, seg in enumerate(self.segments):
+            if i == 0:
+                p = seg.p
+                pts.append(pylatex.TikZCoordinate(p.x, p.y))                            
             seg.render_tikz_path(pts, pylatex)
             # pts.append("--")
             # pts.append(pylatex.TikZCoordinate(p.x, p.y))
