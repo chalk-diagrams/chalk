@@ -68,7 +68,7 @@ class ArcSegment(tx.Transformable):
         "Real center"
         return tx.apply_affine(self.t, P2(0, 0))
 
-    def apply_transform(self, t: tx.Affine) -> ArcSegment:
+    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
         return ArcSegment(self.angle, self.dangle, t * self.t)
 
     def get_trace(self) -> Trace:
@@ -167,10 +167,10 @@ class ArcSegment(tx.Transformable):
         f_S = 1 if self.dangle > 0 else 0
         return f"A {self.r_x} {self.r_y} {self.rot} {f_A} {f_S} {self.q.x} {self.q.y}"
 
-    def reflect_y(self) -> None:
+    def reflect_y(self) -> ArcSegment:  # type: ignore
         assert False
 
-    def reflect_x(self) -> None:
+    def reflect_x(self) -> ArcSegment:  # type: ignore
         assert False
 
     def render_tikz_path(self, pts, pylatex) -> None:
