@@ -26,6 +26,127 @@ def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> bool:
     """
     return (x - a) % 360 <= (b - a) % 360
 
+
+
+@dataclass
+class EllipseSegment(tx.Transformable):
+    "A ellipse arc represented with the cetner parameterization"
+    angle: float
+    dangle: float
+
+    # Ellipse is closed under affine.
+    t: tx.Transform = tx.Affine.identity()
+
+    @property
+    def _start(self) -> P2:
+        "Untransformed start"
+        return P2.polar(1, self.angle)
+
+    @property
+    def _end(self) -> P2:
+        "Untransformed end"
+        return P2.polar(1, self.angle + self.dangle)
+
+    # Lazy center parameterization.
+    @property
+    def p(self):
+        "Real start"
+        return tx.apply_affine(self.t, P2.polar(1, self.angle))
+
+    @property
+    def q(self):
+        "Real end"
+        return tx.apply_affine(self.t, P2.polar(1, self.angle + self.dangle))
+
+
+    @property
+    def r_x(self):
+        t2 = tx.remove_translation(self.t)
+        return tx.apply_affine(t2, unit_x).length
+
+    @property
+    def r_y(self):
+        t2 = tx.remove_translation(self.t)
+        return tx.apply_affine(t2, unit_y).length
+
+    @property
+    def rot(self):
+        t2 = tx.remove_translation(self.t)
+        return tx.apply_affine(t2, unit_x).r_x.angle
+        
+    
+    @property
+    def center(self):
+        "Real center"
+        return tx.apply_affine(self.t, P2(0, 0))
+
+    def apply_transform(self, t: tx.Affine) -> ArcSegment:
+        return ArcSegment(self.angle, self.dangle, t * self.t)
+
+    def get_trace(self) -> Trace:
+        "Trace is done as simple arc and transformed"
+        angle0_deg = self.angle
+        angle1_deg = self.angle + self.dangle
+
+        def f(p: P2, v: V2) -> List[SignedDistance]:
+            ray = Ray(p, v)
+            return sorted(
+                [
+                    d / v.length
+                    for d in ray_circle_intersection(ray, 1)
+                    if is_in_mod_360(
+                        ((d * v) + self._start).angle, angle0_deg, angle1_deg
+                    )
+                ]
+            )
+
+        return Trace(f).apply_transform(self.t)
+
+    def get_envelope(self) -> Envelope:
+        "Trace is done as simple arc and transformed"
+        angle0_deg = self.angle
+        angle1_deg = self.angle + self.dangle
+
+        v1 = V2.polar(angle0_deg, 1)
+        v2 = V2.polar(angle1_deg, 1)
+
+        def wrapped(d: V2) -> SignedDistance:
+            is_circle = abs(angle0_deg - angle1_deg) >= 360
+            if is_circle or is_in_mod_360(d.angle, angle0_deg, angle1_deg):
+                # Case 1: P2 at arc
+                return 1 / d.length  # type: ignore
+            else:
+                # Case 2: P2 outside of arc
+                x: float = max(d.dot(v1), d.dot(v2))
+                return x
+
+        return Envelope(wrapped).apply_transform(self.t)
+
+    def render_path(self, ctx):
+        # end_point = tx.apply_affine(self.t, self._end)
+        # t2 = tx.remove_translation(self.t)
+        # r_x = tx.apply_affine(t2, unit_x)
+        # r_y = tx.apply_affine(t2, unit_y)
+        # rot = r_x.angle
+        start = 180 + self.rot
+        x, y = self.p.x - math.cos(to_radians(start)), self.p.y - math.sin(to_radians(start))
+        ctx.new_sub_path()
+        ctx.save()
+        ctx.translate(x, y)
+        ctx.scale(self.r_x, self.r_y)
+        ctx.arc(0., 0., 1., start, 180 + rot + self.angle)
+        ctx.restore()
+
+    def render_svg_path(self) -> str:
+        "https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint"
+        f_A = 1 if abs(self.dangle) > 180 else 0
+        f_S = 1 if self.dangle > 0 else 0
+        return f"A {self.r_x} {self.r_y} {self.rot} {f_A} {f_S} {self.q.x} {self.q.y}"
+
+    def render_tikz_path(self, pts, pylatex) -> None:    
+        pts._arg_list.append(pylatex.TikZUserPath(f"{{[rotate={self.rot}] arc[start angle={self.angle}, end angle={self.angle + self.dangle}, x radius={self.r_x}, y radius ={self.r_y}]}}"))
+
+        
 # Several ways to specify an arc. Needed for different backends
 
 def angle(center: P2, point: P2) -> Degrees:
@@ -40,19 +161,20 @@ def mid(p1: P2, p2 : P2) -> P2:
 @dataclass
 class ArcByDegrees:
     "Specify arc by angles from center"
-    angle0 : Degrees
-    angle1 : Degrees
+    angle : Degrees
+    dangle : Degrees
     radius : float
     center : P2
 
     def to_arc_between(self) -> ArcBetween:
-        point0 = point(self.center, self.radius, self.angle0)
-        point1 = point(self.center, self.radius, self.angle1)
-        point_angle_mid = point(self.center, self.radius, (self.angle0 - self.angle1) / 2)
+        point0 = point(self.center, self.radius, self.angle)
+        point1 = point(self.center, self.radius, self.angle + self.dangle)
+        angle_mid = self.angle + (self.dangle) / 2
+        point_angle_mid = point(self.center, self.radius, angle_mid)
         point_mid = mid(point0, point1)
         height = (point_angle_mid - point_mid).length
-        # if point_angle_mid.y > point_mid.y:
-        #     height = -height
+        if self.dangle < 0:
+            height = -height
         return ArcBetween(point0, point1, height)
     
 @dataclass
@@ -61,11 +183,11 @@ class ArcBetween:
     point0 : P2
     point1 : P2
     height : float
-
+    
     def radius(self):
         # solve triangle r^2 = (r- h)^2 + (d)^2
         d = (self.point1 - self.point0).length / 2
-        return self.height / 2 + (d * d) / (2 * self.height)
+        return abs(self.height) / 2 + (d * d) / (2 * abs(self.height))
     
     def to_arc_by_degrees(self) -> ArcByDegrees:
         flip = 1 if self.height > 0 else -1
@@ -74,33 +196,33 @@ class ArcBetween:
         h_v = flip * diff.normalized()
         mid_p = mid(self.point0, self.point1)
         center = mid_p - h_v * (r - abs(self.height))
-        angle0 = angle(center, self.point0)
-        angle1 = angle(center, self.point1)
-        return ArcByDegrees(angle0, angle1, r, center)
+        new_angle = angle(center, self.point0)
+        new_dangle = new_angle - angle(center, self.point1)
+        return ArcByDegrees(new_angle % 360, flip * new_dangle, r, center=center)
 
-    def to_arc_radius(self) -> ArcRadius:
-        return ArcRadius(self.point0, self.point1, 0, self.radius())
+    # def to_arc_radius(self) -> ArcRadius:
+    #     return ArcRadius(self.point0, self.point1, 0, self.radius())
     
-@dataclass
-class ArcRadius:
-    "Specify arc by two points and a radius"
-    point0 : P2
-    point1 : P2
-    large : bool
-    radius : float
+# @dataclass
+# class ArcRadius:
+#     "Specify arc by two points and a radius"
+#     point0 : P2
+#     point1 : P2
+#     large : bool
+#     radius : float
 
-    def height(self):
-        d = (self.point1 - self.point0).length / 2
-        # solve triangle r^2 = (r- h)^2 + d / 2
-        r = self.radius
-        if self.large:
-            return r + math.sqrt(r * r - d * d)
-        else:
-            return r - math.sqrt(r * r - d * d)
+#     def height(self):
+#         d = (self.point1 - self.point0).length / 2
+#         # solve triangle r^2 = (r- h)^2 + d / 2
+#         r = self.radius
+#         if self.large:
+#             return r + math.sqrt(r * r - d * d)
+#         else:
+#             return r - math.sqrt(r * r - d * d)
         
     
-    def to_arc_between(self) -> ArcByDegrees:
-        return ArcBetween(self.point0, self.point1, self.height())
+#     def to_arc_between(self) -> ArcByDegrees:
+#         return ArcBetween(self.point0, self.point1, self.height())
 
 
 @dataclass
