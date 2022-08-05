@@ -23,8 +23,7 @@ def circle(radius: float) -> Diagram:
     return (
         Path(
             [
-                ArcSegment.arc_between(P2(-1, 0), P2(1, 0), 1),
-                ArcSegment.arc_between(P2(1, 0), P2(-1, 0), 1),
+                ArcSegment(0, 360)
             ]
         )
         .scale(radius)
@@ -46,7 +45,7 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
     """
     return Path(
-        [ArcSegment(angle0, angle1 - angle0).rotate(angle0).scale(radius)]
+        [ArcSegment(angle0, angle1 - angle0).scale(radius)]
     ).stroke()
 
 
