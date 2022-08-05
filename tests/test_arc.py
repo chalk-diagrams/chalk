@@ -1,27 +1,43 @@
-from chalk.arc import ArcBetween, ArcByDegrees, ArcRadius, Degrees
+from chalk.arc import ArcBetween, ArcByDegrees, Degrees
 from chalk.transform import P2
 
 from hypothesis import given
-from hypothesis.strategies import floats
+from hypothesis.strategies import floats, booleans
 import pytest
+import math
 
 def test_arc_between():
-    a = ArcByDegrees(Degrees(180), Degrees(0), 1, P2(0, 0))
-    b = ArcBetween(P2(-1, 0), P2(1,0), 1)
-    c = ArcRadius(P2(-1, 0), P2(1,0), 0, 1)
+    checks = []
+    
+    a = ArcByDegrees(Degrees(180), Degrees(180), 1, P2(0, 0))
+    b = ArcBetween(P2(-1, 0), P2(1, 0), 1)
+    checks.append((a, b))
 
-    assert a.to_arc_between() == b
-    assert b.to_arc_by_degrees() == a
-    assert c.to_arc_between() == b
-    assert b.to_arc_radius() == c
+    a = ArcByDegrees(Degrees(180), Degrees(-180), 1, P2(0, 0))
+    b = ArcBetween(P2(-1, 0), P2(1,0), -1)
+    checks.append((a, b))
+    
+    for a, b in checks:
+        assert a.to_arc_between() == b
+        print(b, b.to_arc_by_degrees() )
+        assert b.to_arc_by_degrees() == a
 
+degree = floats(min_value=10, max_value=150)
+@given(degree, degree, floats(min_value=0.1, max_value=10),
+       floats(min_value=-10, max_value=10), floats(min_value=-10, max_value=10),
+       booleans())
+def test_arcs(angle0, angle_off, rad, p1, p2, clockwise):
 
-degree = floats(min_value=10, max_value=350)
-@given(degree, degree)
-def test_arcs(angle0, angle_off):
-    a = ArcByDegrees(Degrees(angle0), Degrees(angle0 - angle_off), 10, P2(0, 0))
+    a = ArcByDegrees(Degrees(angle0), Degrees(angle_off), rad, P2(p1, p2))
     b = a.to_arc_between().to_arc_by_degrees()
-    print(a, a.to_arc_between(), b)
+    print(a)
+    print(a.to_arc_between())
+    print(b)
+    print()
     assert a.radius == pytest.approx(b.radius)
-    # assert a.angle0 == pytest.approx(b.angle0)
-    # assert a.angle1 == pytest.approx(b.angle1)
+    assert a.angle == pytest.approx(b.angle)
+    assert a.dangle == pytest.approx(b.dangle)
+
+
+    
+
