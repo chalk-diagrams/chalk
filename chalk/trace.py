@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Callable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional
 
 from chalk.transform import (
     P2,
@@ -11,8 +11,22 @@ from chalk.transform import (
     apply_affine,
     remove_translation,
 )
+from chalk.visitor import DiagramVisitor
+
+if TYPE_CHECKING:
+    from chalk.core import (
+        ApplyName,
+        ApplyStyle,
+        ApplyTransform,
+        Compose,
+        Empty,
+        Primitive,
+    )
+    from chalk.types import Diagram
+
 
 SignedDistance = float
+Ident = Affine.identity()
 
 
 class Trace(Transformable):
@@ -70,5 +84,33 @@ class Trace(Transformable):
         return p + u if u else None
 
 
-class Traceable:
-    pass
+class GetTrace(DiagramVisitor[Trace]):
+    def visit_primitive(self, diagram: Primitive, t: Affine = Ident) -> Trace:
+        new_transform = t * diagram.transform
+        return diagram.shape.get_trace().apply_transform(new_transform)
+
+    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Trace:
+        return Trace.empty()
+
+    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Trace:
+        # TODO Should we cache the trace?
+        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
+            self, t=t
+        )
+
+    def visit_apply_transform(
+        self, diagram: ApplyTransform, t: Affine = Ident
+    ) -> Trace:
+        return diagram.diagram.accept(self, t=t * diagram.transform)
+
+    def visit_apply_style(
+        self, diagram: ApplyStyle, t: Affine = Ident
+    ) -> Trace:
+        return diagram.diagram.accept(self, t=t)
+
+    def visit_apply_name(self, diagram: ApplyName, t: Affine = Ident) -> Trace:
+        return diagram.diagram.accept(self, t=t)
+
+
+def get_trace(self: Diagram, t: Affine = Ident) -> Trace:
+    return self.accept(GetTrace(), t=t)
