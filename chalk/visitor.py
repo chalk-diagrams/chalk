@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 if TYPE_CHECKING:
+    from chalk.ArrowHead import ArrowHead
     from chalk.core import (
         ApplyName,
         ApplyStyle,
@@ -11,7 +12,10 @@ if TYPE_CHECKING:
         Empty,
         Primitive,
     )
-
+    from chalk.Latex import Latex
+    from chalk.Path import Path
+    from chalk.Shape import Spacer
+    from chalk.Text import Text
 
 A = TypeVar("A")
 
@@ -33,4 +37,21 @@ class DiagramVisitor(Generic[A]):
         raise NotImplementedError
 
     def visit_apply_name(self, diagram: ApplyName) -> A:
+        raise NotImplementedError
+
+
+class ShapeVisitor(Generic[A]):
+    def visit_path(self, shape: Path) -> A:
+        raise NotImplementedError
+
+    def visit_latex(self, shape: Latex) -> A:
+        raise NotImplementedError
+
+    def visit_text(self, shape: Text) -> A:
+        raise NotImplementedError
+
+    def visit_spacer(self, shape: Spacer) -> A:
+        raise NotImplementedError
+
+    def visit_arrowhead(self, shape: ArrowHead) -> A:
         raise NotImplementedError

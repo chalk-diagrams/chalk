@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from colour import Color
 from svgwrite import Drawing
@@ -10,6 +11,7 @@ from chalk.shape import Shape
 from chalk.style import Style
 from chalk.transform import P2, BoundingBox, origin
 from chalk.types import Diagram, PyCairoContext, PyLatex, PyLatexElement
+from chalk.visitor import A, ShapeVisitor
 
 black = Color("black")
 
@@ -57,20 +59,5 @@ class ArrowHead(Shape):
         self.bb = BoundingBox([origin, origin + P2(eps, eps)])
         return self.bb
 
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        assert style.output_size
-        scale = 0.01 * (15 / 500) * style.output_size
-        render_cairo_prims(self.arrow_shape.scale(scale), ctx, style)
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        assert style.output_size
-        scale = 0.01 * (15 / 500) * style.output_size
-        return self.arrow_shape.scale(scale).to_svg(dwg, style)
-
-    def render_tikz(self, p: PyLatex, style: Style) -> PyLatexElement:
-        assert style.output_size
-        scale = 0.01 * 3 * (15 / 500) * style.output_size
-        s = p.TikZScope()
-        for inner in self.arrow_shape.scale(scale).to_tikz(p, style):
-            s.append(inner)
-        return
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_arrowhead(self, **kwargs)

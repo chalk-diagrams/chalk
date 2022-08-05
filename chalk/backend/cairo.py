@@ -3,10 +3,27 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List, Optional
 
 from chalk import transform as tx
+from chalk.arc import ArcSegment
+from chalk.arrowheads import ArrowHead
+from chalk.latex import Latex, Raw
+from chalk.path import Path
+from chalk.segment import Segment
+from chalk.shape import Spacer
 from chalk.style import Style
-from chalk.transform import Affine, unit_x, unit_y
-from chalk.types import Diagram
-from chalk.visitor import DiagramVisitor
+from chalk.text import Text
+from chalk.transform import (
+    P2,
+    V2,
+    Affine,
+    BoundingBox,
+    Ray,
+    origin,
+    to_radians,
+    unit_x,
+    unit_y,
+)
+from chalk.types import Diagram, SegmentLike
+from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
     from chalk.core import (
@@ -21,6 +38,16 @@ if TYPE_CHECKING:
 
 Ident = Affine.identity()
 PyCairoContext = Any
+EMPTY_STYLE = Style.empty()
+
+
+def tx_to_cairo(affine: Affine) -> Any:
+    import cairo
+
+    def convert(a, b, c, d, e, f):  # type: ignore
+        return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
+
+    return convert(*affine[:6])  # type: ignore
 
 
 class ToList(DiagramVisitor[List["Primitive"]]):
@@ -68,15 +95,86 @@ class ToList(DiagramVisitor[List["Primitive"]]):
         return [prim for prim in diagram.diagram.accept(self, t=t)]
 
 
+class ToCairoShape(ShapeVisitor[None]):
+    def render_segment(self, seg: SegmentLike, ctx: PyCairoContext) -> None:
+        if isinstance(seg, Segment):
+            ctx.line_to(seg.q.x, seg.q.y)
+        elif isinstance(seg, ArcSegment):
+            end = seg.angle + seg.dangle
+            ctx.new_sub_path()
+            ctx.save()
+            matrix = tx_to_cairo(seg.t)
+            ctx.transform(matrix)
+            if seg.dangle < 0:
+                ctx.arc_negative(
+                    0.0, 0.0, 1.0, to_radians(seg.angle), to_radians(end)
+                )
+            else:
+                ctx.arc(0.0, 0.0, 1.0, to_radians(seg.angle), to_radians(end))
+            ctx.restore()
+        else:
+            assert False, "not a known segment"
+
+    def visit_path(
+        self,
+        path: Path,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE,
+    ) -> None:
+        for i, seg in enumerate(path.segments):
+            if i == 0:
+                p = seg.p
+                ctx.move_to(p.x, p.y)
+            self.render_segment(seg, ctx)
+        if path.is_closed():
+            ctx.close_path()
+
+    def visit_latex(self, shape: Latex) -> None:
+        raise NotImplementedError("Latex is not implemented")
+
+    def visit_text(
+        self,
+        shape: Text,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE,
+    ) -> None:
+        ctx.select_font_face("sans-serif")
+        if shape.font_size is not None:
+            ctx.set_font_size(shape.font_size)
+        extents = ctx.text_extents(shape.text)
+
+        ctx.move_to(-(extents.width / 2), (extents.height / 2))
+        ctx.text_path(shape.text)
+
+    def visit_spacer(
+        self,
+        shape: Spacer,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE,
+    ) -> None:
+        return
+
+    def visit_arrowhead(
+        self,
+        shape: ArrowHead,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE,
+    ) -> None:
+        assert style.output_size
+        scale = 0.01 * (15 / 500) * style.output_size
+        render_cairo_prims(shape.arrow_shape.scale(scale), ctx, style)
+
+
 def render_cairo_prims(
     base: Diagram, ctx: PyCairoContext, style: Style
 ) -> None:
     base = base._style(style)
+    shape_renderer = ToCairoShape()
     for prim in base.accept(ToList()):
         # apply transformation
-        matrix = tx.to_cairo(prim.transform)
+        matrix = tx_to_cairo(prim.transform)
         ctx.transform(matrix)
-        prim.shape.render(ctx, prim.style)
+        prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
 
         # undo transformation
         matrix.invert()

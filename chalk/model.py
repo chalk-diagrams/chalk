@@ -37,12 +37,13 @@ def show_envelope(
     if envelope.is_empty:
         return self
     outer: Diagram = (
-        Primitive.from_shape(Path.from_points(envelope.to_path(angle)))
+        Path.from_points(list(envelope.to_path(angle)))
+        .stroke()
         .fill_opacity(0)
         .line_color(Color("red"))
     )
     outer = (
-        Path.from_pairs(envelope.to_segments(angle))
+        Path.from_pairs(list(envelope.to_segments(angle)))
         .stroke()
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
@@ -65,29 +66,28 @@ def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     envelope2 = other.get_envelope()
     v1 = envelope1.envelope_v(direction)
     one: Diagram = (
-        Primitive.from_shape(Path(Vec2Array([origin, v1])))
+        Path.from_points([origin, v1])
+        .stroke()
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
     v2 = envelope2.envelope_v(-direction)
     two: Diagram = (
-        Primitive.from_shape(Path(Vec2Array([origin, v2])))
+        Path.from_points([origin, v2])
+        .stroke()
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
     split: Diagram = (
-        Primitive.from_shape(
-            Path(
-                Vec2Array(
-                    [
-                        v1 + direction.perpendicular(),
-                        v1 - direction.perpendicular(),
-                    ]
-                )
-            )
+        Path.from_points(
+            [
+                v1 + direction.perpendicular(),
+                v1 - direction.perpendicular(),
+            ]
         )
+        .stroke()
         .line_color(Color("blue"))
         .line_width(0.02)
     )

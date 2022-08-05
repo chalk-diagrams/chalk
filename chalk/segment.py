@@ -10,16 +10,19 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.transform import P2, V2
+from chalk.types import SegmentLike
 
 SignedDistance = float
 
+Ident = tx.Affine.identity()
 
 @dataclass
-class Segment(tx.Transformable):
+class Segment(SegmentLike):
     p: P2
     q: P2
+    dangle: float = 0
 
-    def get_trace(self) -> Trace:
+    def get_trace(self, t: tx.Affine=Ident) -> Trace:
         def f(point: P2, direction: V2) -> List[float]:
             ray = Ray(point, direction)
             inter = sorted(line_segment(ray, self))
@@ -27,7 +30,7 @@ class Segment(tx.Transformable):
 
         return Trace(f)
 
-    def get_envelope(self) -> Envelope:
+    def get_envelope(self, t: tx.Affine=Ident) -> Envelope:
         def f(d: V2) -> SignedDistance:
             x: float = max(d.dot(self.q), d.dot(self.p))
             return x
@@ -41,18 +44,8 @@ class Segment(tx.Transformable):
     def length(self) -> Any:
         return (self.q - self.p).length
 
-    def apply_transform(self, t: tx.Affine) -> Segment:
+    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
         return Segment(tx.apply_affine(t, self.p), tx.apply_affine(t, self.q))
-
-    def render_path(self, ctx) -> None:
-        ctx.line_to(self.q.x, self.q.y)
-
-    def render_svg_path(self) -> str:
-        return f"L {self.q.x} {self.q.y}"
-
-    def render_tikz_path(self, pts, pylatex) -> None:
-        pts.append("--")
-        pts.append(pylatex.TikZCoordinate(self.q.x, self.q.y))
 
 
 def ray_ray_intersection(

@@ -24,21 +24,28 @@ Ident = tx.Affine.identity()
 
 
 class Enveloped(Protocol):
-    def get_envelope(self, t: tx.Affine = Ident) -> Envelope:
+    def get_envelope(self, t: tx.Affine=Ident) -> Envelope:
         ...
 
 
 class Traceable(Protocol):
-    def get_trace(self, t: tx.Affine = Ident) -> Trace:
+    def get_trace(self, t: tx.Affine=Ident) -> Trace:
         ...
 
 
 class SegmentLike(Enveloped, Traceable, Transformable):
-    p: P2
-    q: P2
-    def render_svg_path(self) -> str: ...
-    def render_path(self, ctx: PyCairoContext) -> str: ...
-    def render_tikz_path(self, a:Any, b:Any) -> str: ...
+    @property
+    def p(self) -> P2:
+        ...
+
+    @property
+    def q(self) -> P2:
+        ...
+
+    @property
+    def dangle(self) -> float:
+        ...
+
 
 class Diagram(
     Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol

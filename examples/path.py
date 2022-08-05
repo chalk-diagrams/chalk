@@ -14,7 +14,6 @@ b = 1 - r
 rad = 0.2 / 4
 
 a  = ArcSegment(10, 50).rotate(90)
-print(a.dangle, a.tdangle)
 
 a  = ArcSegment.arc_between(P2(-1, 0), P2(0, 1.0), 1)
 # print(a.p, a.q, a.r_x, a.r_y, a.angle, a.tangle)

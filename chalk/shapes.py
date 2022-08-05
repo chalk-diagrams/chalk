@@ -103,14 +103,8 @@ def arc_between(
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
-    if not isinstance(point1, P2):
-        p = P2(*point1)
-    else:
-        p = point1
-    if not isinstance(point2, P2):
-        q = P2(*point2)
-    else:
-        q = point2
+    p = P2(*point1)
+    q = P2(*point2)
     return Path(
         [
             ArcSegment.arc_between(p, q, height),

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -11,18 +11,11 @@ from chalk.shape import Shape
 from chalk.style import Style
 from chalk.trace import Trace
 from chalk.transform import P2
-from chalk.types import (
-    BaseElement,
-    Diagram,
-    Drawing,
-    PyCairoContext,
-    PyLatex,
-    PyLatexElement,
-    SegmentLike,
-)
+from chalk.types import Diagram, Drawing, SegmentLike
+from chalk.visitor import A, ShapeVisitor
 
 
-def make_path(segments):
+def make_path(segments: List[Tuple[float, float]]) -> Diagram:
     return Path.from_list_of_tuples(segments).stroke()
 
 
@@ -34,7 +27,7 @@ class Path(Shape, tx.Transformable):
 
     @classmethod
     def from_point(cls, point: P2) -> Path:
-        return cls(Segment(point, point))
+        return cls([Segment(point, point)])
 
     @classmethod
     def from_points(cls, points: List[P2]) -> Path:
@@ -122,41 +115,5 @@ class Path(Shape, tx.Transformable):
                 return True
         return False
 
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-
-        for i, seg in enumerate(self.segments):
-            if i == 0:
-                p = seg.p
-                ctx.move_to(p.x, p.y)
-            seg.render_path(ctx)
-        if self.is_closed():
-            ctx.close_path()
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        line = dwg.path(
-            style="vector-effect: non-scaling-stroke;",
-        )
-        for i, seg in enumerate(self.segments):
-            if i == 0:
-                p = seg.p
-                line.push(f"M {p.x} {p.y}")
-            line.push(seg.render_svg_path())
-        if self.is_closed():
-            line.push("Z")
-        return line
-
-    def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
-        pts = pylatex.TikZPathList()
-        for i, seg in enumerate(self.segments):
-            if i == 0:
-                p = seg.p
-                pts.append(pylatex.TikZCoordinate(p.x, p.y))
-            seg.render_tikz_path(pts, pylatex)
-            # pts.append("--")
-            # pts.append(pylatex.TikZCoordinate(p.x, p.y))
-        if self.is_closed():
-            pts.append("--")
-            pts._arg_list.append(pylatex.TikZUserPath("cycle"))
-        return pylatex.TikZDraw(
-            pts, options=pylatex.TikZOptions(**style.to_tikz(pylatex))
-        )
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_path(self, **kwargs)

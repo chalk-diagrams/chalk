@@ -97,7 +97,9 @@ def place_at(
 
 
 def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
-    return concat(d.translate(p.x, p.y) for d, p in zip(diagrams, path.points))
+    return concat(
+        d.translate(p.x, p.y) for d, p in zip(diagrams, path.points())
+    )
 
 
 # position, atPoints

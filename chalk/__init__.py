@@ -8,14 +8,7 @@ except ImportError:  # for Python<3.8
 
 import chalk.align as align
 from chalk.align import *  # noqa: F403
-from chalk.arrow import (
-    ArrowOpts,
-    arrow_at,
-    arrow_between,
-    arrow_v,
-    make_path,
-    unit_arc_between,
-)
+from chalk.arrow import ArrowOpts, arrow_at, arrow_between, arrow_v
 from chalk.combinators import *  # noqa: F403
 from chalk.core import empty, set_svg_height
 from chalk.envelope import Envelope

@@ -1,43 +1,17 @@
 import math
 from typing import Any, Protocol, TypeVar
 
-from planar.py import Affine as Affine
-from planar.py import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
+from planar import Affine as Affine
+from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 
 
-def to_cairo(affine: Affine) -> Any:
-    import cairo
 
-    def convert(a, b, c, d, e, f):  # type: ignore
-        return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
-
-    return convert(*affine[:6])  # type: ignore
-
-
-def to_svg(affine: Affine) -> str:
-    def convert(
-        a: float, b: float, c: float, d: float, e: float, f: float
-    ) -> str:
-        return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
-
-    return convert(*affine[:6])
-
-
-def to_tikz(affine: Affine) -> str:
-    def convert(
-        a: float, b: float, c: float, d: float, e: float, f: float
-    ) -> str:
-        return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
-
-    return convert(*affine[:6])
-
-
-def from_radians(θ: float) -> Affine:
+def from_radians(θ: float) -> float:
     t = (θ / math.pi) * 180
     return t
 
 
-def to_radians(θ: float) -> Affine:
+def to_radians(θ: float) -> float:
     t = (θ / 180) * math.pi
     return t
 
@@ -54,6 +28,8 @@ def transpose_translation(aff: Affine) -> Affine:
 
 def apply_affine(aff: Affine, x: Any) -> Any:
     return aff * x
+
+
 
 
 TTrans = TypeVar("TTrans", bound="TransformableProtocol")
@@ -159,21 +135,21 @@ class Transformable(TransformableProtocol):
 # transformation. This is not great, but necessary to keep the
 # Object oriented api of Chalk.
 
-Vec2._app = lambda x, y: y * x
-Vec2.shear_x = Transformable.shear_x
-Vec2.shear_y = Transformable.shear_y
-Vec2.scale = Transformable.scale
-Vec2.scale_x = Transformable.scale_x
-Vec2.scale_y = Transformable.scale_y
-Vec2.rotate = Transformable.rotate
-Vec2.rotate_by = Transformable.rotate_by
-Vec2.reflect_x = Transformable.reflect_x
-Vec2.reflect_y = Transformable.reflect_y
+Vec2._app = lambda x, y: y * x # type: ignore
+Vec2.shear_x = Transformable.shear_x # type: ignore
+Vec2.shear_y = Transformable.shear_y # type: ignore
+Vec2.scale = Transformable.scale # type: ignore
+Vec2.scale_x = Transformable.scale_x # type: ignore
+Vec2.scale_y = Transformable.scale_y # type: ignore
+Vec2.rotate = Transformable.rotate # type: ignore
+Vec2.rotate_by = Transformable.rotate_by # type: ignore 
+Vec2.reflect_x = Transformable.reflect_x # type: ignore
+Vec2.reflect_y = Transformable.reflect_y # type: ignore
 V2 = Vec2
 
 
-Vec2.translate = Transformable.translate
-Vec2.translate_by = Transformable.translate_by
+Vec2.translate = Transformable.translate # type: ignore
+Vec2.translate_by = Transformable.translate_by # type: ignore
 P2 = Point
 
 origin = P2(0, 0)
@@ -181,6 +157,11 @@ unit_x = V2(1, 0)
 unit_y = V2(0, 1)
 
 
+def apply_p2_affine(aff: Affine, x: Point) -> Point:
+    y: Point = aff * x
+    return y
+
+    
 def affine(affine: Affine, other: Any) -> Any:
     sa, sb, sc, sd, se, sf, _, _, _ = affine[:]
     if isinstance(other, Affine):
@@ -218,7 +199,7 @@ def affine(affine: Affine, other: Any) -> Any:
         return Vec2(vx * sa + vy * sb + sc, vx * sd + vy * se + sf)
 
 
-Affine.__mul__ = affine
+Affine.__mul__ = affine # type: ignore
 
 # Explicit rexport
 
