@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, Optional, Protocol, Tuple
 
-
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
@@ -10,7 +9,7 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
-from chalk.transform import V2
+from chalk.transform import P2, V2, Transformable
 
 if TYPE_CHECKING:
     from chalk.shape import Shape
@@ -33,6 +32,13 @@ class Traceable(Protocol):
     def get_trace(self, t: tx.Affine = Ident) -> Trace:
         ...
 
+
+class SegmentLike(Enveloped, Traceable, Transformable):
+    p: P2
+    q: P2
+    def render_svg_path(self) -> str: ...
+    def render_path(self, ctx: PyCairoContext) -> str: ...
+    def render_tikz_path(self, a:Any, b:Any) -> str: ...
 
 class Diagram(
     Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol

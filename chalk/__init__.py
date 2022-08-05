@@ -22,7 +22,7 @@ from chalk.envelope import Envelope
 from chalk.image import image
 from chalk.latex import latex
 from chalk.path import Path
-from chalk.shape import  Spacer
+from chalk.shape import Spacer
 from chalk.shapes import *  # noqa: F403
 from chalk.style import Style
 from chalk.text import text

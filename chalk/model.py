@@ -8,7 +8,6 @@ from chalk.types import Diagram
 
 def show_origin(self: Diagram) -> Diagram:
     "Add a red dot at the origin of a diagram for debugging."
-    from chalk.core import Primitive
 
     envelope = self.get_envelope()
     if envelope.is_empty:
@@ -42,9 +41,12 @@ def show_envelope(
         .fill_opacity(0)
         .line_color(Color("red"))
     )
-    outer = Path.from_pairs(envelope.to_segments(angle)).stroke().line_color(
-        Color("red")
-    ).dashing([0.01, 0.01], 0)
+    outer = (
+        Path.from_pairs(envelope.to_segments(angle))
+        .stroke()
+        .line_color(Color("red"))
+        .dashing([0.01, 0.01], 0)
+    )
 
     new = self + outer
     if phantom:

@@ -1,8 +1,7 @@
 from typing import Optional, Tuple, Union
 
-from chalk.arrow import unit_arc_between
-from chalk.path import Path, make_path
 from chalk.arc import ArcSegment
+from chalk.path import Path
 from chalk.transform import P2, to_radians
 from chalk.types import Diagram
 
@@ -20,15 +19,7 @@ def circle(radius: float) -> Diagram:
        Diagram
 
     """
-    return (
-        Path(
-            [
-                ArcSegment(0, 360-1e-5)
-            ]
-        )
-        .scale(radius)
-        .stroke()
-    )
+    return Path([ArcSegment(0, 360 - 1e-5)]).scale(radius).stroke()
 
 
 def arc(radius: float, angle0: float, angle1: float) -> Diagram:
@@ -44,9 +35,7 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
       Diagram
 
     """
-    return Path(
-        [ArcSegment(angle0, angle1 - angle0).scale(radius)]
-    ).stroke()
+    return Path([ArcSegment(angle0, angle1 - angle0).scale(radius)]).stroke()
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:

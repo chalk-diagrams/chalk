@@ -9,7 +9,7 @@ from planar.py import Ray
 import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import P2, V2, unit_x, unit_y, to_radians, from_radians
+from chalk.transform import P2, V2
 
 SignedDistance = float
 
@@ -18,7 +18,7 @@ SignedDistance = float
 class Segment(tx.Transformable):
     p: P2
     q: P2
-    
+
     def get_trace(self) -> Trace:
         def f(point: P2, direction: V2) -> List[float]:
             ray = Ray(point, direction)
@@ -44,9 +44,9 @@ class Segment(tx.Transformable):
     def apply_transform(self, t: tx.Affine) -> Segment:
         return Segment(tx.apply_affine(t, self.p), tx.apply_affine(t, self.q))
 
-    def render_path(self, ctx):
+    def render_path(self, ctx) -> None:
         ctx.line_to(self.q.x, self.q.y)
-    
+
     def render_svg_path(self) -> str:
         return f"L {self.q.x} {self.q.y}"
 

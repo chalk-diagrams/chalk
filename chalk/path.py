@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Protocol, Tuple
+from typing import List, Tuple
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
@@ -10,27 +10,22 @@ from chalk.segment import Segment
 from chalk.shape import Shape
 from chalk.style import Style
 from chalk.trace import Trace
-from chalk.transform import P2, Transformable, Vec2Array
+from chalk.transform import P2
 from chalk.types import (
     BaseElement,
     Diagram,
     Drawing,
-    Enveloped,
     PyCairoContext,
     PyLatex,
     PyLatexElement,
-    Traceable,
+    SegmentLike,
 )
-
-
-class SegmentLike(Enveloped, Traceable, Transformable):
-    p: P2
-    q: P2
 
 
 def make_path(segments):
     return Path.from_list_of_tuples(segments).stroke()
-    
+
+
 @dataclass
 class Path(Shape, tx.Transformable):
     """Path class."""
@@ -43,7 +38,9 @@ class Path(Shape, tx.Transformable):
 
     @classmethod
     def from_points(cls, points: List[P2]) -> Path:
-        return cls(list([Segment(pt1, pt2) for pt1, pt2 in zip(points, points[1:])]))
+        return cls(
+            list([Segment(pt1, pt2) for pt1, pt2 in zip(points, points[1:])])
+        )
 
     @classmethod
     def from_pairs(cls, points: List[Tuple[P2, P2]]) -> Path:
@@ -61,11 +58,11 @@ class Path(Shape, tx.Transformable):
                 points.append(seg.p)
             points.append(seg.q)
         return points
-    
+
     @staticmethod
     def hrule(length: float) -> Path:
         return Path.from_list_of_tuples([(-length / 2, 0), (length / 2, 0)])
-    
+
     @staticmethod
     def vrule(length: float) -> Path:
         return Path.from_list_of_tuples([(0, -length / 2), (0, length / 2)])
@@ -130,7 +127,7 @@ class Path(Shape, tx.Transformable):
         for i, seg in enumerate(self.segments):
             if i == 0:
                 p = seg.p
-                ctx.move_to(p.x, p.y)                
+                ctx.move_to(p.x, p.y)
             seg.render_path(ctx)
         if self.is_closed():
             ctx.close_path()
@@ -153,7 +150,7 @@ class Path(Shape, tx.Transformable):
         for i, seg in enumerate(self.segments):
             if i == 0:
                 p = seg.p
-                pts.append(pylatex.TikZCoordinate(p.x, p.y))                            
+                pts.append(pylatex.TikZCoordinate(p.x, p.y))
             seg.render_tikz_path(pts, pylatex)
             # pts.append("--")
             # pts.append(pylatex.TikZCoordinate(p.x, p.y))

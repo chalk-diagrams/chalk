@@ -28,15 +28,14 @@ def tri() -> Diagram:
 def dart(cut: float = 0.2) -> Diagram:
     return (
         Path.from_list_of_tuples(
-                [
-                    (0, -cut),
-                    (1.0, cut),
-                    (0.0, -1.0 - cut),
-                    (-1.0, +cut),
-                    (0, -cut),
-                ]
-            )
-        
+            [
+                (0, -cut),
+                (1.0, cut),
+                (0.0, -1.0 - cut),
+                (-1.0, +cut),
+                (0, -cut),
+            ]
+        )
         .stroke()
         .rotate_by(-0.25)
         .fill_color(Color("black"))

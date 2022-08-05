@@ -8,7 +8,6 @@ from chalk.transform import (
     V2,
     Affine,
     BoundingBox,
-    Polygon,
     Transformable,
     Vec2Array,
     apply_affine,
