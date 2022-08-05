@@ -23,7 +23,7 @@ def circle(radius: float) -> Diagram:
     return (
         Path(
             [
-                ArcSegment(0, 360)
+                ArcSegment(0, 360-1e-5)
             ]
         )
         .scale(radius)
