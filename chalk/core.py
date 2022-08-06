@@ -19,10 +19,9 @@ import chalk.types
 from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.shape import Shape
 from chalk.style import Stylable, Style
 from chalk.transform import Affine, unit_x
-from chalk.types import Diagram
+from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
 

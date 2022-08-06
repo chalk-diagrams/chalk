@@ -7,24 +7,17 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, NewType
+from typing import List
 
 from planar.py import Ray
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
-from chalk.segment import Segment, ray_circle_intersection
+from chalk.shapes.segment import Segment, ray_circle_intersection
 from chalk.trace import Trace
-from chalk.transform import (
-    P2,
-    V2,
-    TTrans,
-    from_radians,
-    to_radians,
-    unit_x,
-    unit_y,
-)
+from chalk.transform import P2, V2, from_radians, unit_x, unit_y
 from chalk.types import SegmentLike
+
 Ident = tx.Affine.identity()
 
 Degrees = float
@@ -84,7 +77,7 @@ class ArcSegment(SegmentLike):
     def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
         return ArcSegment(self.angle, self.dangle, t * self.t)
 
-    def get_trace(self, t: tx.Affine=Ident) -> Trace:
+    def get_trace(self, t: tx.Affine = Ident) -> Trace:
         "Trace is done as simple arc and transformed"
         angle0_deg = self.angle
         angle1_deg = self.angle + self.dangle
@@ -105,7 +98,7 @@ class ArcSegment(SegmentLike):
 
         return Trace(f).apply_transform(self.t)
 
-    def get_envelope(self, t: tx.Affine=Ident) -> Envelope:
+    def get_envelope(self, t: tx.Affine = Ident) -> Envelope:
         "Trace is done as simple arc and transformed"
         angle0_deg = self.angle
         angle1_deg = self.angle + self.dangle

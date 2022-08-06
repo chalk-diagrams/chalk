@@ -2,8 +2,7 @@ from functools import reduce
 from typing import Iterable, List, Optional, Tuple
 
 from chalk.envelope import Envelope
-from chalk.path import Path
-from chalk.shape import Spacer
+from chalk.shapes import Path, Spacer
 from chalk.transform import V2, Affine, origin, unit_x, unit_y
 from chalk.types import Diagram
 

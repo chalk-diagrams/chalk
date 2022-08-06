@@ -16,13 +16,22 @@ SignedDistance = float
 
 Ident = tx.Affine.identity()
 
+
 @dataclass
 class Segment(SegmentLike):
-    p: P2
-    q: P2
+    p_: P2
+    q_: P2
     dangle: float = 0
 
-    def get_trace(self, t: tx.Affine=Ident) -> Trace:
+    @property
+    def p(self) -> P2:
+        return self.p_
+
+    @property
+    def q(self) -> P2:
+        return self.q_
+
+    def get_trace(self, t: tx.Affine = Ident) -> Trace:
         def f(point: P2, direction: V2) -> List[float]:
             ray = Ray(point, direction)
             inter = sorted(line_segment(ray, self))
@@ -30,7 +39,7 @@ class Segment(SegmentLike):
 
         return Trace(f)
 
-    def get_envelope(self, t: tx.Affine=Ident) -> Envelope:
+    def get_envelope(self, t: tx.Affine = Ident) -> Envelope:
         def f(d: V2) -> SignedDistance:
             x: float = max(d.dot(self.q), d.dot(self.p))
             return x
@@ -44,7 +53,7 @@ class Segment(SegmentLike):
     def length(self) -> Any:
         return (self.q - self.p).length
 
-    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> Segment:  # type: ignore
         return Segment(tx.apply_affine(t, self.p), tx.apply_affine(t, self.q))
 
 

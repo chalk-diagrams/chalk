@@ -7,15 +7,19 @@ from svgwrite import Drawing
 from svgwrite.base import BaseElement
 
 from chalk import transform as tx
-from chalk.arc import ArcSegment
-from chalk.arrowheads import ArrowHead
-from chalk.latex import Latex, Raw
-from chalk.path import Path
-from chalk.segment import Segment
-from chalk.shape import Spacer
+from chalk.shapes import (
+    ArcSegment,
+    ArrowHead,
+    Image,
+    Latex,
+    Path,
+    Raw,
+    Segment,
+    Spacer,
+    Text,
+)
 from chalk.style import Style
-from chalk.text import Text
-from chalk.transform import P2, V2, BoundingBox, Ray, origin, unit_x, unit_y
+from chalk.transform import unit_x, unit_y
 from chalk.types import Diagram, SegmentLike
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -157,7 +161,16 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
     ) -> BaseElement:
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
-        return shape.arrow_shape.scale(scale).to_svg(self.dwg, style)
+        return to_svg(shape.arrow_shape.scale(scale), self.dwg, style)
+
+    def visit_image(
+        self, shape: Image, style: Style = EMPTY_STYLE
+    ) -> BaseElement:
+        dx = -shape.width / 2
+        dy = -shape.height / 2
+        return self.dwg.image(
+            href=shape.url_path, transform=f"translate({dx}, {dy})"
+        )
 
 
 def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:

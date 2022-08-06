@@ -1,8 +1,7 @@
 from colour import Color
 
-from chalk.path import Path
-from chalk.shapes import circle
-from chalk.transform import V2, Vec2Array, origin
+from chalk.shapes import Path, circle
+from chalk.transform import V2, origin
 from chalk.types import Diagram
 
 
@@ -30,7 +29,6 @@ def show_envelope(
     Returns:
         Diagram
     """
-    from chalk.core import Primitive
 
     self.show_origin()
     envelope = self.get_envelope()
@@ -60,7 +58,6 @@ def show_envelope(
 
 def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     "Add blue normal line to show placement of combination."
-    from chalk.core import Primitive
 
     envelope1 = self.get_envelope()
     envelope2 = other.get_envelope()

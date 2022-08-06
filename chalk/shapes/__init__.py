@@ -1,7 +1,13 @@
 from typing import Optional, Tuple, Union
 
-from chalk.arc import ArcSegment
-from chalk.path import Path
+from chalk.shapes.arc import ArcSegment  # noqa: F401
+from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
+from chalk.shapes.image import Image, from_pil, image  # noqa: F401
+from chalk.shapes.latex import Latex, Raw, latex  # noqa: F401
+from chalk.shapes.path import Path, make_path  # noqa: F401
+from chalk.shapes.segment import Segment  # noqa: F401
+from chalk.shapes.shape import Shape, Spacer  # noqa: F401
+from chalk.shapes.text import Text, text  # noqa: F401
 from chalk.transform import P2, to_radians
 from chalk.types import Diagram
 
@@ -110,3 +116,6 @@ def arc_between(
             ArcSegment.arc_between(p, q, height),
         ]
     ).stroke()
+
+
+ignore = [Optional]

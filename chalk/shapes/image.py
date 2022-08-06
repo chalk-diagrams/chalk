@@ -1,21 +1,19 @@
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Optional
+from typing import Any, Optional
 
 import PIL
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
+from PIL import Image as Im
 
-from chalk.shape import Shape
-from chalk.style import Style
+from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import Diagram, PyCairoContext, PyCairoSurface
+from chalk.types import Diagram
 
 
 def from_pil(
-    im: PIL.Image,
+    im: Im,
     alpha: float = 1.0,
-) -> PyCairoSurface:
+) -> Any:
     import cairo
 
     format: cairo.Format = cairo.FORMAT_ARGB32
@@ -54,18 +52,6 @@ class Image(Shape):
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
-
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        surface = from_pil(self.im)
-        ctx.set_source_surface(surface, -(self.width / 2), -(self.height / 2))
-        ctx.paint()
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        dx = -self.width / 2
-        dy = -self.height / 2
-        return dwg.image(
-            href=self.url_path, transform=f"translate({dx}, {dy})"
-        )
 
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:

@@ -2,15 +2,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from colour import Color
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
 
-from chalk.backend.cairo import render_cairo_prims
-from chalk.path import Path
-from chalk.shape import Shape
-from chalk.style import Style
+from chalk.shapes.path import Path
+from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import Diagram, PyCairoContext, PyLatex, PyLatexElement
+from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
 black = Color("black")

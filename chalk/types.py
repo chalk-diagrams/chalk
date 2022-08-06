@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, Optional, Protocol, Tuple
 
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
-
 import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
@@ -12,24 +9,23 @@ from chalk.trace import Trace
 from chalk.transform import P2, V2, Transformable
 
 if TYPE_CHECKING:
-    from chalk.shape import Shape
-    from chalk.visitor import A, DiagramVisitor
+    from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
-__all__ = ["BaseElement", "Drawing"]
-PyLatexElement = Any
-PyLatex = Any
-PyCairoContext = Any
-PyCairoSurface = Any
 Ident = tx.Affine.identity()
 
 
 class Enveloped(Protocol):
-    def get_envelope(self, t: tx.Affine=Ident) -> Envelope:
+    def get_envelope(self) -> Envelope:
         ...
 
 
 class Traceable(Protocol):
-    def get_trace(self, t: tx.Affine=Ident) -> Trace:
+    def get_trace(self) -> Trace:
+        ...
+
+
+class Shape(Enveloped, Traceable, Protocol):
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
         ...
 
 
@@ -42,9 +38,7 @@ class SegmentLike(Enveloped, Traceable, Transformable):
     def q(self) -> P2:
         ...
 
-    @property
-    def dangle(self) -> float:
-        ...
+    dangle: float
 
 
 class Diagram(
@@ -143,12 +137,6 @@ class Diagram(
     ) -> Envelope:
         ...
 
-    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        ...
-
-    def to_tikz(self, pylatex: PyLatex, style: Style) -> List[PyLatexElement]:
-        ...
-
     def _style(self, style: Style) -> Diagram:
         ...
 
@@ -167,10 +155,6 @@ class Diagram(
         ...
 
     def to_list(self, t: tx.Affine = Ident) -> List[Diagram]:
-        ...
-
-    @staticmethod
-    def from_shape(shape: Shape) -> Diagram:
         ...
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:

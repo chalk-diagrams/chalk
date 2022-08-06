@@ -12,10 +12,8 @@ if TYPE_CHECKING:
         Empty,
         Primitive,
     )
-    from chalk.Latex import Latex
     from chalk.Path import Path
-    from chalk.Shape import Spacer
-    from chalk.Text import Text
+    from chalk.shapes import Image, Latex, Spacer, Text
 
 A = TypeVar("A")
 
@@ -54,4 +52,7 @@ class ShapeVisitor(Generic[A]):
         raise NotImplementedError
 
     def visit_arrowhead(self, shape: ArrowHead) -> A:
+        raise NotImplementedError
+
+    def visit_image(self, shape: Image) -> A:
         raise NotImplementedError

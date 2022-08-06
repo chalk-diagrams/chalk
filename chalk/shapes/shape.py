@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any
 
 from chalk.envelope import Envelope
-from chalk.segment import ray_circle_intersection
-from chalk.style import Style
-from chalk.trace import SignedDistance, Trace
-from chalk.transform import P2, V2, BoundingBox, Ray, origin
-from chalk.types import BaseElement, Drawing
+from chalk.trace import Trace
+from chalk.transform import P2, BoundingBox, origin
 from chalk.visitor import A, ShapeVisitor
 
 
@@ -24,8 +20,7 @@ class Shape:
         return Envelope.from_bounding_box(self.get_bounding_box())
 
     def get_trace(self) -> Trace:
-        # default trace based on bounding box
-        from chalk.path import Path
+        from chalk.shapes.path import Path
 
         box = self.get_bounding_box()
         return Path.rectangle(box.width, box.height).get_trace()

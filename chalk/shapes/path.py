@@ -6,12 +6,11 @@ from typing import Any, List, Tuple
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.segment import Segment
-from chalk.shape import Shape
-from chalk.style import Style
+from chalk.shapes.segment import Segment
+from chalk.shapes.shape import Shape
 from chalk.trace import Trace
 from chalk.transform import P2
-from chalk.types import Diagram, Drawing, SegmentLike
+from chalk.types import Diagram, SegmentLike
 from chalk.visitor import A, ShapeVisitor
 
 

@@ -5,7 +5,6 @@ from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 
 
-
 def from_radians(θ: float) -> float:
     t = (θ / math.pi) * 180
     return t
@@ -28,8 +27,6 @@ def transpose_translation(aff: Affine) -> Affine:
 
 def apply_affine(aff: Affine, x: Any) -> Any:
     return aff * x
-
-
 
 
 TTrans = TypeVar("TTrans", bound="TransformableProtocol")
@@ -135,21 +132,21 @@ class Transformable(TransformableProtocol):
 # transformation. This is not great, but necessary to keep the
 # Object oriented api of Chalk.
 
-Vec2._app = lambda x, y: y * x # type: ignore
-Vec2.shear_x = Transformable.shear_x # type: ignore
-Vec2.shear_y = Transformable.shear_y # type: ignore
-Vec2.scale = Transformable.scale # type: ignore
-Vec2.scale_x = Transformable.scale_x # type: ignore
-Vec2.scale_y = Transformable.scale_y # type: ignore
-Vec2.rotate = Transformable.rotate # type: ignore
-Vec2.rotate_by = Transformable.rotate_by # type: ignore 
-Vec2.reflect_x = Transformable.reflect_x # type: ignore
-Vec2.reflect_y = Transformable.reflect_y # type: ignore
+Vec2._app = lambda x, y: y * x  # type: ignore
+Vec2.shear_x = Transformable.shear_x  # type: ignore
+Vec2.shear_y = Transformable.shear_y  # type: ignore
+Vec2.scale = Transformable.scale  # type: ignore
+Vec2.scale_x = Transformable.scale_x  # type: ignore
+Vec2.scale_y = Transformable.scale_y  # type: ignore
+Vec2.rotate = Transformable.rotate  # type: ignore
+Vec2.rotate_by = Transformable.rotate_by  # type: ignore
+Vec2.reflect_x = Transformable.reflect_x  # type: ignore
+Vec2.reflect_y = Transformable.reflect_y  # type: ignore
 V2 = Vec2
 
 
-Vec2.translate = Transformable.translate # type: ignore
-Vec2.translate_by = Transformable.translate_by # type: ignore
+Vec2.translate = Transformable.translate  # type: ignore
+Vec2.translate_by = Transformable.translate_by  # type: ignore
 P2 = Point
 
 origin = P2(0, 0)
@@ -161,7 +158,7 @@ def apply_p2_affine(aff: Affine, x: Point) -> Point:
     y: Point = aff * x
     return y
 
-    
+
 def affine(affine: Affine, other: Any) -> Any:
     sa, sb, sc, sd, se, sf, _, _, _ = affine[:]
     if isinstance(other, Affine):
@@ -199,7 +196,7 @@ def affine(affine: Affine, other: Any) -> Any:
         return Vec2(vx * sa + vy * sb + sc, vx * sd + vy * se + sf)
 
 
-Affine.__mul__ = affine # type: ignore
+Affine.__mul__ = affine  # type: ignore
 
 # Explicit rexport
 

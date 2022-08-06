@@ -29,14 +29,14 @@ def get_subdiagram_envelope(
     """Get the bounding envelope of the subdiagram."""
     subdiagram = self.get_subdiagram(name)
     assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_envelope(t=subdiagram[1])
+    return subdiagram[0].get_envelope(t=subdiagram[1])  # type: ignore
 
 
 def get_subdiagram_trace(self: Diagram, name: str, t: Affine = Ident) -> Trace:
     """Get the trace of the sub-diagram."""
     subdiagram = self.get_subdiagram(name)
     assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_trace(t=subdiagram[1])
+    return subdiagram[0].get_trace(t=subdiagram[1])  # type: ignore
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):

@@ -3,15 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List
 
 from chalk import transform as tx
-from chalk.arc import ArcSegment
-from chalk.arrowheads import ArrowHead
-from chalk.latex import Latex
-from chalk.path import Path
-from chalk.segment import Segment
-from chalk.shape import Spacer
+from chalk.shapes import (
+    ArcSegment,
+    ArrowHead,
+    Image,
+    Latex,
+    Path,
+    Segment,
+    Spacer,
+    Text,
+)
 from chalk.style import Style
-from chalk.text import Text
-from chalk.transform import P2, V2, BoundingBox, Ray, origin
+from chalk.transform import origin
 from chalk.types import Diagram, SegmentLike
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -113,7 +116,9 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
             end_ang = end - seg.rot
             pts._arg_list.append(
                 self.pylatex.TikZUserPath(
-                    f"{{[rotate={seg.rot}] arc[start angle={start-seg.rot}, end angle={end_ang}, x radius={seg.r_x}, y radius ={seg.r_y}]}}"
+                    f"""{{[rotate={seg.rot}] arc [
+                           start angle={start-seg.rot}, end angle={end_ang},
+                           x radius={seg.r_x}, y radius ={seg.r_y}]}}"""
                 )
             )
         else:
@@ -177,11 +182,16 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         assert style.output_size
         scale = 0.01 * 3 * (15 / 500) * style.output_size
         s = self.pylatex.TikZScope()
-        for inner in shape.arrow_shape.scale(scale).to_tikz(
-            self.pylatex, style
+        for inner in to_tikz(
+            shape.arrow_shape.scale(scale), self.pylatex, style
         ):
             s.append(inner)
         return s
+
+    def visit_image(
+        self, shape: Image, style: Style = EMPTY_STYLE
+    ) -> PyLatexElement:
+        assert False, "No tikz image renderer"
 
 
 def to_tikz(

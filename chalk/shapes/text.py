@@ -1,13 +1,9 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
-
-from chalk.shape import Shape
-from chalk.style import Style
+from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import Diagram, PyCairoContext, PyLatex, PyLatexElement
+from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
 

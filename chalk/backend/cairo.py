@@ -2,26 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, Optional
 
-from chalk import transform as tx
-from chalk.arc import ArcSegment
-from chalk.arrowheads import ArrowHead
-from chalk.latex import Latex, Raw
-from chalk.path import Path
-from chalk.segment import Segment
-from chalk.shape import Spacer
-from chalk.style import Style
-from chalk.text import Text
-from chalk.transform import (
-    P2,
-    V2,
-    Affine,
-    BoundingBox,
-    Ray,
-    origin,
-    to_radians,
-    unit_x,
-    unit_y,
+from chalk.shapes import (
+    ArcSegment,
+    ArrowHead,
+    Image,
+    Latex,
+    Path,
+    Segment,
+    Spacer,
+    Text,
+    from_pil,
 )
+from chalk.style import Style
+from chalk.transform import Affine, to_radians, unit_x, unit_y
 from chalk.types import Diagram, SegmentLike
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -163,6 +156,18 @@ class ToCairoShape(ShapeVisitor[None]):
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
         render_cairo_prims(shape.arrow_shape.scale(scale), ctx, style)
+
+    def visit_image(
+        self,
+        shape: Image,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE,
+    ) -> None:
+        surface = from_pil(shape.im)
+        ctx.set_source_surface(
+            surface, -(shape.width / 2), -(shape.height / 2)
+        )
+        ctx.paint()
 
 
 def render_cairo_prims(

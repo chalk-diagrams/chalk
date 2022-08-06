@@ -1,16 +1,13 @@
-import math
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import Optional
 
 from colour import Color
 
-from chalk.arc import ArcSegment
-from chalk.arrowheads import ArrowHead, dart
-from chalk.path import Path
+from chalk.shapes import ArcSegment, ArrowHead, Path, dart
 from chalk.style import Style
 from chalk.trail import Trail
 from chalk.transform import P2, V2, unit_x
-from chalk.types import Diagram, SegmentLike
+from chalk.types import Diagram
 
 black = Color("black")
 # arrow heads

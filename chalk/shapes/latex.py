@@ -2,13 +2,9 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any
 
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
-
-from chalk.shape import Shape, Spacer
-from chalk.style import Style
+from chalk.shapes.shape import Shape, Spacer
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import Diagram, PyCairoContext
+from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
 

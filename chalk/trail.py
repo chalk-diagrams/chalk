@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
 
-from chalk.path import Path
+from chalk.shapes.path import Path
 from chalk.transform import (
     P2,
     V2,
     Affine,
     Transformable,
+    Vec2Array,
     apply_affine,
     remove_translation,
 )
@@ -95,7 +96,14 @@ class Trail(Transformable):
         Returns:
             Trail: A trail object.
         """
-        return Trail(apply_affine(remove_translation(t), self.offsets))
+        return Trail(
+            [
+                o
+                for o in apply_affine(
+                    remove_translation(t), Vec2Array(self.offsets)
+                )
+            ]
+        )
 
 
 unit_x = Trail(([V2(1, 0)]))
