@@ -25,7 +25,7 @@ setup(
     name=LIBNAME,
     version="0.1.2",
     packages=find_packages(
-        include=["chalk", "chalk.*"],
+        include=["chalk", "chalk*"],
         exclude=["examples", "docs", "test*"],
     ),
     description="A declarative drawing API",
