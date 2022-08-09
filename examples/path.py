@@ -1,6 +1,6 @@
 from chalk import *
-from chalk.segment import Segment
-from chalk.arc import ArcSegment
+from chalk.shapes.segment import Segment
+from chalk.shapes.arc import ArcSegment
 from colour import Color
 import math
 # d = Path([ArcSegment.arc_between(P2(0, 0), P2(2, 0), 1), ArcSegment.arc_between(P2(2, 0), P2(0, 0), 1)]).stroke()
@@ -35,14 +35,15 @@ d5 = Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1).scale_y(0.5).rotate(
 # d = Path([Segment(P2(0, r), P2(0, b)),
 #           ArcSegment.arc_between(P2(0, b), P2(r, 1), rad)]).stroke()
 
-d6 = Path([Segment(P2(0, r), P2(0, b)),
+d6 = Path([Segment(P2(0, b/2), P2(0, b)),
           ArcSegment.arc_between(P2(0, b), P2(r, 1), -rad),
            Segment(P2(r, 1), P2(b, 1)),
            ArcSegment.arc_between(P2(b, 1), P2(1, 1-r), -rad),
           Segment(P2(1, 1-r), P2(1, r)),
           ArcSegment.arc_between(P2(1, r), P2(1-r, 0), -rad),
           Segment(P2(1-r, 0), P2(r, 0)),
-          ArcSegment.arc_between(P2(r, 0), P2(0, r), -rad)
+           ArcSegment.arc_between(P2(r, 0), P2(0, r), -rad),
+           Segment(P2(0, r), P2(0, b / 2))
 
 ]).stroke().center_xy().show_origin()
 

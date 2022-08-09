@@ -107,6 +107,7 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
             pts.append("--")
             pts.append(self.pylatex.TikZCoordinate(seg.q.x, seg.q.y))
         elif isinstance(seg, ArcSegment):
+
             start = (seg.p - seg.center).angle
             end = (seg.q - seg.center).angle
             if seg.dangle < 0 and end > start:
@@ -118,7 +119,7 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
                 self.pylatex.TikZUserPath(
                     f"""{{[rotate={seg.rot}] arc [
                            start angle={start-seg.rot}, end angle={end_ang},
-                           x radius={seg.r_x}, y radius ={seg.r_y}]}}"""
+                           x radius={seg.r_x}, y radius={seg.r_y}]}}"""
                 )
             )
         else:

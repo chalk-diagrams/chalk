@@ -94,7 +94,6 @@ class ToCairoShape(ShapeVisitor[None]):
             ctx.line_to(seg.q.x, seg.q.y)
         elif isinstance(seg, ArcSegment):
             end = seg.angle + seg.dangle
-            ctx.new_sub_path()
             ctx.save()
             matrix = tx_to_cairo(seg.t)
             ctx.transform(matrix)

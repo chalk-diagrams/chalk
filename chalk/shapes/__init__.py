@@ -25,7 +25,9 @@ def circle(radius: float) -> Diagram:
        Diagram
 
     """
-    return Path([ArcSegment(0, 360 - 1e-5)]).scale(radius).stroke()
+    return (
+        Path([ArcSegment(0, 180), ArcSegment(180, 180)]).scale(radius).stroke()
+    )
 
 
 def arc(radius: float, angle0: float, angle1: float) -> Diagram:
