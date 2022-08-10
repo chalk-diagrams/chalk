@@ -31,9 +31,9 @@ ex1 = dias.connect(
     "first",
     "second",
     ArrowOpts(
-        head_style=Style(fill_color=grey),
+        head_style=Style.empty().fill_color(grey),
         arc_height=0.5,
-        shaft_style=Style(line_color=blue),
+        shaft_style=Style.empty().line_color(blue),
     ),
 )
 ex12 = ex1.connect_perim(

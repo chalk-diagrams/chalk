@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
-
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
+from typing import TYPE_CHECKING, Any, List, Optional, Protocol, Tuple
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
@@ -12,24 +9,29 @@ from chalk.trace import Trace
 from chalk.transform import V2
 
 if TYPE_CHECKING:
-    from chalk.shape import Shape
-    from chalk.visitor import A, DiagramVisitor
+    from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
-__all__ = ["BaseElement", "Drawing"]
-PyLatexElement = Any
-PyLatex = Any
-PyCairoContext = Any
-PyCairoSurface = Any
 Ident = tx.Affine.identity()
 
 
-class Diagram(StylableProtocol, tx.TransformableProtocol):
-    def get_envelope(self, t: tx.Affine = Ident) -> Envelope:
+class Enveloped(Protocol):
+    def get_envelope(self) -> Envelope:
         ...
 
-    def get_trace(self, t: tx.Affine = Ident) -> Trace:
+
+class Traceable(Protocol):
+    def get_trace(self) -> Trace:
         ...
 
+
+class Shape(Enveloped, Traceable, Protocol):
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+        ...
+
+
+class Diagram(
+    Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol
+):
     def apply_transform(self, t: tx.Affine) -> Diagram:
         ...
 
@@ -123,12 +125,6 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
     ) -> Envelope:
         ...
 
-    def to_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        ...
-
-    def to_tikz(self, pylatex: PyLatex, style: Style) -> List[PyLatexElement]:
-        ...
-
     def _style(self, style: Style) -> Diagram:
         ...
 
@@ -147,10 +143,6 @@ class Diagram(StylableProtocol, tx.TransformableProtocol):
         ...
 
     def to_list(self, t: tx.Affine = Ident) -> List[Diagram]:
-        ...
-
-    @staticmethod
-    def from_shape(shape: Shape) -> Diagram:
         ...
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:

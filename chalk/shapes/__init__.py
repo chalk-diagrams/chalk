@@ -1,9 +1,13 @@
 from typing import Optional, Tuple, Union
 
-from chalk.arrow import unit_arc_between
-from chalk.core import Primitive
-from chalk.path import Path
-from chalk.shape import Arc, Circle, Rectangle
+from chalk.shapes.arc import ArcSegment  # noqa: F401
+from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
+from chalk.shapes.image import Image, from_pil, image  # noqa: F401
+from chalk.shapes.latex import Latex, Raw, latex  # noqa: F401
+from chalk.shapes.path import Path, SegmentLike, make_path  # noqa: F401
+from chalk.shapes.segment import Segment  # noqa: F401
+from chalk.shapes.shape import Shape, Spacer  # noqa: F401
+from chalk.shapes.text import Text, text  # noqa: F401
 from chalk.transform import P2, to_radians
 from chalk.types import Diagram
 
@@ -21,7 +25,9 @@ def circle(radius: float) -> Diagram:
        Diagram
 
     """
-    return Primitive.from_shape(Circle(radius))
+    return (
+        Path([ArcSegment(0, 180), ArcSegment(180, 180)]).scale(radius).stroke()
+    )
 
 
 def arc(radius: float, angle0: float, angle1: float) -> Diagram:
@@ -37,9 +43,7 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
       Diagram
 
     """
-    return Primitive.from_shape(
-        Arc(radius, to_radians(angle0), to_radians(angle1))
-    )
+    return Path([ArcSegment(angle0, angle1 - angle0).scale(radius)]).stroke()
 
 
 def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
@@ -54,21 +58,19 @@ def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
     Returns:
        Diagram
     """
-    return Primitive.from_shape(
-        Path.polygon(sides, radius, to_radians(rotation))
-    )
+    return Path.polygon(sides, radius, to_radians(rotation)).stroke()
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
-    return Primitive.from_shape(Path.regular_polygon(sides, side_length))
+    return Path.regular_polygon(sides, side_length).stroke()
 
 
 def hrule(length: float) -> Diagram:
-    return Primitive.from_shape(Path.hrule(length))
+    return Path.hrule(length).stroke()
 
 
 def vrule(length: float) -> Diagram:
-    return Primitive.from_shape(Path.vrule(length))
+    return Path.vrule(length).stroke()
 
 
 def triangle(width: float) -> Diagram:
@@ -89,11 +91,11 @@ def rectangle(
     Returns:
         Diagrams
     """
-    return Primitive.from_shape(Rectangle(width, height, radius))
+    return Path.rectangle(width, height).stroke()
 
 
 def square(side: float) -> Diagram:
-    return Primitive.from_shape(Rectangle(side, side))
+    return Path.rectangle(side, side).stroke()
 
 
 def arc_between(
@@ -109,16 +111,13 @@ def arc_between(
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
-    if not isinstance(point1, P2):
-        p = P2(*point1)
-    else:
-        p = point1
-    if not isinstance(point2, P2):
-        q = P2(*point2)
-    else:
-        q = point2
+    p = P2(*point1)
+    q = P2(*point2)
+    return Path(
+        [
+            ArcSegment.arc_between(p, q, height),
+        ]
+    ).stroke()
 
-    v = q - p
-    d = v.length
-    shape, _ = unit_arc_between(d, height)
-    return shape.rotate(-v.angle).translate_by(p)
+
+ignore = [Optional]

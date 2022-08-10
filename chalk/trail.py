@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import List
 
-from chalk.path import Path
+from chalk.shapes.path import Path
 from chalk.transform import (
     P2,
     V2,
@@ -25,11 +26,11 @@ class Trail(Transformable):
     with illustrations/figures).
     """
 
-    offsets: Vec2Array
+    offsets: List[V2]
 
     @staticmethod
     def empty() -> Trail:
-        return Trail(Vec2Array([]))
+        return Trail([])
 
     def __add__(self, other: Trail) -> Trail:
         """Adds another trail to this one and
@@ -41,7 +42,7 @@ class Trail(Transformable):
         Returns:
             Trail: A trail object.
         """
-        new_vec = Vec2Array(self.offsets)
+        new_vec = list(self.offsets)
         new_vec.extend(other.offsets)
         return Trail(new_vec)
 
@@ -55,7 +56,7 @@ class Trail(Transformable):
         Returns:
             Trail: A trail object.
         """
-        pts = path.points
+        pts = path.points()
         offsets = [t - s for s, t in zip(pts, pts[1:])]
         return cls(offsets)
 
@@ -72,7 +73,7 @@ class Trail(Transformable):
         points = [origin]
         for s in self.offsets:
             points.append(points[-1] + s)
-        return Path(points)
+        return Path.from_points(points)
 
     def stroke(self) -> Diagram:
         """Returns a primitive (shape) with strokes
@@ -95,8 +96,15 @@ class Trail(Transformable):
         Returns:
             Trail: A trail object.
         """
-        return Trail(apply_affine(remove_translation(t), self.offsets))
+        return Trail(
+            [
+                o
+                for o in apply_affine(
+                    remove_translation(t), Vec2Array(self.offsets)
+                )
+            ]
+        )
 
 
-unit_x = Trail(Vec2Array([V2(1, 0)]))
-unit_y = Trail(Vec2Array([V2(0, 1)]))
+unit_x = Trail(([V2(1, 0)]))
+unit_y = Trail(([V2(0, 1)]))

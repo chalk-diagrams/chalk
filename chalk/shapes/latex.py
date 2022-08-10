@@ -1,16 +1,14 @@
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from typing import Any
 
-from svgwrite import Drawing
-from svgwrite.base import BaseElement
-
-from chalk.shape import Rectangle, Shape
-from chalk.style import Style
+from chalk.shapes.shape import Shape, Spacer
 from chalk.transform import P2, BoundingBox, origin
-from chalk.types import Diagram, PyCairoContext
+from chalk.types import Diagram
+from chalk.visitor import A, ShapeVisitor
 
 
-class Raw(Rectangle):
+class Raw(Spacer):
     """Shape class.
 
     A fake SVG node for importing latex.
@@ -58,16 +56,10 @@ class Latex(Shape):
         top = origin.y - self.height / 2
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
-        return BoundingBox(tl, br).scale(0.05)
+        return BoundingBox([tl * 0.05, br * 0.05])
 
-    def render(self, ctx: PyCairoContext, style: Style) -> None:
-        raise NotImplementedError
-
-    def render_svg(self, dwg: Drawing, style: Style) -> BaseElement:
-        dx, dy = -self.width / 2, -self.height / 2
-        g = dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
-        g.add(Raw(self.content))
-        return g
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_latex(self, **kwargs)
 
 
 def latex(t: str) -> Diagram:

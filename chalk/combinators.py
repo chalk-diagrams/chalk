@@ -2,8 +2,7 @@ from functools import reduce
 from typing import Iterable, List, Optional, Tuple
 
 from chalk.envelope import Envelope
-from chalk.path import Path
-from chalk.shape import Spacer
+from chalk.shapes import Path, Spacer
 from chalk.transform import V2, Affine, origin, unit_x, unit_y
 from chalk.types import Diagram
 
@@ -97,7 +96,9 @@ def place_at(
 
 
 def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
-    return concat(d.translate(p.x, p.y) for d, p in zip(diagrams, path.points))
+    return concat(
+        d.translate(p.x, p.y) for d, p in zip(diagrams, path.points())
+    )
 
 
 # position, atPoints

@@ -1,20 +1,18 @@
 from colour import Color
 
-from chalk.path import Path
-from chalk.shape import Circle
-from chalk.transform import V2, Vec2Array, origin
+from chalk.shapes import Path, circle
+from chalk.transform import V2, origin
 from chalk.types import Diagram
 
 
 def show_origin(self: Diagram) -> Diagram:
     "Add a red dot at the origin of a diagram for debugging."
-    from chalk.core import Primitive
 
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
     origin_size = min(envelope.height, envelope.width) / 50
-    origin = Primitive.from_shape(Circle(origin_size)).line_color(Color("red"))
+    origin = circle(origin_size).line_color(Color("red"))
     return self + origin
 
 
@@ -31,21 +29,23 @@ def show_envelope(
     Returns:
         Diagram
     """
-    from chalk.core import Primitive
 
     self.show_origin()
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
     outer: Diagram = (
-        Primitive.from_shape(Path(envelope.to_path(angle)))
+        Path.from_points(list(envelope.to_path(angle)))
+        .stroke()
         .fill_opacity(0)
         .line_color(Color("red"))
     )
-    for segment in envelope.to_segments(angle):
-        outer = outer + Primitive.from_shape(Path(segment)).line_color(
-            Color("red")
-        ).dashing([0.01, 0.01], 0)
+    outer = (
+        Path.from_pairs(list(envelope.to_segments(angle)))
+        .stroke()
+        .line_color(Color("red"))
+        .dashing([0.01, 0.01], 0)
+    )
 
     new = self + outer
     if phantom:
@@ -58,35 +58,33 @@ def show_envelope(
 
 def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     "Add blue normal line to show placement of combination."
-    from chalk.core import Primitive
 
     envelope1 = self.get_envelope()
     envelope2 = other.get_envelope()
     v1 = envelope1.envelope_v(direction)
     one: Diagram = (
-        Primitive.from_shape(Path(Vec2Array([origin, v1])))
+        Path.from_points([origin, v1])
+        .stroke()
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
     v2 = envelope2.envelope_v(-direction)
     two: Diagram = (
-        Primitive.from_shape(Path(Vec2Array([origin, v2])))
+        Path.from_points([origin, v2])
+        .stroke()
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
     split: Diagram = (
-        Primitive.from_shape(
-            Path(
-                Vec2Array(
-                    [
-                        v1 + direction.perpendicular(),
-                        v1 - direction.perpendicular(),
-                    ]
-                )
-            )
+        Path.from_points(
+            [
+                v1 + direction.perpendicular(),
+                v1 - direction.perpendicular(),
+            ]
         )
+        .stroke()
         .line_color(Color("blue"))
         .line_width(0.02)
     )

@@ -5,25 +5,23 @@ import tempfile
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar
 
+import chalk.align
+import chalk.arrow
 import chalk.backend.cairo
 import chalk.backend.svg
 import chalk.backend.tikz
-import chalk.align
-import chalk.arrow
 import chalk.combinators
 import chalk.model
 import chalk.padding
 import chalk.subdiagram
 import chalk.trace
 import chalk.types
-
 from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.shape import Shape
 from chalk.style import Stylable, Style
 from chalk.transform import Affine, unit_x
-from chalk.types import Diagram
+from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
 
