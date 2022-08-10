@@ -9,13 +9,14 @@ from chalk.shapes import (
     Latex,
     Path,
     Segment,
+    SegmentLike,
     Spacer,
     Text,
     from_pil,
 )
 from chalk.style import Style
 from chalk.transform import Affine, to_radians, unit_x, unit_y
-from chalk.types import Diagram, SegmentLike
+from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
@@ -104,8 +105,6 @@ class ToCairoShape(ShapeVisitor[None]):
             else:
                 ctx.arc(0.0, 0.0, 1.0, to_radians(seg.angle), to_radians(end))
             ctx.restore()
-        else:
-            assert False, "not a known segment"
 
     def visit_path(
         self,

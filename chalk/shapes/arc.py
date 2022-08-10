@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 
 from planar.py import Ray
 
@@ -16,7 +16,7 @@ from chalk.envelope import Envelope
 from chalk.shapes.segment import Segment, ray_circle_intersection
 from chalk.trace import Trace
 from chalk.transform import P2, V2, from_radians, unit_x, unit_y
-from chalk.types import SegmentLike
+from chalk.types import Enveloped, Traceable
 
 Ident = tx.Affine.identity()
 
@@ -32,7 +32,7 @@ def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> bool:
 
 
 @dataclass
-class ArcSegment(SegmentLike):
+class ArcSegment(Traceable, Enveloped, tx.Transformable):
     "A ellipse arc represented with the cetner parameterization"
     angle: float
     dangle: float
@@ -123,7 +123,7 @@ class ArcSegment(SegmentLike):
         return Envelope(wrapped).apply_transform(self.t)
 
     @staticmethod
-    def arc_between(p: P2, q: P2, height: float) -> SegmentLike:
+    def arc_between(p: P2, q: P2, height: float) -> Union[Segment, ArcSegment]:
 
         h = abs(height)
         if h < 1e-3:

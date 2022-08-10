@@ -10,12 +10,13 @@ from chalk.shapes import (
     Latex,
     Path,
     Segment,
+    SegmentLike,
     Spacer,
     Text,
 )
 from chalk.style import Style
 from chalk.transform import origin
-from chalk.types import Diagram, SegmentLike
+from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
@@ -122,8 +123,6 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
                            x radius={seg.r_x}, y radius={seg.r_y}]}}"""
                 )
             )
-        else:
-            assert False, "not a known segment"
 
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE

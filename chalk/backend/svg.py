@@ -15,12 +15,13 @@ from chalk.shapes import (
     Path,
     Raw,
     Segment,
+    SegmentLike,
     Spacer,
     Text,
 )
 from chalk.style import Style
 from chalk.transform import unit_x, unit_y
-from chalk.types import Diagram, SegmentLike
+from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
@@ -112,8 +113,6 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
             f_A = 1 if abs(seg.dangle) > 180 else 0
             f_S = 1 if seg.dangle > 0 else 0
             return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {seg.q.x} {seg.q.y}"
-        else:
-            assert False, "not a known segment"
 
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE

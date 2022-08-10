@@ -4,7 +4,7 @@ from chalk.shapes.arc import ArcSegment  # noqa: F401
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
 from chalk.shapes.latex import Latex, Raw, latex  # noqa: F401
-from chalk.shapes.path import Path, make_path  # noqa: F401
+from chalk.shapes.path import Path, SegmentLike, make_path  # noqa: F401
 from chalk.shapes.segment import Segment  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
 from chalk.shapes.text import Text, text  # noqa: F401

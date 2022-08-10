@@ -10,7 +10,7 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.transform import P2, V2
-from chalk.types import SegmentLike
+from chalk.types import Enveloped, Traceable
 
 SignedDistance = float
 
@@ -18,7 +18,7 @@ Ident = tx.Affine.identity()
 
 
 @dataclass
-class Segment(SegmentLike):
+class Segment(Traceable, Enveloped, tx.Transformable):
     p_: P2
     q_: P2
     dangle: float = 0

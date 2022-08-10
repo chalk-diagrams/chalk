@@ -6,7 +6,7 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
-from chalk.transform import P2, V2, Transformable
+from chalk.transform import V2
 
 if TYPE_CHECKING:
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
@@ -27,18 +27,6 @@ class Traceable(Protocol):
 class Shape(Enveloped, Traceable, Protocol):
     def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
         ...
-
-
-class SegmentLike(Enveloped, Traceable, Transformable):
-    @property
-    def p(self) -> P2:
-        ...
-
-    @property
-    def q(self) -> P2:
-        ...
-
-    dangle: float
 
 
 class Diagram(

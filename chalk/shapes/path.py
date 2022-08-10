@@ -2,20 +2,24 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Union
 
 from chalk import transform as tx
 from chalk.envelope import Envelope
+from chalk.shapes.arc import ArcSegment
 from chalk.shapes.segment import Segment
 from chalk.shapes.shape import Shape
 from chalk.trace import Trace
 from chalk.transform import P2
-from chalk.types import Diagram, SegmentLike
+from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
 
 def make_path(segments: List[Tuple[float, float]]) -> Diagram:
     return Path.from_list_of_tuples(segments).stroke()
+
+
+SegmentLike = Union[Segment, ArcSegment]
 
 
 @dataclass
