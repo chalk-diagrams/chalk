@@ -16,7 +16,7 @@ from chalk.envelope import Envelope
 from chalk.shapes.segment import Segment, ray_circle_intersection
 from chalk.trace import Trace
 from chalk.transform import P2, V2, from_radians, unit_x, unit_y
-from chalk.types import Enveloped, Traceable
+from chalk.types import Diagram, Enveloped, Traceable
 
 Ident = tx.Affine.identity()
 
@@ -155,8 +155,7 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
         ret = ret.rotate(-diff.angle).translate_by(p)
         return ret
 
-    def reflect_y(self) -> ArcSegment:
-        assert False
+    def stroke(self) -> Diagram:
+        from chalk.shapes.path import Path
 
-    def reflect_x(self) -> ArcSegment:
-        assert False
+        return Path([self]).stroke()

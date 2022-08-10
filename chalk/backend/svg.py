@@ -111,7 +111,8 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         elif isinstance(seg, ArcSegment):
             "https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint"
             f_A = 1 if abs(seg.dangle) > 180 else 0
-            f_S = 1 if seg.dangle > 0 else 0
+            det: float = seg.t.determinant  # type: ignore
+            f_S = 1 if det * seg.dangle > 0 else 0
             return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {seg.q.x} {seg.q.y}"
 
     def visit_path(

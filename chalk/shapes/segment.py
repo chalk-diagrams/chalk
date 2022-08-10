@@ -10,7 +10,7 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.transform import P2, V2
-from chalk.types import Enveloped, Traceable
+from chalk.types import Diagram, Enveloped, Traceable
 
 SignedDistance = float
 
@@ -55,6 +55,11 @@ class Segment(Traceable, Enveloped, tx.Transformable):
 
     def apply_transform(self, t: tx.Affine) -> Segment:  # type: ignore
         return Segment(tx.apply_affine(t, self.p), tx.apply_affine(t, self.q))
+
+    def stroke(self) -> Diagram:
+        from chalk.shapes.path import Path
+
+        return Path([self]).stroke()
 
 
 def ray_ray_intersection(

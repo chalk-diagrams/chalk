@@ -111,9 +111,10 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
 
             start = (seg.p - seg.center).angle
             end = (seg.q - seg.center).angle
-            if seg.dangle < 0 and end > start:
+            det: float = seg.t.determinant  # type: ignore
+            if det * seg.dangle < 0 and end > start:
                 end = end - 360
-            if seg.dangle > 0 and end < start:
+            if det * seg.dangle > 0 and end < start:
                 end = end + 360
             end_ang = end - seg.rot
             pts._arg_list.append(

@@ -17,25 +17,24 @@ a  = ArcSegment(10, 50).rotate(90)
 
 a  = ArcSegment.arc_between(P2(-1, 0), P2(0, 1.0), 1)
 # print(a.p, a.q, a.r_x, a.r_y, a.angle, a.tangle)
+d = []
 
-d0 = circle(1).show_origin()
+d += [circle(1).show_origin()]
 
-d1 = Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1)]).stroke().show_origin()
+d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1)]).stroke().show_origin()]
 
-d2 = Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), -1)]).stroke().show_origin()
+d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), -1)]).stroke().show_origin()]
 
-d3 = Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), 1)]).stroke().show_origin()
+d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), 1)]).stroke().show_origin()]
 
-d4 = Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), -1)]).stroke().show_origin()
+d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), -1)]).stroke().show_origin()]
 
-d5 = Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1).scale_y(0.5)]).stroke().show_origin()
-
-d5 = Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1).scale_y(0.5).rotate(45)]).stroke().show_origin()
+d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1).scale_y(0.5).rotate(45)]).stroke().show_origin()]
 
 # d = Path([Segment(P2(0, r), P2(0, b)),
 #           ArcSegment.arc_between(P2(0, b), P2(r, 1), rad)]).stroke()
 
-d6 = Path([Segment(P2(0, b/2), P2(0, b)),
+d += [Path([Segment(P2(0, b/2), P2(0, b)),
           ArcSegment.arc_between(P2(0, b), P2(r, 1), -rad),
            Segment(P2(r, 1), P2(b, 1)),
            ArcSegment.arc_between(P2(b, 1), P2(1, 1-r), -rad),
@@ -45,11 +44,21 @@ d6 = Path([Segment(P2(0, b/2), P2(0, b)),
            ArcSegment.arc_between(P2(r, 0), P2(0, r), -rad),
            Segment(P2(0, r), P2(0, b / 2))
 
-]).stroke().center_xy().show_origin()
+]).stroke().center_xy().show_origin()]
 
-d = d0 / vstrut(1) / d1 / vstrut(1) / d2 / vstrut(1) / d3 / vstrut(1) / d4  / vstrut(1) / d5 / vstrut(1) / d6
-# d = d6
-# d = d1
+
+d += [cat(
+    [
+        ArcSegment(180, 135).stroke().show_origin(),
+        ArcSegment(180, 135).scale_x(-1).stroke().show_origin(),
+        ArcSegment(180, 135).stroke().scale_x(-1).show_origin(),
+    ],
+    unit_x,
+    sep=0.5
+)]
+
+d = vcat(d, sep=1.0)
+
 d = d.fill_color(Color("blue"))
 
 d.render_svg("examples/output/path.svg", height=300)
