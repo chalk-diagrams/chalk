@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import reduce
-from typing import Iterable, List, Tuple, Union
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
 from chalk.shapes.arc import ArcSegment, arc_seg_angle
@@ -20,6 +20,9 @@ from chalk.transform import (
     unit_y,
 )
 from chalk.types import Diagram, Enveloped, Traceable, TrailLike
+
+if TYPE_CHECKING:
+    from chalk.shapes.path import Path
 
 SegmentLike = Union[Segment, ArcSegment]
 
@@ -56,7 +59,7 @@ class Located(Enveloped, Traceable, Transformable):
             apply_affine(t, self.trail), apply_affine(t2, self.location)
         )
 
-    def to_path(self) -> Diagram:
+    def to_path(self) -> Path:
         from chalk.shapes.path import Path
 
         return Path([self])
