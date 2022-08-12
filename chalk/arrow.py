@@ -3,7 +3,7 @@ from typing import Optional
 
 from colour import Color
 
-from chalk.shapes import ArcSegment, ArrowHead, Path, dart
+from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
 from chalk.style import Style
 from chalk.trail import Trail
 from chalk.transform import P2, V2, unit_x
@@ -90,15 +90,15 @@ def arrow(length: float, style: ArrowOpts = ArrowOpts()) -> Diagram:
     t = style.tail_pad
     l_adj = length - style.head_pad - t
     if style.trail is None:
-        segment = ArcSegment.arc_between(
-            P2(0, 0), P2(l_adj, 0), style.arc_height
-        )
-        shaft = Path([segment]).stroke()
-        φ = segment.dangle
-        arrow = arrow.rotate_rad(φ)
+        segment = arc_seg(P2(l_adj, 0), style.arc_height)
+        shaft = segment.stroke()
+        if isinstance(segment.segments[-1], ArcSegment):
+            φ = segment.segments[-1].q_angle
+            arrow = arrow.rotate_rad(φ)
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
-        arrow = arrow.rotate(-style.trail.offsets[-1].angle)
+        if isinstance(style.trail.segments[-1], ArcSegment):
+            arrow = arrow.rotate(-style.trail.segments[-1].angle)
 
     return shaft._style(style.shaft_style).translate_by(
         t * unit_x

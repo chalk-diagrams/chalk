@@ -1,33 +1,22 @@
 from typing import Optional, Tuple, Union
 
-from chalk.shapes.arc import ArcSegment  # noqa: F401
+from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle  # noqa: F401
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
 from chalk.shapes.latex import Latex, Raw, latex  # noqa: F401
-from chalk.shapes.path import Path, SegmentLike, make_path  # noqa: F401
-from chalk.shapes.segment import Segment  # noqa: F401
+from chalk.shapes.path import Path, make_path  # noqa: F401
+from chalk.shapes.segment import Segment, seg  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
 from chalk.shapes.text import Text, text  # noqa: F401
-from chalk.transform import P2, to_radians
+from chalk.trail import Trail
+from chalk.transform import P2, V2
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.2d.Shapes
 
 
 def circle(radius: float) -> Diagram:
-    """
-    Draw a circle.
-
-    Args:
-       radius (float): Radius.
-
-    Returns:
-       Diagram
-
-    """
-    return (
-        Path([ArcSegment(0, 180), ArcSegment(180, 180)]).scale(radius).stroke()
-    )
+    return Trail.circle().stroke().center_xy().scale(radius)
 
 
 def arc(radius: float, angle0: float, angle1: float) -> Diagram:
@@ -43,34 +32,39 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
       Diagram
 
     """
-    return Path([ArcSegment(angle0, angle1 - angle0).scale(radius)]).stroke()
+    return (
+        ArcSegment(angle0, angle1 - angle0)
+        .at(V2.polar(1, angle0))
+        .stroke()
+        .scale(radius)
+    )
 
 
-def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
-    """
-    Draw a polygon.
+# def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
+#     """
+#     Draw a polygon.
 
-    Args:
-       sides (int): Number of sides.
-       radius (float): Internal radius.
-       rotation: (int): Rotation in degress
+#     Args:
+#        sides (int): Number of sides.
+#        radius (float): Internal radius.
+#        rotation: (int): Rotation in degress
 
-    Returns:
-       Diagram
-    """
-    return Path.polygon(sides, radius, to_radians(rotation)).stroke()
+#     Returns:
+#        Diagram
+#     """
+#     return Trail.polygon(sides, radius, to_radians(rotation)).stroke()
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
-    return Path.regular_polygon(sides, side_length).stroke()
+    return Trail.regular_polygon(sides, side_length).stroke().center_xy()
 
 
 def hrule(length: float) -> Diagram:
-    return Path.hrule(length).stroke()
+    return Trail.hrule(length).stroke().center_xy()
 
 
 def vrule(length: float) -> Diagram:
-    return Path.vrule(length).stroke()
+    return Trail.vrule(length).stroke().center_xy()
 
 
 def triangle(width: float) -> Diagram:
@@ -91,11 +85,11 @@ def rectangle(
     Returns:
         Diagrams
     """
-    return Path.rectangle(width, height).stroke()
+    return Trail.rectangle(width, height).stroke().center_xy()
 
 
 def square(side: float) -> Diagram:
-    return Path.rectangle(side, side).stroke()
+    return rectangle(side, side)
 
 
 def arc_between(
@@ -113,11 +107,7 @@ def arc_between(
     """
     p = P2(*point1)
     q = P2(*point2)
-    return Path(
-        [
-            ArcSegment.arc_between(p, q, height),
-        ]
-    ).stroke()
+    return arc_seg(q - p, height).at(p).stroke()
 
 
 ignore = [Optional]

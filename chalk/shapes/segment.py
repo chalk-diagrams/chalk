@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 from planar.py import Ray
 
@@ -10,26 +10,38 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.transform import P2, V2
-from chalk.types import Diagram, Enveloped, Traceable
+from chalk.types import Enveloped, Traceable, TrailLike
+
+if TYPE_CHECKING:
+    from chalk.trail import Trail
 
 SignedDistance = float
 
 Ident = tx.Affine.identity()
+ORIGIN = P2(0, 0)
 
 
 @dataclass
-class Segment(Traceable, Enveloped, tx.Transformable):
-    p_: P2
-    q_: P2
-    dangle: float = 0
+class LocatedSegment(Traceable, Enveloped, tx.Transformable, TrailLike):
+    offset: V2
+    origin: P2 = ORIGIN
 
     @property
     def p(self) -> P2:
-        return self.p_
+        return self.origin
+
+    @staticmethod
+    def from_points(p: P2, q: P2) -> LocatedSegment:
+        return LocatedSegment(q - p, p)
+
+    def apply_transform(self, t: tx.Affine) -> LocatedSegment:  # type: ignore
+        return LocatedSegment(
+            tx.apply_affine(t, self.offset), tx.apply_affine(t, self.origin)
+        )
 
     @property
     def q(self) -> P2:
-        return self.q_
+        return self.p + self.offset
 
     def get_trace(self, t: tx.Affine = Ident) -> Trace:
         def f(point: P2, direction: V2) -> List[float]:
@@ -46,20 +58,31 @@ class Segment(Traceable, Enveloped, tx.Transformable):
 
         return Envelope(f)
 
+    @property
+    def length(self) -> Any:
+        return self.offset.length
+
     def to_ray(self) -> "Ray":
         return Ray(self.p, self.q - self.p)
 
+    def to_trail(self) -> Trail:
+        from chalk.trail import Trail
+
+        return Trail([Segment(self.offset)])
+
+
+@dataclass
+class Segment(LocatedSegment, TrailLike):
     @property
-    def length(self) -> Any:
-        return (self.q - self.p).length
+    def p(self) -> P2:
+        return ORIGIN
 
     def apply_transform(self, t: tx.Affine) -> Segment:  # type: ignore
-        return Segment(tx.apply_affine(t, self.p), tx.apply_affine(t, self.q))
+        return Segment(tx.apply_affine(tx.remove_translation(t), self.offset))
 
-    def stroke(self) -> Diagram:
-        from chalk.shapes.path import Path
 
-        return Path([self]).stroke()
+def seg(offset: V2) -> Trail:
+    return Segment(offset).to_trail()
 
 
 def ray_ray_intersection(
@@ -88,7 +111,7 @@ def ray_ray_intersection(
         return x3 / x1, x2 / x1
 
 
-def line_segment(ray: Ray, segment: Segment) -> List[float]:
+def line_segment(ray: Ray, segment: LocatedSegment) -> List[float]:
     """Given a ray and a segment, return the parameter `t` for which the ray
     meets the segment, that is:
 

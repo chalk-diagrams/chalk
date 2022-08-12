@@ -20,6 +20,11 @@ def remove_translation(aff: Affine) -> Affine:
     return Affine(a, b, 0, d, e, 0)
 
 
+def remove_linear(aff: Affine) -> Affine:
+    a, b, c, d, e, f = aff[:6]
+    return Affine(1, 0, c, 0, 1, f)
+
+
 def transpose_translation(aff: Affine) -> Affine:
     a, b, c, d, e, f = aff[:6]
     return Affine(a, d, 0, b, e, 0)

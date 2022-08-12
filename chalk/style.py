@@ -120,7 +120,12 @@ class Style(Stylable):
             ctx (PyCairoContext): A context.
         """
         if self.fill_color_:
-            ctx.set_source_rgb(*self.fill_color_.rgb)
+            if self.fill_opacity_ is None:
+                op = 1.0
+            else:
+                op = self.fill_opacity_
+
+            ctx.set_source_rgba(*self.fill_color_.rgb, op)
             ctx.fill_preserve()
 
         # set default values if they are not provided
@@ -140,7 +145,6 @@ class Style(Stylable):
 
             elif lwt == WidthType.LOCAL:
                 lw = lw
-
         ctx.set_source_rgb(*lc.rgb)
         ctx.set_line_width(lw)
 

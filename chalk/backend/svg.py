@@ -20,7 +20,7 @@ from chalk.shapes import (
     Text,
 )
 from chalk.style import Style
-from chalk.transform import unit_x, unit_y
+from chalk.transform import P2, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -105,29 +105,33 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
 
-    def render_segment(self, seg: SegmentLike) -> str:
+    def render_segment(self, seg: SegmentLike, p: P2) -> str:
+        q = seg.q + p
         if isinstance(seg, Segment):
-            return f"L {seg.q.x} {seg.q.y}"
+            return f"L {q.x} {q.y}"
         elif isinstance(seg, ArcSegment):
             "https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint"
             f_A = 1 if abs(seg.dangle) > 180 else 0
             det: float = seg.t.determinant  # type: ignore
             f_S = 1 if det * seg.dangle > 0 else 0
-            return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {seg.q.x} {seg.q.y}"
+            return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {q.x} {q.y}"
 
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE
     ) -> BaseElement:
+        extra_style = ""
+        if not path.loc_trails[0].trail.closed:
+            extra_style = "fill:none;"
         line = self.dwg.path(
-            style="vector-effect: non-scaling-stroke;",
+            style="vector-effect: non-scaling-stroke;" + extra_style,
         )
-        for i, seg in enumerate(path.segments):
-            if i == 0:
-                p = seg.p
-                line.push(f"M {p.x} {p.y}")
-            line.push(self.render_segment(seg))
-        if path.is_closed():
-            line.push("Z")
+        for loc_trail in path.loc_trails:
+            for i, (seg, p) in enumerate(loc_trail.located_segments()):
+                if i == 0:
+                    line.push(f"M {p.x} {p.y}")
+                line.push(self.render_segment(seg, p))
+            if loc_trail.trail.closed:
+                line.push("Z")
         return line
 
     def visit_latex(self, shape: Latex) -> BaseElement:
