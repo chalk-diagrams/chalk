@@ -8,7 +8,7 @@ from chalk.shapes.path import Path, make_path  # noqa: F401
 from chalk.shapes.segment import Segment, seg  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
 from chalk.shapes.text import Text, text  # noqa: F401
-from chalk.trail import Trail
+from chalk.trail import SegmentLike, Trail  # noqa: F401
 from chalk.transform import P2, V2
 from chalk.types import Diagram
 
