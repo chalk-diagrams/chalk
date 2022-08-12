@@ -113,11 +113,11 @@ class Trail(Transformable, TrailLike):
 
     @staticmethod
     def hrule(length: float) -> Trail:
-        return seg(unit_x)
+        return seg(length * unit_x)
 
     @staticmethod
     def vrule(length: float) -> Trail:
-        return seg(unit_y)
+        return seg(length * unit_y)
 
     @staticmethod
     def rectangle(width: float, height: float) -> Trail:

@@ -1,5 +1,5 @@
 from chalk import *
-from chalk.trail import Trail, Vec2Array
+from chalk.trail import Trail
 from colour import Color
 from PIL import Image as PILImage
 

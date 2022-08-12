@@ -34,7 +34,7 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
     """
     return (
         ArcSegment(angle0, angle1 - angle0)
-        .at(V2.polar(1, angle0))
+        .at(V2.polar(angle0, 1))
         .stroke()
         .scale(radius)
     )
