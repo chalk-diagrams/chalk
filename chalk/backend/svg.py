@@ -126,9 +126,9 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
             style="vector-effect: non-scaling-stroke;" + extra_style,
         )
         for loc_trail in path.loc_trails:
+            p = loc_trail.location
+            line.push(f"M {p.x} {p.y}")
             for i, (seg, p) in enumerate(loc_trail.located_segments()):
-                if i == 0:
-                    line.push(f"M {p.x} {p.y}")
                 line.push(self.render_segment(seg, p))
             if loc_trail.trail.closed:
                 line.push("Z")
@@ -182,7 +182,11 @@ def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
 
 
 def render(
-    self: Diagram, path: str, height: int = 128, width: Optional[int] = None
+    self: Diagram,
+    path: str,
+    height: int = 128,
+    width: Optional[int] = None,
+    draw_height: Optional[int] = None,
 ) -> None:
     """Render the diagram to an SVG file.
 
@@ -193,6 +197,8 @@ def render(
                                 Defaults to 128.
         width (Optional[int], optional): Width of the rendered image.
                                          Defaults to None.
+        draw_width (Optional[int], optional): Override the height for line width.
+
     """
     pad = 0.05
     envelope = self.get_envelope()
@@ -222,6 +228,8 @@ def render(
     e = s.get_envelope()
     assert e is not None
     s = s.translate(e(-unit_x), e(-unit_y))
-    style = Style.root(output_size=max(height, width))
+    if draw_height is None:
+        draw_height = max(height, width)
+    style = Style.root(output_size=draw_height)
     outer.add(to_svg(s, dwg, style))
     dwg.save()

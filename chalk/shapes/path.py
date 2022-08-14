@@ -8,7 +8,7 @@ from chalk.envelope import Envelope
 from chalk.shapes.shape import Shape
 from chalk.trace import Trace
 from chalk.trail import Located, Trail
-from chalk.transform import P2
+from chalk.transform import P2, Transformable
 from chalk.types import Diagram, Enveloped, Traceable
 from chalk.visitor import A, ShapeVisitor
 
@@ -18,7 +18,7 @@ def make_path(segments: List[Tuple[float, float]]) -> Diagram:
 
 
 @dataclass
-class Path(Shape, Enveloped, Traceable):
+class Path(Shape, Enveloped, Traceable, Transformable):
     """Path class."""
 
     loc_trails: List[Located]
@@ -31,7 +31,7 @@ class Path(Shape, Enveloped, Traceable):
     def __add__(self, other: Path) -> Path:
         return Path(self.loc_trails + other.loc_trails)
 
-    def apply_transform(self, t: tx.Affine) -> Path:
+    def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
         return Path(
             [loc_trail.apply_transform(t) for loc_trail in self.loc_trails]
         )

@@ -14,7 +14,6 @@ from chalk.transform import (
     Affine,
     Transformable,
     apply_affine,
-    remove_linear,
     remove_translation,
     unit_x,
     unit_y,
@@ -54,9 +53,8 @@ class Located(Enveloped, Traceable, Transformable):
         return self.to_path().stroke()
 
     def apply_transform(self, t: Affine) -> Located:  # type: ignore
-        t2 = remove_linear(t)
         return Located(
-            apply_affine(t, self.trail), apply_affine(t2, self.location)
+            apply_affine(t, self.trail), apply_affine(t, self.location)
         )
 
     def to_path(self) -> Path:
