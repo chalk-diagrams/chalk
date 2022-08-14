@@ -197,8 +197,8 @@ def render(
                                 Defaults to 128.
         width (Optional[int], optional): Width of the rendered image.
                                          Defaults to None.
-        draw_width (Optional[int], optional): Override the height for
-                                              line width.
+        draw_height (Optional[int], optional): Override the height for
+                                               line width.
 
     """
     pad = 0.05
