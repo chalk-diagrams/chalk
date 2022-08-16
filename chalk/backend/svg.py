@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING, Optional
 
 import svgwrite
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
+from svgwrite.shapes import Rect
 
 from chalk import transform as tx
 from chalk.shapes import (
@@ -13,7 +15,6 @@ from chalk.shapes import (
     Image,
     Latex,
     Path,
-    Raw,
     Segment,
     SegmentLike,
     Spacer,
@@ -45,6 +46,19 @@ def tx_to_svg(affine: tx.Affine) -> str:
         return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
 
     return convert(*affine[:6])
+
+
+class Raw(Rect):  # type: ignore
+    """Shape class.
+
+    A fake SVG node for importing latex.
+    """
+
+    def __init__(self, st: str):
+        self.xml = ET.fromstring(st)
+
+    def get_xml(self) -> ET.Element:
+        return self.xml
 
 
 class ToSVG(DiagramVisitor[BaseElement]):
@@ -134,7 +148,9 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
                 line.push("Z")
         return line
 
-    def visit_latex(self, shape: Latex) -> BaseElement:
+    def visit_latex(
+        self, shape: Latex, style: Style = EMPTY_STYLE
+    ) -> BaseElement:
         dx, dy = -shape.width / 2, -shape.height / 2
         g = self.dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
         g.add(Raw(shape.content))

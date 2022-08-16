@@ -74,6 +74,7 @@ class Trail(Transformable, TrailLike):
         return Trail([], False)
 
     def __add__(self, other: Trail) -> Trail:
+        assert not (self.closed or other.closed), "Cannot add closed trails"
         return Trail(self.segments + other.segments, False)
 
     @staticmethod

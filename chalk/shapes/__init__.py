@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Union
 from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle  # noqa: F401
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
-from chalk.shapes.latex import Latex, Raw, latex  # noqa: F401
+from chalk.shapes.latex import Latex, latex  # noqa: F401
 from chalk.shapes.path import Path, make_path  # noqa: F401
 from chalk.shapes.segment import Segment, seg  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
@@ -56,7 +56,7 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
-    return Trail.regular_polygon(sides, side_length).stroke().center_xy()
+    return Trail.regular_polygon(sides, side_length).centered().stroke()
 
 
 def hrule(length: float) -> Diagram:

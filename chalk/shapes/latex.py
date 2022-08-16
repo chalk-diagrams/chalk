@@ -1,24 +1,10 @@
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any
 
-from chalk.shapes.shape import Shape, Spacer
+from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox, origin
 from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
-
-
-class Raw(Spacer):
-    """Shape class.
-
-    A fake SVG node for importing latex.
-    """
-
-    def __init__(self, st: str):
-        self.xml = ET.fromstring(st)
-
-    def get_xml(self) -> ET.Element:
-        return self.xml
 
 
 @dataclass
