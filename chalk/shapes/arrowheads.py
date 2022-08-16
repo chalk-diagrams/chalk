@@ -14,10 +14,13 @@ black = Color("black")
 
 def tri() -> Diagram:
     return (
-        Path.from_list_of_tuples([(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)])
+        Path.from_list_of_tuples(
+            [(1.0, 0), (0.0, -1.0), (-1.0, 0), (1.0, 0)], closed=True
+        )
         .stroke()
         .rotate_by(-0.25)
         .fill_color(Color("black"))
+        .center_xy()
         .align_r()
         .line_width(0)
     )
@@ -32,11 +35,13 @@ def dart(cut: float = 0.2) -> Diagram:
                 (0.0, -1.0 - cut),
                 (-1.0, +cut),
                 (0, -cut),
-            ]
+            ],
+            closed=True,
         )
         .stroke()
         .rotate_by(-0.25)
         .fill_color(Color("black"))
+        .center_xy()
         .align_r()
         .line_width(0)
     )

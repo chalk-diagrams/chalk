@@ -17,41 +17,39 @@ a  = ArcSegment(10, 50).rotate(90)
 
 a  = ArcSegment.arc_between(P2(-1, 0), P2(0, 1.0), 1)
 # print(a.p, a.q, a.r_x, a.r_y, a.angle, a.tangle)
+
 d = []
 
 d += [circle(1).show_origin()]
 
-d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1)]).stroke().show_origin()]
+d += [(Trail.rectangle(1, 1).centered().to_path() + Trail.rectangle(0.5, 0.5).reverse().centered().to_path()).stroke()]
 
-d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), -1)]).stroke().show_origin()]
+d += [(Trail.circle(2).centered().to_path() + Trail.circle(1.0, False).centered().to_path()).stroke()]
 
-d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), 1)]).stroke().show_origin()]
+d += [arc_seg(2*unit_x, 1).stroke().show_origin()]
 
-d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(0, 1), -1)]).stroke().show_origin()]
+d += [arc_seg(2*unit_x, -1).stroke().show_origin()]
 
-d += [Path([ArcSegment.arc_between(P2(-1, 0), P2(1, 0.0), 1).scale_y(0.5).rotate(45)]).stroke().show_origin()]
+d += [arc_seg(unit_x + unit_y, 1).stroke().show_origin()]
 
-# d = Path([Segment(P2(0, r), P2(0, b)),
-#           ArcSegment.arc_between(P2(0, b), P2(r, 1), rad)]).stroke()
+d += [arc_seg(unit_x + unit_y, 1).scale(-1).stroke().show_origin()]
 
-d += [Path([Segment(P2(0, b/2), P2(0, b)),
-          ArcSegment.arc_between(P2(0, b), P2(r, 1), -rad),
-           Segment(P2(r, 1), P2(b, 1)),
-           ArcSegment.arc_between(P2(b, 1), P2(1, 1-r), -rad),
-          Segment(P2(1, 1-r), P2(1, r)),
-          ArcSegment.arc_between(P2(1, r), P2(1-r, 0), -rad),
-          Segment(P2(1-r, 0), P2(r, 0)),
-           ArcSegment.arc_between(P2(r, 0), P2(0, r), -rad),
-           Segment(P2(0, r), P2(0, b / 2))
+d += [arc_seg(unit_x + unit_y, -1).stroke().show_origin()]
 
-]).stroke().center_xy().show_origin()]
+d += [arc_seg(2 * unit_x, 1).scale_y(0.5).rotate(45).stroke().show_origin()]
 
+edge = seg(b * unit_y) + arc_seg(V2(r, r), -rad)
+trail = Trail.concat(edge.rotate_by(i / 4) for i in range(4)) + seg(0.01 * unit_y)
+
+d += [trail.close().stroke().center_xy().show_origin()]
+
+d += [Trail.rectangle(1, 1).stroke().center_xy().show_origin()]
 
 d += [cat(
     [
-        ArcSegment(180, 135).stroke().show_origin(),
-        ArcSegment(180, 135).scale_x(-1).stroke().show_origin(),
-        ArcSegment(180, 135).stroke().scale_x(-1).show_origin(),
+        arc_seg_angle(180, 135).stroke().show_origin(),
+        arc_seg_angle(180, 135).scale_x(-1).stroke().show_origin(),
+        arc_seg_angle(180, 135).stroke().scale_x(-1).show_origin(),
     ],
     unit_x,
     sep=0.5

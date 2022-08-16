@@ -15,7 +15,7 @@ from chalk.shapes import (
     from_pil,
 )
 from chalk.style import Style
-from chalk.transform import Affine, to_radians, unit_x, unit_y
+from chalk.transform import P2, Affine, to_radians, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -90,13 +90,16 @@ class ToList(DiagramVisitor[List["Primitive"]]):
 
 
 class ToCairoShape(ShapeVisitor[None]):
-    def render_segment(self, seg: SegmentLike, ctx: PyCairoContext) -> None:
+    def render_segment(
+        self, seg: SegmentLike, ctx: PyCairoContext, p: P2
+    ) -> None:
+        q = seg.q + p
         if isinstance(seg, Segment):
-            ctx.line_to(seg.q.x, seg.q.y)
+            ctx.line_to(q.x, q.y)
         elif isinstance(seg, ArcSegment):
             end = seg.angle + seg.dangle
             ctx.save()
-            matrix = tx_to_cairo(seg.t)
+            matrix = tx_to_cairo(Affine.translation(p) * seg.t)
             ctx.transform(matrix)
             if seg.dangle < 0:
                 ctx.arc_negative(
@@ -112,13 +115,15 @@ class ToCairoShape(ShapeVisitor[None]):
         ctx: PyCairoContext = None,
         style: Style = EMPTY_STYLE,
     ) -> None:
-        for i, seg in enumerate(path.segments):
-            if i == 0:
-                p = seg.p
-                ctx.move_to(p.x, p.y)
-            self.render_segment(seg, ctx)
-        if path.is_closed():
-            ctx.close_path()
+        if not path.loc_trails[0].trail.closed:
+            style.fill_opacity_ = 0
+        for loc_trail in path.loc_trails:
+            for i, (seg, p) in enumerate(loc_trail.located_segments()):
+                if i == 0:
+                    ctx.move_to(p.x, p.y)
+                self.render_segment(seg, ctx, p)
+            if loc_trail.trail.closed:
+                ctx.close_path()
 
     def visit_latex(self, shape: Latex) -> None:
         raise NotImplementedError("Latex is not implemented")

@@ -29,12 +29,19 @@ Trail = Any
 Ident = Affine.identity()
 A = TypeVar("A")
 SVG_HEIGHT = 200
+SVG_DRAW_HEIGHT = None
 
 
 def set_svg_height(height: int) -> None:
     "Globally set the svg preview height for notebooks."
     global SVG_HEIGHT
     SVG_HEIGHT = height
+
+
+def set_svg_draw_height(height: int) -> None:
+    "Globally set the svg preview height for notebooks."
+    global SVG_DRAW_HEIGHT
+    SVG_DRAW_HEIGHT = height
 
 
 @dataclass
@@ -140,7 +147,7 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
         f = tempfile.NamedTemporaryFile(delete=False)
-        self.render_svg(f.name, height=SVG_HEIGHT)
+        self.render_svg(f.name, height=SVG_HEIGHT, draw_height=SVG_DRAW_HEIGHT)
         f.close()
         svg = open(f.name).read()
         os.unlink(f.name)

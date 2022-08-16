@@ -1,6 +1,8 @@
 from colour import Color
 
+from chalk.combinators import concat
 from chalk.shapes import Path, circle
+from chalk.shapes.segment import seg
 from chalk.transform import V2, origin
 from chalk.types import Diagram
 
@@ -40,9 +42,8 @@ def show_envelope(
         .fill_opacity(0)
         .line_color(Color("red"))
     )
-    outer = (
-        Path.from_pairs(list(envelope.to_segments(angle)))
-        .stroke()
+    outer += (
+        concat([seg(y).stroke() for (x, y) in envelope.to_segments(angle)])
         .line_color(Color("red"))
         .dashing([0.01, 0.01], 0)
     )

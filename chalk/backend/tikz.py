@@ -15,7 +15,7 @@ from chalk.shapes import (
     Text,
 )
 from chalk.style import Style
-from chalk.transform import origin
+from chalk.transform import P2, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -103,13 +103,15 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
     def __init__(self, pylatex: PyLatex):
         self.pylatex = pylatex
 
-    def render_segment(self, pts: PyLatexElement, seg: SegmentLike) -> None:
+    def render_segment(
+        self, pts: PyLatexElement, seg: SegmentLike, p: P2
+    ) -> None:
+        q = seg.q + p
         if isinstance(seg, Segment):
             pts.append("--")
-            pts.append(self.pylatex.TikZCoordinate(seg.q.x, seg.q.y))
+            pts.append(self.pylatex.TikZCoordinate(q.x, q.y))
         elif isinstance(seg, ArcSegment):
-
-            start = (seg.p - seg.center).angle
+            start = (-seg.center).angle
             end = (seg.q - seg.center).angle
             det: float = seg.t.determinant  # type: ignore
             if det * seg.dangle < 0 and end > start:
@@ -129,14 +131,17 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         self, path: Path, style: Style = EMPTY_STYLE
     ) -> PyLatexElement:
         pts = self.pylatex.TikZPathList()
-        for i, seg in enumerate(path.segments):
-            if i == 0:
-                p = seg.p
-                pts.append(self.pylatex.TikZCoordinate(p.x, p.y))
-            self.render_segment(pts, seg)
-        if path.is_closed():
-            pts.append("--")
-            pts._arg_list.append(self.pylatex.TikZUserPath("cycle"))
+        if not path.loc_trails[0].trail.closed:
+            style = style.fill_opacity(0)
+
+        for loc_trail in path.loc_trails:
+            for i, (seg, p) in enumerate(loc_trail.located_segments()):
+                if i == 0:
+                    pts.append(self.pylatex.TikZCoordinate(p.x, p.y))
+                self.render_segment(pts, seg, p)
+            if loc_trail.trail.closed:
+                pts.append("--")
+                pts._arg_list.append(self.pylatex.TikZUserPath("cycle"))
         return self.pylatex.TikZDraw(
             pts,
             options=self.pylatex.TikZOptions(**style.to_tikz(self.pylatex)),

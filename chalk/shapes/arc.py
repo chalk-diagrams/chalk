@@ -7,18 +7,22 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
 from planar.py import Ray
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
-from chalk.shapes.segment import Segment, ray_circle_intersection
+from chalk.shapes.segment import LocatedSegment, ray_circle_intersection
 from chalk.trace import Trace
 from chalk.transform import P2, V2, from_radians, unit_x, unit_y
-from chalk.types import Diagram, Enveloped, Traceable
+from chalk.types import Enveloped, Traceable, TrailLike
+
+if TYPE_CHECKING:
+    from chalk.trail import Trail
 
 Ident = tx.Affine.identity()
+ORIGIN = P2(0, 0)
 
 Degrees = float
 
@@ -32,7 +36,7 @@ def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> bool:
 
 
 @dataclass
-class ArcSegment(Traceable, Enveloped, tx.Transformable):
+class LocatedArcSegment(Traceable, Enveloped, tx.Transformable):
     "A ellipse arc represented with the cetner parameterization"
     angle: float
     dangle: float
@@ -40,7 +44,7 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
     # Ellipse is closed under affine.
     t: tx.Affine = tx.Affine.identity()
 
-    # Lazy center parameterization.
+    # Parts to be careful about translation-invariance
     @property
     def p(self) -> P2:
         "Real start"
@@ -54,6 +58,15 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
         )
 
     @property
+    def q_angle(self) -> float:
+        return (self.q - self.center).angle
+
+    @property
+    def center(self) -> P2:
+        "Real center"
+        return tx.apply_p2_affine(self.t, P2(0, 0))
+
+    @property
     def r_x(self) -> float:
         t2 = tx.remove_translation(self.t)
         return tx.apply_p2_affine(t2, unit_x).length
@@ -61,21 +74,12 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
     @property
     def r_y(self) -> float:
         t2 = tx.remove_translation(self.t)
-        p2: P2 = tx.apply_p2_affine(t2, unit_y)
-        return p2.length
+        return tx.apply_p2_affine(t2, unit_y).length
 
     @property
     def rot(self) -> float:
         t2 = tx.remove_translation(self.t)
         return tx.apply_p2_affine(t2, unit_x).angle
-
-    @property
-    def center(self) -> P2:
-        "Real center"
-        return tx.apply_p2_affine(self.t, P2(0, 0))
-
-    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
-        return ArcSegment(self.angle, self.dangle, t * self.t)
 
     def get_trace(self, t: tx.Affine = Ident) -> Trace:
         "Trace is done as simple arc and transformed"
@@ -123,11 +127,13 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
         return Envelope(wrapped).apply_transform(self.t)
 
     @staticmethod
-    def arc_between(p: P2, q: P2, height: float) -> Union[Segment, ArcSegment]:
+    def arc_between(
+        p: P2, q: P2, height: float
+    ) -> Union[LocatedSegment, LocatedArcSegment]:
 
         h = abs(height)
         if h < 1e-3:
-            return Segment(p, q)
+            return LocatedSegment(q - p, p)
         d = (q - p).length
         # Determine the arc's angle θ and its radius r
         θ = math.acos((d**2 - 4.0 * h**2) / (d**2 + 4.0 * h**2))
@@ -155,7 +161,43 @@ class ArcSegment(Traceable, Enveloped, tx.Transformable):
         ret = ret.rotate(-diff.angle).translate_by(p)
         return ret
 
-    def stroke(self) -> Diagram:
-        from chalk.shapes.path import Path
 
-        return Path([self]).stroke()
+@dataclass
+class ArcSegment(LocatedArcSegment, TrailLike):
+    "A translation invariant version of Arc"
+
+    def __post_init__(self) -> None:
+        self.t = tx.Affine.translation(-self.p) * self.t
+        assert self.p.x == 0, self.p
+        assert self.p.y == 0, self.p
+
+    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
+        t = tx.remove_translation(t)
+        return ArcSegment(self.angle, self.dangle, t * self.t)
+
+    def to_trail(self) -> Trail:
+        from chalk.trail import Trail
+
+        return Trail([self])
+
+    @staticmethod
+    def arc_between_trail(q: P2, height: float) -> Trail:
+        segment = LocatedArcSegment.arc_between(P2(0, 0), q, height)
+        if isinstance(segment, LocatedArcSegment):
+            return ArcSegment(
+                segment.angle, segment.dangle, segment.t
+            ).to_trail()
+        else:
+            return segment.to_trail()
+
+
+def arc_seg(q: V2, height: float) -> Trail:
+    return ArcSegment.arc_between_trail(q, height)
+
+
+def arc_seg_angle(angle: float, dangle: float) -> Trail:
+    return ArcSegment(angle, dangle).to_trail()
+
+
+# def arc_between(p:P2, q: P2, height: float) -> Path:
+#     return ArcSegment.arc_between_trail(q - p, height).at(p)

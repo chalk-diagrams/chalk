@@ -56,7 +56,8 @@ class Envelope(Transformable):
 
     @property
     def center(self) -> P2:
-        assert not self.is_empty
+        if self.is_empty:
+            return origin
         return P2(
             (-self(-unit_x) + self(unit_x)) / 2,
             (-self(-unit_y) + self(unit_y)) / 2,

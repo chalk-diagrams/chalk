@@ -320,7 +320,13 @@ tournament:
 parade:
 	python examples/rectangle_parade.py
 
-images: squares hanoi intro escher_square lenet logo hilbert koch tensor hex_variation tree tournament parade
+arrows:
+	python examples/arrows.py
+
+path:
+	python examples/path.py
+
+images: squares hanoi intro  hilbert koch tensor hex_variation tree tournament parade arrows path lenet escher_square logo
 	@echo "🎁 Generate all examples ... ⏳"
 
 serve:

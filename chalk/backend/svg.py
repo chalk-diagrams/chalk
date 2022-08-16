@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING, Optional
 
 import svgwrite
 from svgwrite import Drawing
 from svgwrite.base import BaseElement
+from svgwrite.shapes import Rect
 
 from chalk import transform as tx
 from chalk.shapes import (
@@ -13,14 +15,13 @@ from chalk.shapes import (
     Image,
     Latex,
     Path,
-    Raw,
     Segment,
     SegmentLike,
     Spacer,
     Text,
 )
 from chalk.style import Style
-from chalk.transform import unit_x, unit_y
+from chalk.transform import P2, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -45,6 +46,19 @@ def tx_to_svg(affine: tx.Affine) -> str:
         return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
 
     return convert(*affine[:6])
+
+
+class Raw(Rect):  # type: ignore
+    """Shape class.
+
+    A fake SVG node for importing latex.
+    """
+
+    def __init__(self, st: str):
+        self.xml = ET.fromstring(st)
+
+    def get_xml(self) -> ET.Element:
+        return self.xml
 
 
 class ToSVG(DiagramVisitor[BaseElement]):
@@ -105,32 +119,38 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
 
-    def render_segment(self, seg: SegmentLike) -> str:
+    def render_segment(self, seg: SegmentLike, p: P2) -> str:
+        q = seg.q + p
         if isinstance(seg, Segment):
-            return f"L {seg.q.x} {seg.q.y}"
+            return f"L {q.x} {q.y}"
         elif isinstance(seg, ArcSegment):
             "https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint"
             f_A = 1 if abs(seg.dangle) > 180 else 0
             det: float = seg.t.determinant  # type: ignore
             f_S = 1 if det * seg.dangle > 0 else 0
-            return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {seg.q.x} {seg.q.y}"
+            return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {q.x} {q.y}"
 
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE
     ) -> BaseElement:
+        extra_style = ""
+        if not path.loc_trails[0].trail.closed:
+            extra_style = "fill:none;"
         line = self.dwg.path(
-            style="vector-effect: non-scaling-stroke;",
+            style="vector-effect: non-scaling-stroke;" + extra_style,
         )
-        for i, seg in enumerate(path.segments):
-            if i == 0:
-                p = seg.p
-                line.push(f"M {p.x} {p.y}")
-            line.push(self.render_segment(seg))
-        if path.is_closed():
-            line.push("Z")
+        for loc_trail in path.loc_trails:
+            p = loc_trail.location
+            line.push(f"M {p.x} {p.y}")
+            for i, (seg, p) in enumerate(loc_trail.located_segments()):
+                line.push(self.render_segment(seg, p))
+            if loc_trail.trail.closed:
+                line.push("Z")
         return line
 
-    def visit_latex(self, shape: Latex) -> BaseElement:
+    def visit_latex(
+        self, shape: Latex, style: Style = EMPTY_STYLE
+    ) -> BaseElement:
         dx, dy = -shape.width / 2, -shape.height / 2
         g = self.dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
         g.add(Raw(shape.content))
@@ -178,7 +198,11 @@ def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
 
 
 def render(
-    self: Diagram, path: str, height: int = 128, width: Optional[int] = None
+    self: Diagram,
+    path: str,
+    height: int = 128,
+    width: Optional[int] = None,
+    draw_height: Optional[int] = None,
 ) -> None:
     """Render the diagram to an SVG file.
 
@@ -189,6 +213,9 @@ def render(
                                 Defaults to 128.
         width (Optional[int], optional): Width of the rendered image.
                                          Defaults to None.
+        draw_height (Optional[int], optional): Override the height for
+                                               line width.
+
     """
     pad = 0.05
     envelope = self.get_envelope()
@@ -218,6 +245,8 @@ def render(
     e = s.get_envelope()
     assert e is not None
     s = s.translate(e(-unit_x), e(-unit_y))
-    style = Style.root(output_size=max(height, width))
+    if draw_height is None:
+        draw_height = max(height, width)
+    style = Style.root(output_size=draw_height)
     outer.add(to_svg(s, dwg, style))
     dwg.save()

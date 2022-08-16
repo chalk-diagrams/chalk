@@ -4,12 +4,11 @@
 from PIL import Image as PILImage
 from chalk import *
 from chalk.transform import *
-from chalk.trail import unit_x, unit_y
 # Needed for recursion 
 import sys
 sys.setrecursionlimit(100000)
 
-
+unit_x, unit_y = Trail.hrule(1), Trail.vrule(1)
 
 # Draw a space filling Hilbert curve
 

@@ -17,7 +17,7 @@ def make_node(n):
 
 
 n = 6
-hexagon = Path.regular_polygon(n, 1)
+hexagon = Trail.regular_polygon(n, 1)
 nodes = [make_node(i).named(i) for i in range(n)]
 nodes = [node.translate(point.x, point.y) for node, point in zip(nodes, hexagon.points())]
 dia = concat(nodes) 

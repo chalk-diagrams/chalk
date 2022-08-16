@@ -6,9 +6,11 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.style import StylableProtocol, Style
 from chalk.trace import Trace
-from chalk.transform import V2
+from chalk.transform import P2, V2
 
 if TYPE_CHECKING:
+    from chalk.path import Path
+    from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
 Ident = tx.Affine.identity()
@@ -27,6 +29,20 @@ class Traceable(Protocol):
 class Shape(Enveloped, Traceable, Protocol):
     def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
         ...
+
+
+class TrailLike(Protocol):
+    def to_trail(self) -> Trail:
+        ...
+
+    def to_path(self, location: P2 = P2(0, 0)) -> Path:
+        return self.at(location).to_path()
+
+    def at(self, location: P2) -> Located:
+        return self.to_trail().at(location)
+
+    def stroke(self) -> Diagram:
+        return self.at(P2(0, 0)).stroke()
 
 
 class Diagram(

@@ -1,110 +1,165 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from functools import reduce
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
-from chalk.shapes.path import Path
+from chalk.envelope import Envelope
+from chalk.shapes.arc import ArcSegment, arc_seg_angle
+from chalk.shapes.segment import Segment, seg
+from chalk.trace import Trace
 from chalk.transform import (
     P2,
     V2,
     Affine,
     Transformable,
-    Vec2Array,
     apply_affine,
     remove_translation,
+    unit_x,
+    unit_y,
 )
-from chalk.types import Diagram
+from chalk.types import Diagram, Enveloped, Traceable, TrailLike
+
+if TYPE_CHECKING:
+    from chalk.shapes.path import Path
+
+SegmentLike = Union[Segment, ArcSegment]
 
 
 @dataclass
-class Trail(Transformable):
-    """Trail class.
+class Located(Enveloped, Traceable, Transformable):
+    trail: Trail
+    location: P2
 
-    This is derived from a ``chalk.transform.Transformable`` class.
+    def located_segments(self) -> Iterable[Tuple[SegmentLike, P2]]:
+        return zip(self.trail.segments, self.points())
 
-    [TODO]: Need more explanation on what this class is for (preferably
-    with illustrations/figures).
-    """
+    def points(self) -> Iterable[P2]:
+        return (pt + self.location for pt in self.trail.points())
 
-    offsets: List[V2]
-
-    @staticmethod
-    def empty() -> Trail:
-        return Trail([])
-
-    def __add__(self, other: Trail) -> Trail:
-        """Adds another trail to this one and
-        returns the resulting trail.
-
-        Args:
-            other (Trail): Another trail object.
-
-        Returns:
-            Trail: A trail object.
-        """
-        new_vec = list(self.offsets)
-        new_vec.extend(other.offsets)
-        return Trail(new_vec)
-
-    @classmethod
-    def from_path(cls, path: Path) -> Trail:
-        """Constructs and returns a trail from a given path.
-
-        Args:
-            path (Path): A path object.
-
-        Returns:
-            Trail: A trail object.
-        """
-        pts = path.points()
-        offsets = [t - s for s, t in zip(pts, pts[1:])]
-        return cls(offsets)
-
-    def to_path(self, origin: P2 = P2(0, 0)) -> Path:
-        """Converts a trail to a path, given a point (as a reference).
-
-        Args:
-            origin (P2, optional): A point object.
-                                      Defaults to ORIGIN.
-
-        Returns:
-            Path: A path object.
-        """
-        points = [origin]
-        for s in self.offsets:
-            points.append(points[-1] + s)
-        return Path.from_points(points)
-
-    def stroke(self) -> Diagram:
-        """Returns a primitive (shape) with strokes
-
-        Returns:
-            Diagram: A diagram.
-        """
-        from chalk.core import Primitive
-
-        return Primitive.from_shape(self.to_path())
-
-    def apply_transform(self, t: Affine) -> Trail:  # type: ignore
-        """Applies a given transform.
-
-        This is the same as ``Trail.transform()`` method.
-
-        Args:
-            t (Transform): A transform object.
-
-        Returns:
-            Trail: A trail object.
-        """
-        return Trail(
-            [
-                o
-                for o in apply_affine(
-                    remove_translation(t), Vec2Array(self.offsets)
-                )
-            ]
+    def get_envelope(self) -> Envelope:
+        return Envelope.concat(
+            segment.get_envelope().translate_by(location)
+            for segment, location in self.located_segments()
         )
 
+    def get_trace(self) -> Trace:
+        return Trace.concat(
+            segment.get_trace().translate_by(location)
+            for segment, location in self.located_segments()
+        )
 
-unit_x = Trail(([V2(1, 0)]))
-unit_y = Trail(([V2(0, 1)]))
+    def stroke(self) -> Diagram:
+        return self.to_path().stroke()
+
+    def apply_transform(self, t: Affine) -> Located:  # type: ignore
+        return Located(
+            apply_affine(t, self.trail), apply_affine(t, self.location)
+        )
+
+    def to_path(self) -> Path:
+        from chalk.shapes.path import Path
+
+        return Path([self])
+
+
+@dataclass
+class Trail(Transformable, TrailLike):
+    segments: List[SegmentLike]
+    closed: bool = False
+
+    # Monoid - concat
+    @staticmethod
+    def empty() -> Trail:
+        return Trail([], False)
+
+    def __add__(self, other: Trail) -> Trail:
+        assert not (self.closed or other.closed), "Cannot add closed trails"
+        return Trail(self.segments + other.segments, False)
+
+    @staticmethod
+    def concat(trails: Iterable[Trail]) -> Trail:
+        return reduce(Trail.__add__, trails, Trail.empty())
+
+    def close(self) -> Trail:
+        return Trail(self.segments, True)
+
+    def points(self) -> Iterable[P2]:
+        cur = P2(0, 0)
+        pts = [cur]
+        for segment in self.segments:
+            cur += segment.q
+            pts.append(cur)
+        return pts
+
+    # Apply transform to all
+    def apply_transform(self, t: Affine) -> Trail:  # type: ignore
+        t = remove_translation(t)
+        return Trail(
+            [seg.apply_transform(t) for seg in self.segments], self.closed
+        )
+
+    def at(self, p: P2) -> Located:
+        return Located(self, p)
+
+    def reverse(self) -> Trail:
+        return Trail(
+            [seg.scale(-1) for seg in reversed(self.segments)],
+            self.closed,
+        )
+
+    # Constructor
+    @staticmethod
+    def from_offsets(offsets: List[V2], closed: bool = False) -> Trail:
+        return Trail([Segment(off) for off in offsets], closed)
+
+    @staticmethod
+    def hrule(length: float) -> Trail:
+        return seg(length * unit_x)
+
+    @staticmethod
+    def vrule(length: float) -> Trail:
+        return seg(length * unit_y)
+
+    @staticmethod
+    def rectangle(width: float, height: float) -> Trail:
+        t = seg(unit_x * width) + seg(unit_y * height)
+        return (t + t.rotate_by(0.5)).close()
+
+    def centered(self) -> Located:
+        return self.at(-sum(self.points(), P2(0, 0)) / len(self.segments))
+
+    @staticmethod
+    def circle(radius: float = 1.0, clockwise: bool = True) -> Trail:
+        sides = 4
+        dangle = -90
+        rotate_by = 1
+        if not clockwise:
+            dangle = 90
+            rotate_by *= -1
+        return (
+            Trail.concat(
+                [
+                    arc_seg_angle(0, dangle).rotate_by(rotate_by * i / sides)
+                    for i in range(sides)
+                ]
+            )
+            .close()
+            .scale(radius)
+        )
+
+    # @staticmethod
+    # def polygon(sides: int) -> Path:
+    #     edge = Trail.hrule(1.0)
+    #     return Trail.concat(edge.rotate_by(i / side) for i in range(sides))
+
+    @staticmethod
+    def regular_polygon(sides: int, side_length: float) -> Trail:
+        edge = Trail.hrule(side_length)
+        return Trail.concat(
+            edge.rotate_by(i / sides) for i in range(sides)
+        ).close()
+
+
+# unit_x = Trail.from_offsets([V2(1, 0)])
+# unit_y = Trail.from_offsets([V2(0, 1)])
