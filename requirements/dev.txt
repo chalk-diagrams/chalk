@@ -1,0 +1,10 @@
+flake8>=3.6.0
+black>=19.3b0
+mypy>=0.95
+interrogate>=1.5.0
+isort>=5.10.0
+darglint>=1.8.0
+pre-commit>=2.2.0
+# flake8-print>=4.4.0
+pytest>=4.0.2
+hypothesis

@@ -1,0 +1,52 @@
+name: checks.yml
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libcairo2-dev pdf2svg texlive texlive-science texlive-latex-recommended texlive-latex-extra 
+        python -m pip install --upgrade pip
+        pip install -U pip wheel
+        make install.dev install.base install.e install.docs
+    - name: Format with [[ isort ]]
+      run: |
+        # stop the build if there are errors raised by isort
+        make isort
+    - name: Format with [[ black ]]
+      run: |
+        # stop the build if there are errors raised by black
+        make black
+    - name: Lint with [[ flake8 ]]
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        make flake
+    - name: Docstring linting -- type check against function/method signature with [[ darglint ]]
+      run: |
+        # stop the build if docstring type-mismatch detected
+        make darglint
+    - name: Doctest coverage check with [[ interrogate ]]
+      run: |
+        # stop the build if doctest threshold does not meet
+        make interrogate
+    - name: Type check with [[ mypy ]]
+      run: |
+        # stop the build if there are type errors
+        make type
+    - name: Make sure examples run
+      run: |
+        make images
+    - name: Make sure docs run
+      run: |
+        make docsapi
