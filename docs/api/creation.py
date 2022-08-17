@@ -1,6 +1,8 @@
 # + tags=["hide"]
 import math
+import chalk.backend.cairo
 from chalk import *
+
 def help(f):
     import pydoc
     from IPython.display import HTML
@@ -9,9 +11,60 @@ def help(f):
 
 
 # Diagrams form the core of the chalk library. Elementary diagrams can
-# be created using shapes and paths. Diagrams can be rendered to SVGs
-# or PNGs.
+# be created using shapes and paths. Diagrams can be rendered to SVG,
+# PNG or PDF.
 
+
+# ### triangle
+
+# + tags=["hide_inp"]
+help(triangle)
+# -
+
+#
+
+triangle(1)
+
+
+# ### square
+
+# + tags=["hide_inp"]
+help(square)
+# -
+
+#
+
+square(1)
+
+# ### rectangle
+
+# + tags=["hide_inp"]
+help(rectangle)
+# -
+
+rectangle(3, 1, 0.0)
+
+
+# ### polygon
+
+# + tags=["hide_inp"]
+help(regular_polygon)
+# -
+
+#
+
+regular_polygon(8, 2)
+
+
+# ### make_path
+
+# + tags=["hide_inp"]
+help(make_path)
+# -
+
+#
+
+make_path([(0, 0), (0, 1), (1, 1), (1, 2)])
 
 # ### circle
 
@@ -30,77 +83,12 @@ help(arc)
 
 #
 
-quarter = math.pi / 2
+quarter = 90
 arc(1, 0, quarter) 
 
 #
 
 arc(1, 0, quarter) + arc(1, 2 * quarter, 3 * quarter) 
-
-
-# ### polygon
-
-# + tags=["hide_inp"]
-help(polygon)
-# -
-
-#
-
-polygon(8, 2)
-
-
-# ### square
-
-# + tags=["hide_inp"]
-help(square)
-# -
-
-#
-
-square(1)
-
-# ### triangle
-
-# + tags=["hide_inp"]
-help(triangle)
-# -
-
-#
-
-triangle(1)
-
-
-# ### rectangle
-
-# + tags=["hide_inp"]
-help(rectangle)
-# -
-
-#
-
-rectangle(8, 2, 0.5)
-
-
-
-# ### make_path
-
-# + tags=["hide_inp"]
-help(make_path)
-# -
-
-#
-
-make_path([(0, 0), (0, 1), (1, 1), (1, 2)])
-
-# ### text
-
-# + tags=["hide_inp"]
-help(text)
-# -
-
-#
-
-text("hello", 0.2)
 
 
 # ### arc_between
@@ -114,10 +102,20 @@ help(arc_between)
 arc_between((0, 0), (1, 0), 1)
 
 
+# ### text
+
+# + tags=["hide_inp"]
+help(text)
+# -
+
+# Note that unlike other shapes, ``text`` has an empty envelope, so we need to explicitly specify it in order to get a non-empty rendering.
+
+text("hello", 1).with_envelope(rectangle(2.5, 1))
+
 # ### Diagram.render
 
 # + tags=["hide_inp"]
-help(Diagram.render)
+help(chalk.backend.cairo.render)
 # -
 
 circle(1).render("circle.png")
