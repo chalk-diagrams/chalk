@@ -1,18 +1,18 @@
 site_name: chalk-diagrams
-site_url: https://danoneata.github.io/chalk/
+site_url: https://chalk-diagrams.github.io
 site_description: Chalk Diagrams - A declarative drawing API
-site_author: Dan Oneață
+site_author: Dan Oneață and Alexander Rush
 
 ### Repository
-repo_name: danoneata/chalk
-repo_url: https://github.com/danoneata/chalk
+# repo_name: chalk-diagrams/chalk-diagrams.github.io
+repo_url: https://github.com/chalk-diagrams/chalk-diagrams.github.io
 edit_uri: '' # comment this out to disable allowing editing of the docs from the website.
-remote_branch: gh-pages
+remote_branch: master
 remote_name: origin
 
 ### Copyright
 copyright: |
-  Maintained by <a href="https://github.com/danoneata">Dan Oneață</a>.
+  Maintained by <a href="https://github.com/danoneata">Dan Oneață</a> and <a href="https://github.com/srush">Alexander Rush</a>.
 
 ### Preview Controls
 use_directory_urls: true

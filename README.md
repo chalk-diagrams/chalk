@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/logo-sm.png" width=300></p>
+<p align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/logo-sm.png" width=300></p>
 
 Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
 The API draws heavy inspiration from
@@ -6,7 +6,7 @@ Haskell's [diagrams](https://diagrams.github.io/),
 Scala's [doodle](https://github.com/creativescala/doodle/) and
 Jeremy Gibbons's lecture notes on [Functional Programming for Domain−Specific Languages](http://www.cs.ox.ac.uk/publications/publication7583-abstract.html).
 
-The documentation is available at [https://danoneata.github.io/chalk/](https://danoneata.github.io/chalk/).
+The documentation is available at [https://chalk-diagrams.github.io](https://chalk-diagrams.github.io).
 
 ⚠️ The library is still very much work in progress and subject to change.
 
@@ -15,7 +15,7 @@ The documentation is available at [https://danoneata.github.io/chalk/](https://d
 The library is available on PyPI as `chalk-diagrams` and can be installed with `pip`:
 
 ```bash
-pip install git+https://github.com/danoneata/chalk/
+pip install git+https://github.com/chalk-diagrams/chalk/
 ```
 
 On Debian (or Colab) you will need to install Cairo
@@ -71,7 +71,7 @@ For example:
 d = circle(1).fill_color(papaya)
 ```
 
-![circle](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-01.png)
+![circle](https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/intro-01.png)
 
 The diagram can be saved to an image using the `render` method:
 
@@ -94,7 +94,7 @@ circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
 
 This code produces the following image:
 
-![atop](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-02.png)
+![atop](https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/intro-02.png)
 
 We also provide combinators for a list of diagrams:
 `hcat` for horizontal composition, `vcat` for vertical composition.
@@ -103,7 +103,7 @@ For example:
 ```python
 hcat(circle(0.1 * i) for i in range(1, 6)).fill_color(blue)
 ```
-![hcat](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-03.png)
+![hcat](https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/intro-03.png)
 
 We can use Python functions to build more intricate diagrams:
 
@@ -118,7 +118,7 @@ def sierpinski(n: int, size: int) -> Diagram:
 d = sierpinski(5, 4).fill_color(papaya)
 ```
 
-![sierpinski](https://raw.githubusercontent.com/danoneata/chalk/master/examples/output/intro-04.png)
+![sierpinski](https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/intro-04.png)
 
 ### Gallery of examples
 
@@ -127,23 +127,23 @@ their output is illustrated below:
 
 <table>
 <tr>
-<td align="center"><img src="doc/imgs/squares.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
-<td align="center"><img src="doc/imgs/logo.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
-<td align="center"><img src="doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
+<td align="center"><img src="doc/imgs/squares.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
+<td align="center"><img src="doc/imgs/logo.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
+<td align="center"><img src="doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/hilbert.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
-<td align="center"><img src="doc/imgs/koch.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
-<td align="center"><img src="doc/imgs/hex-variation.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
+<td align="center"><img src="doc/imgs/hilbert.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
+<td align="center"><img src="doc/imgs/koch.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
+<td align="center"><img src="doc/imgs/hex-variation.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
-<td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
-<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
+<td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
+<td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
+<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/tree.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/tree.py">tree.py</a></code></td>
-<td align="center"><img src="doc/imgs/lattice.png"><br><code><a href="https://github.com/danoneata/chalk/tree/master/examples/lattice.py">lattice.py</a></code></td>
+<td align="center"><img src="doc/imgs/tree.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tree.py">tree.py</a></code></td>
+<td align="center"><img src="doc/imgs/lattice.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lattice.py">lattice.py</a></code></td>
 </tr>
 <!--<tr>
 </tr>
