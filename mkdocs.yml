@@ -5,9 +5,9 @@ site_author: Dan Oneață and Alexander Rush
 
 ### Repository
 # repo_name: chalk-diagrams/chalk-diagrams.github.io
-repo_url: https://github.com/chalk-diagrams/chalk-diagrams.github.io
+repo_url: https://github.com/chalk-diagrams/chalk
 edit_uri: '' # comment this out to disable allowing editing of the docs from the website.
-remote_branch: master
+remote_branch: gh-pages
 remote_name: origin
 
 ### Copyright
