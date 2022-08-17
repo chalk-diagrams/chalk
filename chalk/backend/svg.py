@@ -159,7 +159,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
     def visit_text(
         self, shape: Text, style: Style = EMPTY_STYLE
     ) -> BaseElement:
-        dx = -(shape.bb.width / 2)
+        dx = -(shape.get_bounding_box().width / 2)
         return self.dwg.text(
             shape.text,
             transform=f"translate({dx}, 0)",
