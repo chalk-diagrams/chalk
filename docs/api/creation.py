@@ -1,6 +1,7 @@
 # + tags=["hide"]
 import math
-import chalk.backend.cairo
+
+from chalk.core import BaseDiagram
 from chalk import *
 
 def help(f):
@@ -115,7 +116,7 @@ text("hello", 1).with_envelope(rectangle(2.5, 1))
 # ### Diagram.render
 
 # + tags=["hide_inp"]
-help(chalk.backend.cairo.render)
+help(BaseDiagram.render)
 # -
 
 circle(1).render("circle.png")

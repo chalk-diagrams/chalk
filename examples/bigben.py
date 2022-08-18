@@ -192,7 +192,7 @@ diffx = diffy * abs(u60.x / u45.x)
 
 fudge = 0.73
 y = (
-    Trail(
+    Trail.from_offsets(
         [
             u45,
             diffy * u60,
@@ -357,8 +357,8 @@ r
 # Next we do each of the outer corners by themselves. We first make a sloping triangle shape using trails and arc_between.
 
 corner = (
-    Trail([unit_x]).stroke().align_l()
-    + Trail([-unit_y]).stroke()
+    Trail.hrule(1).stroke().align_l()
+    + Trail.vrule(1).reflect_y().stroke()
     + arc_between((0, -1), (1, 0), -0.2)
 ).line_width(0.2)
 corner
@@ -390,7 +390,7 @@ decal
 # To add the other shapes with we `arc` which draws part of a circle.
 
 disp = 20  # degrees
-marc = arc(2 / 2, 180, disp)
+marc = arc(2 / 2, 0, 180 - disp)
 decal = concat(
     [
         decal,
@@ -403,7 +403,7 @@ decal
 
 # We scale the decoration to fit in the corner we created.
 
-fudge = 0.545
+fudge = 0.515
 corner = corner.align_bl() + decal.scale_uniform_to_x(fudge).align_bl()
 corner = corner.align_tr().translate(-0.4, 0.4).line_color(gold)
 corner.show_origin()
@@ -439,7 +439,7 @@ part3
 
 set_svg_height(200)
 hand = (
-    make_path([(2, -0.5), (1, -0), (0.4, 20), (0, 21), (0, -1.5), (0.5, -1), (2, -0.5)])
+    make_path([(2, -0.5), (1, -0), (0.4, 20), (0, 21), (0, -1.5), (0.5, -1), (2, -0.5)], closed=True)
     .fill_color(black)
     .line_color(grey)
 )
@@ -458,7 +458,8 @@ hand2 = make_path(
         (0, 12),
         (0, 0),
         (1, 0),
-    ]
+    ],
+    closed=True
 ).fill_color(black)
 hand2 = (hand2 + hand2.reflect_x()).translate(0, -3).line_width(0.1).line_color(grey)
 hand2.show_origin()

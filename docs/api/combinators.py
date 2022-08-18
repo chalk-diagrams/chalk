@@ -11,7 +11,7 @@ def help(f):
 
 # Complex diagrams can be created by combining simpler diagrams
 # through placement combinators. These place diagrams above, atop or
-# besides other diagrams. Relative location is determined by the bounding box
+# besides other diagrams. Relative location is determined by the envelope
 # and origins of the diagrams.
 
 # ### beside
