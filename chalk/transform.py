@@ -104,11 +104,11 @@ class Transformable(TransformableProtocol):
         return self._app(Affine.rotation(θ))
 
     def rotate_rad(self: TTrans, θ: float) -> TTrans:
-        "Rotatte by θ radians counterclockwise"
+        "Rotate by θ radians counterclockwise"
         return self._app(Affine.rotation(from_radians(θ)))
 
     def rotate_by(self: TTrans, turns: float) -> TTrans:
-        """Rotate by fractions of a circle (turn)."""
+        "Rotate by fractions of a circle (turn)."
         θ = 2 * math.pi * turns
         return self._app(Affine.rotation(from_radians(θ)))
 
