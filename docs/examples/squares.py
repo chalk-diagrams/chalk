@@ -5,7 +5,7 @@ import random
 from itertools import product
 
 from colour import Color
-from chalk import square, concat
+from chalk import square, concat, empty
 
 random.seed(0)
 
@@ -23,7 +23,7 @@ def make_square():
     i = random.random() > 0.75
     color = colors[i]
 
-    return square(0.75).line_color(color).rotate(θ)
+    return square(0.75).line_color(color).rotate_rad(-θ)
 make_square()
 
 def make_group(num_squares=4):
@@ -32,10 +32,6 @@ make_group()
 
 disps = range(4)
 diagram = concat(make_group().translate(x, y) for x, y in product(disps, disps))
-diagram = diagram.line_width(0.02)
 
-path = "examples/output/squares.svg"
-diagram.render_svg(path, height=256)
-path = "examples/output/squares.png"
-diagram.render(path, height=256)
-PILImage.open(path)
+diagram = diagram.line_width(0.02)
+diagram
