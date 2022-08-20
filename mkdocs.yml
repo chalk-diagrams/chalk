@@ -317,6 +317,7 @@ nav:
     - Trails: api/trails.py
     - Connections: api/names.py
     - Utils: api/utils.md
+    - Internals: api/internals.md
   - Examples:
     - BigBen: examples/bigben.py
     - Hanoi: examples/hanoi.py
