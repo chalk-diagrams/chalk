@@ -39,12 +39,14 @@ def vrule(length: float) -> Diagram:
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
+    """Draws a regular polygon with given number of sides and given side
+    length. The polygon is oriented with one edge parallel to the x-axis."""
     return Trail.regular_polygon(sides, side_length).centered().stroke()
 
 
 def triangle(width: float) -> Diagram:
-    "Draws an equilateral triangle, with the side length specified by the
-    ``width`` argument. The origin of the triangle is placed at its centroid."
+    """Draws an equilateral triangle with the side length specified by
+    the ``width`` argument. The origin is the traingle's centroid."""
     return regular_polygon(3, width)
 
 
@@ -66,8 +68,8 @@ def rectangle(
 
 
 def square(side: float) -> Diagram:
-    "Draws a square, with the side length specified by the ``side`` argument.
-    The origin is the center of the square."
+    """Draws a square with the specified side length. The origin is the
+    center of the square."""
     return rectangle(side, side)
 
 
