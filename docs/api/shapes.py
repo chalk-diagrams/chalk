@@ -9,11 +9,9 @@ def help(f):
 
     return HTML(pydoc.HTMLDoc().docroutine(f))
 
-
 # -
 
-
-# Elementary diagrams can be created using shapes (polygons, circle-like shapes, text) and paths.
+# Elementary diagrams can be created using shapes: polygons, circle-like shapes, text and paths.
 
 # ## Polygons
 
