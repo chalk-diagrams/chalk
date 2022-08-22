@@ -83,13 +83,13 @@ The main benefit of using functions is that the library can be easily split into
 In contrast, using an object-oriented style would bundle the entire functionality as methods inside the class
 and would only allow to separate the variants (e.g., `Empty`, `Primitive`, `Compose`) across files (see the ["expression problem"](https://en.wikipedia.org/wiki/Expression_problem) for the trade-offs between the functional and object-oriented style).
 
-However, allowing to write code in object-oriented style (with dot notation) provides and arguably more convenient and idiomatic style in Python.
-So we attach all the functions as methods in the `chalk/core.py` file; for example:
+However, allowing to write code in an object-oriented style (using dot notation) provides an arguably more convenient and idiomatic style in Python.
+For this reason, we attach all the functions as methods in the `chalk/core.py` file; for example:
 ```python
 class BaseDiagram:
     beside = chalk.combinators.beside
 ```
-This implementation allows writing:
+This implementation allows writing
 ```python
 circle(1).beside(circle(1), unit_x)
 ```
@@ -99,32 +99,33 @@ circle(1) | circle(1)
 ```
 as we define ["dunder" methods](https://docs.python.org/3/reference/datamodel.html#special-method-names) for common combinators (`__or__` in this case).
 
-The challenge of this sort of implementation is that it makes [type checking](https://mypy.readthedocs.io/en/stable/index.html#) difficult due to circular imports.
-We solve this problem by introducing a `Diagram` [protocol](https://mypy.readthedocs.io/en/stable/protocols.html) (in `chalk/types.py`), which specifies the type signature of the all methods to be implemented later on.
-The `Diagram` type is used throughout the code, for example:
+The challenge of this implementation decision is that it complicates the [type checking](https://mypy.readthedocs.io/en/stable/index.html#) due to circular imports.
+We solve this problem by introducing a `Diagram` [protocol](https://mypy.readthedocs.io/en/stable/protocols.html) (in `chalk/types.py`), which specifies type signatures for all the methods that are to be implemented later on.
+The `Diagram` type is used throughout the code for type hinting, for example:
 ```python
 def juxtapose(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     # We can use `get_envelope` here since the `Diagram` protocol promises
     # that such a method will be implemented.
 ```
-The concrete implementation is provided by the `BaseDiagram` in `chalk/core.py`.
+The concrete implementation of the `Diagram` protocol is provided by the `BaseDiagram` in `chalk/core.py`.
 
 ## Trail-like data types
 
 Apart from the main `Diagram` data type, there are several other related types (`Trail`, `Located`, `Path`) that encode a trail-like drawing and can be "lifted" to a `Diagram` using the `stroke` method.
-An important distinction between those is that the combination semantics (that is, the [monoid](https://en.wikipedia.org/wiki/Monoid) instances).
+These trail-like structures encode different types of information and, as a consequence, have different combination semantics:
+
 - `Trail` corresponds to a list of vectors (translation-invariant offsets, which can be either straight or bendy—implemented as arcs).
 A `Trail` is `Transformable` (by transforming each of the vectors), but since vectors are translation-invariant, applying `translate` leaves a `Trail` unchanged.
-The monoid composition corresponds to the list monoid: it extends the first trail with the second one.
+The monoid composition corresponds to the list monoid: it _extends_ the first trail with the second one.
 A `Trail` can be closed which means that it is a loop and it will be able to hold a color when filled in.
 - `Located` is a `Trail` paired with a `location` origin point.
 A `Trail` can be turned into `Located` using the `at` method which specifies the origin location.
 `Located` instances do not form a monoid.
 - `Path` is a list of `Located` instances.
 Having more than one `Located` instance is important, since it allows to easily draw objects with holes in them (such as rings).
-The monoid composition corresponds to the list monoid.
+The monoid composition also corresponds to the list monoid, but the effects is different from `Trail`: it _overlays_ the `Located` subpaths.
 
-Below we present an example (inspired from the `diagrams` library) that showcases the distinction of the monoid instances for the `Diagram`, `Path`, `Trail` types.
+Below we present an example (inspired from the `diagrams` library) that showcases the distinction of the combination semantics (the `concat` function) for the `Diagram`, `Path`, `Trail` types.
 
 ```python
 from colour import Color
@@ -135,12 +136,16 @@ red = Color("red")
 t = Trail.regular_polygon(3, 1)
 t_loc = t.centered()
 
+# Diagram
 dia1 = concat(take(3, iterate(lambda d: d.rotate_by(1 / 9), t_loc.stroke()))).fill_color(red)
+
+# Path
 dia2 = Path.concat(take(3, iterate(lambda d: d.rotate_by(1 / 9), t_loc.to_path()))).stroke().fill_color(red)
+
+# Trail
 dia3 = Trail.concat(take(3, iterate(lambda d: d.rotate_by(1 / 9), t))).stroke().center_xy()
 
-dia_all = hcat([dia1, dia2, dia3], sep=0.2)
-dia_all
+hcat([dia1, dia2, dia3], sep=0.2)
 ```
 
 <img src="https://user-images.githubusercontent.com/819256/184515950-b3ce4245-19ee-4357-bc3a-f32f993b04ef.png">
