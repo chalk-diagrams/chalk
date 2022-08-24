@@ -1,6 +1,7 @@
 # + tags=["hide_inp"]
-import math
+from chalk.core import BaseDiagram
 from chalk import *
+
 def help(f):
     import pydoc
     from IPython.display import HTML
@@ -15,12 +16,10 @@ def help(f):
 # ### Diagram.named
 
 # + tags=["hide_inp"]
-help(Diagram.named)
+help(BaseDiagram.named)
 # -
 
-#
-
-diagram = triangle(1).named("x") | square(1)
+diagram = circle(0.5).named("x") | square(1)
 diagram
 
 # ### place_on_path
@@ -29,41 +28,37 @@ diagram
 help(place_on_path)
 # -
 
-#
-
-place_on_path([triangle(0.4) for i in range(5)],
-              Path.from_list_of_tuples([(i, i % 2) for i in range(5)]))
+place_on_path(
+    [circle(0.25) for _ in range(6)],
+    Trail.regular_polygon(6, 1).to_path(),
+)
 
 # ### Diagram.get_subdiagram_envelope
 
 # + tags=["hide_inp"]
-help(Diagram.get_subdiagram_envelope)
+help(BaseDiagram.get_subdiagram_envelope)
 # -
 
 #
 
-diagram = triangle(1).named("x") | square(1) 
+diagram = circle(0.5).named("x") | square(1) 
 bbox = diagram.get_subdiagram_envelope("x")
-diagram + place_on_path([triangle(0.4)], Path.from_point(bbox.center))
+diagram + circle(0.2).translate(bbox.center.x, bbox.center.y)
 
-# ### connect
+# ### Diagram.connect
 
 # + tags=["hide_inp"]
-help(connect)
+help(BaseDiagram.connect)
 # -
 
-#
+diagram = circle(0.5).named("x") | hstrut(1) | square(1).named("y")
+diagram.connect("x", "y")
 
-diagram = triangle(1).named("x") / square(1).named("y")
-diagram + connect(diagram, "x", "y")
-
-# ### connect_outer
+# ### Diagram.connect_outside
 
 # + tags=["hide_inp"]
-help(connect_outer)
+help(BaseDiagram.connect_outside)
 # - 
 
-#
-
-diagram = square(1).named("x") | hstrut(1) | square(1).named("y")
-diagram + connect_outer(diagram, "x", "E", "y", "W")
+diagram = circle(0.5).named("x") | hstrut(1) | square(1).named("y")
+diagram.connect_outside("x", "y")

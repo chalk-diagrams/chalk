@@ -4,9 +4,9 @@
 from PIL import Image as PILImage
 from chalk import *
 from chalk.transform import *
-from chalk.trail import unit_x
 import chalk
 
+unit_x = Trail.hrule(1)
 
 def koch(n):
     if n == 0:

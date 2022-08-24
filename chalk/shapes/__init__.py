@@ -15,29 +15,12 @@ from chalk.types import Diagram
 # Functions mirroring Diagrams.2d.Shapes
 
 
-def circle(radius: float) -> Diagram:
-    return Trail.circle().stroke().center_xy().scale(radius)
+def hrule(length: float) -> Diagram:
+    return Trail.hrule(length).stroke().center_xy()
 
 
-def arc(radius: float, angle0: float, angle1: float) -> Diagram:
-    """
-    Draw an arc.
-
-    Args:
-      radius (float): Circle radius.
-      angle0 (float): Starting cutoff in degrees.
-      angle1 (float): Finishing cutoff in degrees.
-
-    Returns:
-      Diagram
-
-    """
-    return (
-        ArcSegment(angle0, angle1 - angle0)
-        .at(V2.polar(angle0, 1))
-        .stroke()
-        .scale(radius)
-    )
+def vrule(length: float) -> Diagram:
+    return Trail.vrule(length).stroke().center_xy()
 
 
 # def polygon(sides: int, radius: float, rotation: float = 0) -> Diagram:
@@ -56,18 +39,14 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
 
 def regular_polygon(sides: int, side_length: float) -> Diagram:
+    """Draws a regular polygon with given number of sides and given side
+    length. The polygon is oriented with one edge parallel to the x-axis."""
     return Trail.regular_polygon(sides, side_length).centered().stroke()
 
 
-def hrule(length: float) -> Diagram:
-    return Trail.hrule(length).stroke().center_xy()
-
-
-def vrule(length: float) -> Diagram:
-    return Trail.vrule(length).stroke().center_xy()
-
-
 def triangle(width: float) -> Diagram:
+    """Draws an equilateral triangle with the side length specified by
+    the ``width`` argument. The origin is the traingle's centroid."""
     return regular_polygon(3, width)
 
 
@@ -75,7 +54,7 @@ def rectangle(
     width: float, height: float, radius: Optional[float] = None
 ) -> Diagram:
     """
-    Draw a rectangle.
+    Draws a rectangle.
 
     Args:
         width (float): Width
@@ -89,7 +68,35 @@ def rectangle(
 
 
 def square(side: float) -> Diagram:
+    """Draws a square with the specified side length. The origin is the
+    center of the square."""
     return rectangle(side, side)
+
+
+def circle(radius: float) -> Diagram:
+    "Draws a circle with the specified ``radius``."
+    return Trail.circle().stroke().center_xy().scale(radius)
+
+
+def arc(radius: float, angle0: float, angle1: float) -> Diagram:
+    """
+    Draws an arc.
+
+    Args:
+      radius (float): Circle radius.
+      angle0 (float): Starting cutoff in degrees.
+      angle1 (float): Finishing cutoff in degrees.
+
+    Returns:
+      Diagram
+
+    """
+    return (
+        ArcSegment(angle0, angle1 - angle0)
+        .at(V2.polar(angle0, 1))
+        .stroke()
+        .scale(radius)
+    )
 
 
 def arc_between(

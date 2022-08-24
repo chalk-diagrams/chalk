@@ -76,6 +76,7 @@ class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
 
     # Combinators
     with_envelope = chalk.combinators.with_envelope
+    juxtapose = chalk.combinators.juxtapose
     juxtapose_snug = chalk.combinators.juxtapose_snug
     beside_snug = chalk.combinators.beside_snug
     above = chalk.combinators.above

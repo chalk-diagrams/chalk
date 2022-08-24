@@ -308,14 +308,16 @@ extra_javascript:
 nav:
   - Home: index.md
   - API:
-    - Diagrams: api/creation.py
+    - Shapes: api/shapes.py
     - Alignment: api/alignment.py
     - Combinators: api/combinators.py
     - Transformations: api/transformations.py
     - Style: api/style.py
+    - Rendering: api/rendering.py
     - Trails: api/trails.py
     - Connections: api/names.py
     - Utils: api/utils.md
+    - Internals: api/internals.md
   - Examples:
     - BigBen: examples/bigben.py
     - Hanoi: examples/hanoi.py
