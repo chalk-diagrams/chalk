@@ -26,23 +26,22 @@ class Latex(Shape):
             ),
         )
         self.eq = latex_eq.as_svg()
+        c = '<g>\n' + "\n".join(self.eq.content.split("\n")[2: -2]) + "\n</g>"
         self.width = self.eq.width
         self.height = self.eq.height
-        self.content = self.eq.content
+        self.content = c
         # From latextools Ensures no clash between multiple math statements
         id_prefix = f"embed-{hash(self.content)}-"
         self.content = (
             self.content.replace('id="', f'id="{id_prefix}')
             .replace('="url(#', f'="url(#{id_prefix}')
-            .replace('xlink:href="#', f'xlink:href="#{id_prefix}')
+            .replace('xlink:href="#', f'href="#{id_prefix}')
         )
 
     def get_bounding_box(self) -> BoundingBox:
-        left = origin.x - self.width / 2
-        top = origin.y - self.height / 2
-        tl = P2(left, top)
-        br = P2(left + self.width, top + self.height)
-        return BoundingBox([tl * 0.05, br * 0.05])
+        eps = 1e-4
+        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
+        return self.bb
 
     def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
         return visitor.visit_latex(self, **kwargs)
