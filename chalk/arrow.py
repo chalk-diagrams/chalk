@@ -94,7 +94,8 @@ def arrow(length: float, style: ArrowOpts = ArrowOpts()) -> Diagram:
         shaft = segment.stroke()
         if isinstance(segment.segments[-1], ArcSegment):
             seg = segment.segments[-1]
-            φ = (-(seg.q - seg.center.reflect_y()).perpendicular()).angle # type: ignore
+            tan = -(seg.q - seg.center.reflect_y()).perpendicular()  # type: ignore
+            φ = tan.angle
             arrow = arrow.rotate(φ)
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
