@@ -26,6 +26,16 @@ ex1 = dias.connect(
         shaft_style=Style.empty().line_color(blue),
     ),
 )
+ex1 = ex1.connect(
+    "second",
+    "first",
+    ArrowOpts(
+        head_style=Style.empty().fill_color(grey),
+        arc_height=0.5,
+        shaft_style=Style.empty().line_color(blue),
+    ),
+)
+
 ex12 = ex1.connect_perim(
     "first",
     "second",
