@@ -55,7 +55,7 @@ class Raw(Rect):  # type: ignore
     """
 
     def __init__(self, st: str):
-        ET.register_namespace("", "http://www.w3.org/2000/svg") 
+        ET.register_namespace("", "http://www.w3.org/2000/svg")
         self.xml = ET.fromstring(st)
 
     def get_xml(self) -> ET.Element:

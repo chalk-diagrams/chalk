@@ -64,7 +64,12 @@ def rectangle(
     Returns:
         Diagrams
     """
-    return Trail.rectangle(width, height).stroke().center_xy()
+    if radius is None:
+        return Trail.rectangle(width, height).stroke().center_xy()
+    else:
+        return (
+            Trail.rounded_rectangle(width, height, radius).stroke().center_xy()
+        )
 
 
 def square(side: float) -> Diagram:

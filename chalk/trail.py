@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from functools import reduce
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
-from chalk.shapes.arc import ArcSegment, arc_seg_angle
+from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle
 from chalk.shapes.segment import Segment, seg
 from chalk.trace import Trace
 from chalk.transform import (
@@ -125,6 +126,18 @@ class Trail(Transformable, TrailLike):
     def rectangle(width: float, height: float) -> Trail:
         t = seg(unit_x * width) + seg(unit_y * height)
         return (t + t.rotate_by(0.5)).close()
+
+    @staticmethod
+    def rounded_rectangle(width: float, height: float, radius: float) -> Trail:
+        r = radius
+        edge1 = math.sqrt(2 * r * r) / 2
+        edge3 = math.sqrt(r * r - edge1 * edge1)
+        corner = arc_seg(V2(r, r), -(r - edge3))
+        b = [height - r, width - r, height - r, width - r]
+        trail = Trail.concat(
+            (seg(b[i] * unit_y) + corner).rotate_by(i / 4) for i in range(4)
+        ) + seg(0.01 * unit_y)
+        return trail.close()
 
     def centered(self) -> Located:
         return self.at(-sum(self.points(), P2(0, 0)) / len(self.segments))
