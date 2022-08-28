@@ -26,7 +26,7 @@ class Latex(Shape):
             ),
         )
         self.eq = latex_eq.as_svg()
-        c = '<g>\n' + "\n".join(self.eq.content.split("\n")[2: -2]) + "\n</g>"
+        c = "<g>\n" + "\n".join(self.eq.content.split("\n")[2:-2]) + "\n</g>"
         self.width = self.eq.width
         self.height = self.eq.height
         self.content = c

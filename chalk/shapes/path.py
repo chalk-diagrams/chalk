@@ -13,7 +13,9 @@ from chalk.types import Diagram, Enveloped, Traceable
 from chalk.visitor import A, ShapeVisitor
 
 
-def make_path(segments: List[Tuple[float, float]], closed: bool = False) -> Diagram:
+def make_path(
+    segments: List[Tuple[float, float]], closed: bool = False
+) -> Diagram:
     return Path.from_list_of_tuples(segments, closed).stroke()
 
 

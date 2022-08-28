@@ -38,10 +38,9 @@ d += [arc_seg(unit_x + unit_y, -1).stroke().show_origin()]
 
 d += [arc_seg(2 * unit_x, 1).scale_y(0.5).rotate(45).stroke().show_origin()]
 
-edge = seg(b * unit_y) + arc_seg(V2(r, r), -rad)
-trail = Trail.concat(edge.rotate_by(i / 4) for i in range(4)) + seg(0.01 * unit_y)
 
-d += [trail.close().stroke().center_xy().show_origin()]
+d += [rectangle(1, 5, 0.5), rectangle(5, 1, 0.25), rectangle(1, 1, 1)]
+
 
 d += [Trail.rectangle(1, 1).stroke().center_xy().show_origin()]
 
