@@ -127,23 +127,23 @@ their output is illustrated below:
 
 <table>
 <tr>
-<td align="center"><img src="doc/imgs/squares.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
-<td align="center"><img src="doc/imgs/logo.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
-<td align="center"><img src="doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/squares.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/logo.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/hilbert.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
-<td align="center"><img src="doc/imgs/koch.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
-<td align="center"><img src="doc/imgs/hex-variation.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/hilbert.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/koch.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/koch.py">koch.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/hex-variation.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hex_variation.py">hex-variation.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/lenet.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
-<td align="center"><img src="doc/imgs/tensor.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
-<td align="center"><img src="doc/imgs/hanoi.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/lenet.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lenet.py">lenet.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/tensor.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tensor.py">tensor.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/hanoi.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hanoi.py">hanoi.py</a></code></td>
 </tr>
 <tr>
-<td align="center"><img src="doc/imgs/tree.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tree.py">tree.py</a></code></td>
-<td align="center"><img src="doc/imgs/lattice.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lattice.py">lattice.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/tree.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/tree.py">tree.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/lattice.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/lattice.py">lattice.py</a></code></td>
 </tr>
 <!--<tr>
 </tr>

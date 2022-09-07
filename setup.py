@@ -23,7 +23,7 @@ LIBNAME: str = "chalk-diagrams"
 
 setup(
     name=LIBNAME,
-    version="0.1.2",
+    version="0.2.1",
     packages=find_packages(
         include=["chalk", "chalk*"],
         exclude=["examples", "docs", "test*"],
