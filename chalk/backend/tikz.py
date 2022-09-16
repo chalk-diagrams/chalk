@@ -155,10 +155,8 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
     ) -> PyLatexElement:
         opts = {}
         opts["font"] = "\\small\\sffamily"
-        print(style.output_size)
         opts["scale"] = str(
             (15 / 500)
-            * style.output_size
             * (1 if shape.font_size is None else shape.font_size)
         )
 
