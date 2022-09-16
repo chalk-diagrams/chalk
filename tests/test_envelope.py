@@ -43,6 +43,7 @@ def transforms(draw):
 
     v2 = draw(vectors())
     return draw(sampled_from([chalk.transform.Affine.scale(v2),
+                              chalk.transform.Affine.translation(v2),
                               chalk.transform.Affine.rotation(v2.angle),
                               ]))
 
@@ -50,7 +51,7 @@ def transforms(draw):
 
 @given(diagrams(), vectors())
 def test_envelope_trail(diagram, vec):
-    "Property -> Envelope bounds interior trace."
+    "Property -> Envelope bounds trace."
     trace = diagram.get_trace()
     env = diagram.get_envelope()
     ts = trace(P2(0, 0), vec)
