@@ -156,8 +156,7 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         opts = {}
         opts["font"] = "\\small\\sffamily"
         opts["scale"] = str(
-            (15 / 500)
-            * (1 if shape.font_size is None else shape.font_size)
+            3.5 * (1 if shape.font_size is None else shape.font_size)
         )
 
         styles = style.to_tikz(self.pylatex)
