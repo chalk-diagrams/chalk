@@ -155,11 +155,15 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
     ) -> PyLatexElement:
         opts = {}
         opts["font"] = "\\small\\sffamily"
+        print(style.output_size)
         opts["scale"] = str(
-            3.5 * (1 if shape.font_size is None else shape.font_size)
+            (15 / 500)
+            * style.output_size
+            * (1 if shape.font_size is None else shape.font_size)
         )
+
         styles = style.to_tikz(self.pylatex)
-        if styles["fill"] is not None:
+        if styles.get("fill", None) is not None:
             opts["text"] = styles["fill"]
         return self.pylatex.TikZNode(
             text=shape.text,

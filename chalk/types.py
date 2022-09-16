@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Protocol, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+
+from typing_extensions import Protocol
 
 import chalk.transform as tx
 from chalk.envelope import Envelope

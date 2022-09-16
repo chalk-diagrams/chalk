@@ -97,6 +97,8 @@ def arrow(length: float, style: ArrowOpts = ArrowOpts()) -> Diagram:
             tan = -(seg.q - seg.center.reflect_y()).perpendicular()  # type: ignore
             φ = tan.angle
             arrow = arrow.rotate(φ)
+            if style.arc_height < 0:
+                arrow = arrow.rotate(180)
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
 

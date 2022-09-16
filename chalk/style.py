@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Protocol, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 from colour import Color
+from typing_extensions import Protocol
 
 PyCairoContext = Any
 PyLatex = Any
@@ -204,6 +205,7 @@ class Style(Stylable):
         # This constant was set based on observing TikZ output
         assert self.output_size is not None
         normalizer = self.output_size * (175 / 500)
+
         if self.line_width_ is not None:
             lwt, lw = self.line_width_
             if lwt == WidthType.NORMALIZED:
@@ -215,5 +217,9 @@ class Style(Stylable):
         style["line width"] = f"{lw}pt"
         if self.fill_opacity_ is not None:
             style["fill opacity"] = f"{self.fill_opacity_}"
+        if self.dashing_ is not None:
+            style[
+                "dash pattern"
+            ] = f"{{on {self.dashing_[0][0]}pt off {self.dashing_[0][0]}pt}}"
 
         return style

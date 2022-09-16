@@ -1,8 +1,9 @@
 import math
-from typing import Any, Protocol, TypeVar
+from typing import Any, TypeVar
 
 from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
+from typing_extension import Protocol
 
 
 def from_radians(θ: float) -> float:
