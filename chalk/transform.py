@@ -3,7 +3,7 @@ from typing import Any, TypeVar
 
 from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
-from typing_extension import Protocol
+from typing_extensions import Protocol
 
 
 def from_radians(θ: float) -> float:
