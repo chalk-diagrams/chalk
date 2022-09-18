@@ -47,7 +47,7 @@ class LocatedSegment(Traceable, Enveloped, tx.Transformable, TrailLike):
         def f(point: P2, direction: V2) -> List[float]:
             ray = Ray(point, direction)
             inter = sorted(line_segment(ray, self))
-            return inter
+            return [r / direction.length for r in inter]
 
         return Trace(f)
 
@@ -106,6 +106,8 @@ def ray_ray_intersection(
     if x1 == 0 and x2 != 0:
         # parallel
         return None
+    elif x1 == 0 and x2 == 0:
+        return 0.0, 0.0
     else:
         # intersecting or collinear
         return x3 / x1, x2 / x1

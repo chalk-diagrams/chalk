@@ -5,7 +5,6 @@ from itertools import product
 
 from chalk import *
 
-
 random.seed(1337)
 
 

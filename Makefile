@@ -61,21 +61,21 @@ isort:
 	@ echo "✨ Applying import sorter: isort ... ⏳"
 	# The settings are maintained in setup.cfg file.
 	isort $(PACKAGE_NAME) setup.py \
-		# tests \
+		 tests \
 
 ## Run black
 
 black:
 	@ echo "✨ Applying formatter: black ... ⏳"
 	black --target-version py38 --line-length 79 $(PACKAGE_NAME) setup.py \
-		# tests \
+		 tests \
 
 ## Run flake8
 
 flake:
 	@ echo "✨ Applying formatter: flake8 ... ⏳"
 	flake8 --show-source $(PACKAGE_NAME) setup.py \
-		# tests \
+		 tests \
 
 ## Run pytest
 
@@ -88,7 +88,7 @@ test:
 type:
 	@ echo "✨ Applying type checker: mypy ... ⏳"
 	mypy --strict --ignore-missing-imports $(PACKAGE_NAME) \
-		# tests \
+		 tests \
 
 ## Run darglint
 

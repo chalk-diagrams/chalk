@@ -1,10 +1,11 @@
 import math
-from typing import Iterable, List, Optional, Tuple, Union
+import sys
+from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union
 
-try:
+if sys.version_info >= (3, 8):
     from importlib import metadata
-except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata  # type: ignore
+else:
+    import importlib_metadata as metadata
 
 import chalk.align as align
 from chalk.align import *  # noqa: F403
@@ -28,7 +29,9 @@ from chalk.transform import (
 )
 from chalk.types import Diagram
 
-# Set library name the same as on PyPI
-# must be the same as setup.py:setup(name=?)
-__libname__: str = "chalk-diagrams"  # custom dunder attribute
-__version__ = metadata.version(__libname__)
+if not TYPE_CHECKING:
+
+    # Set library name the same as on PyPI
+    # must be the same as setup.py:setup(name=?)
+    __libname__: str = "chalk-diagrams"  # custom dunder attribute
+    __version__: str = metadata.version(__libname__)

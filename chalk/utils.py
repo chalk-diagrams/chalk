@@ -26,8 +26,6 @@ from typing import Any, Optional, Tuple, TypeVar, Union
 from colour import Color
 from PIL import Image as PILImage
 
-import chalk
-
 _HERE = os.path.dirname(__file__)
 
 try:
@@ -125,8 +123,6 @@ def imgen(
     """
     make_tempdir = False
     dp = None
-    if verbose:
-        prnt_warning(f" ✨ {chalk.__name__} version: v{chalk.__version__}")
     if temporary:
         if (dirpath is not None) and (not os.path.isdir(dirpath)):
             make_tempdir = True

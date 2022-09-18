@@ -88,17 +88,23 @@ class Envelope(Transformable):
     def apply_transform(self, t: Affine) -> Envelope:  # type: ignore
         if self.is_empty:
             return self
+        rt = remove_translation(t)
+        inv_t = ~rt
+        trans_t = transpose_translation(rt)
         _, _, c, _, _, f = t[:6]
-        u: V2 = V2(c, f)
-        t1 = transpose_translation(remove_translation(t))
+        u: V2 = -V2(c, f)
 
         def wrapped(v: V2) -> SignedDistance:
-            t1v = apply_affine(t1, v)
-            t1v2 = t1v.scaled_to(1)
-            d: float = self(t1v2)
-            l: float = t1v.length
-            p: float = u.dot(v) / (v.dot(v))
-            return d * l + p
+            # Linear
+            vi = apply_affine(inv_t, v)
+            v_prim = apply_affine(trans_t, v).normalized()
+            inner: float = self(v_prim)
+            d: float = v_prim.dot(vi)
+            after_linear = inner / d
+
+            # Translation
+            diff: float = (u / (v.dot(v))).dot(v)
+            return after_linear - diff
 
         return Envelope(wrapped)
 

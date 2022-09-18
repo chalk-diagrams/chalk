@@ -44,6 +44,10 @@ jobs:
       run: |
         # stop the build if there are type errors
         make type
+    - name: Unit test with [[ pytest ]]
+      run: |
+        # stop the build if there are type errors
+        make test
     - name: Make sure examples run
       run: |
         make images
