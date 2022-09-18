@@ -1,10 +1,11 @@
 import math
+import sys
 from typing import Iterable, List, Optional, Tuple, Union
 
-try:
+if sys.version_info >= (3, 8):
     from importlib import metadata
-except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata  # type: ignore
+else:
+    import importlib_metadata as metadata
 
 import chalk.align as align
 from chalk.align import *  # noqa: F403
