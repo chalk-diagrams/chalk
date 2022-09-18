@@ -11,6 +11,8 @@ def vectors(draw):
     y = draw(integers(min_value=-2, max_value=2).filter(lambda x: x != 0))
     return V2(x, y)
 
+small_nat = integers(min_value=1, max_value=10)
+
 @composite
 def trails(draw):
     vs = draw(lists(vectors(), min_size=1))
@@ -22,25 +24,26 @@ def paths(draw):
 
 @composite
 def circles(draw):
-    return circle(draw(integers(min_value=1)))
+    return circle(draw(small_nat))
 
 @composite
 def rects(draw):
-    return rectangle(draw(integers(min_value=1)), draw(integers(min_value=1)))
+    return rectangle(draw(small_nat), draw(small_nat))
 
 @composite
 def shapes(draw):
-    return draw(one_of(paths(),  rects()))
+    return draw(one_of(paths(), rects(), circles()))
 
 @composite
 def diagrams(draw):
-    shape = draw(shapes())
-    transform = draw(transforms())
-    return shape.apply_transform(transform)
+    shape = empty()
+    for j in range(3):
+        lshape = draw(shapes())
+        shape += chalk.transform.apply_affine(draw(transforms()), lshape)
+    return shape
 
 @composite
 def transforms(draw):
-
     v2 = draw(vectors())
     return draw(sampled_from([chalk.transform.Affine.scale(v2),
                               chalk.transform.Affine.translation(v2),
@@ -59,6 +62,17 @@ def test_envelope_trail(diagram, vec):
     for t in ts:
         assert e == pytest.approx(t) or e > t
 
+
+@given(diagrams(), vectors())
+def test_pad(diagram, vec):
+    orig = diagram.get_envelope()(vec)
+    p = diagram.pad(2)
+    assert p.get_envelope()(vec) == pytest.approx(2 * orig)
+    vec = vec.normalized()
+    orig = diagram.get_envelope()(vec)
+    f = diagram.frame(2)
+    assert f.get_envelope()(vec) == pytest.approx(2 + orig)
+        
 # Some specific tests. 
 def test_square():
     square = make_path([(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)])
@@ -76,12 +90,16 @@ def test_circle():
     assert env(unit_y) == 1
     assert env((unit_x + unit_y).normalized()) == pytest.approx(1)
 
+
+
+
 def test_circle_trace():
     d = circle(1)
     trace = d.get_trace()
     assert set(trace(origin, unit_x)) == set([-1.0, 1.0])
     assert set(trace(origin, (2 * unit_x))) == set([-0.5, 0.5])
     assert set(trace(origin, unit_y)) == set([-1.0, 1.0])
+    trace(origin, (unit_x + unit_y))
     # assert set(trace(origin, (unit_x + unit_y).normalized())) == pytest.approx(set([-1.0, 1.0]))
 
 def test_path_trace():

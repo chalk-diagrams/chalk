@@ -3,6 +3,10 @@ from chalk import *
 from colour import Color
 from chalk import BoundingBox
 
+# Needed for recursion 
+import sys
+sys.setrecursionlimit(100000)
+
 # Colors
 papaya = Color("#ff9700")
 blue = Color("#005FDB")

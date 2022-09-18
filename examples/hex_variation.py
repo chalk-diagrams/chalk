@@ -5,6 +5,9 @@ from itertools import product
 
 from chalk import *
 
+# Needed for recursion 
+import sys
+sys.setrecursionlimit(100000)
 
 random.seed(1337)
 

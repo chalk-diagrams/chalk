@@ -91,8 +91,10 @@ def frame(self: Diagram, extra: float) -> Diagram:
         Diagram: A diagram object.
     """
     envelope = self.get_envelope()
+    print("frame")
 
     def f(d: V2) -> float:
+        print(extra)
         assert envelope is not None
         return envelope(d) + extra
 
