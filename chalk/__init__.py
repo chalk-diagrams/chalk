@@ -32,4 +32,5 @@ from chalk.types import Diagram
 # Set library name the same as on PyPI
 # must be the same as setup.py:setup(name=?)
 __libname__: str = "chalk-diagrams"  # custom dunder attribute
-__version__ = metadata.version(__libname__)
+
+__version__: str = metadata.version(__libname__)
