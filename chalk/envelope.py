@@ -85,34 +85,28 @@ class Envelope(Transformable):
     def concat(envelopes: Iterable[Envelope]) -> Envelope:
         return reduce(Envelope.mappend, envelopes, Envelope.empty())
 
-    def apply_translation(self, t: Affine) -> Envelope:
+    def apply_transform(self, t: Affine) -> Envelope:  # type: ignore
+        if self.is_empty:
+            return self
+        rt = remove_translation(t)
+        inv_t = ~rt
+        trans_t = transpose_translation(rt)
         _, _, c, _, _, f = t[:6]
         u: V2 = -V2(c, f)
 
         def wrapped(v: V2) -> SignedDistance:
-            inner: float = self(v)
-            diff: float = (u / (v.dot(v))).dot(v)
-            return inner - diff
-
-        return Envelope(wrapped)
-
-    def apply_linear(self, t: Affine) -> Envelope:
-        inv_t = ~t
-        trans_t = transpose_translation(t)
-
-        def wrapped(v: V2) -> SignedDistance:
+            # Linear
             vi = apply_affine(inv_t, v)
             v_prim = apply_affine(trans_t, v).normalized()
             inner: float = self(v_prim)
             d: float = v_prim.dot(vi)
-            return inner / d
+            after_linear = inner / d
+
+            # Translation
+            diff: float = (u / (v.dot(v))).dot(v)
+            return after_linear - diff
 
         return Envelope(wrapped)
-
-    def apply_transform(self, t: Affine) -> Envelope:  # type: ignore
-        if self.is_empty:
-            return self
-        return self.apply_linear(remove_translation(t)).apply_translation(t)
 
     def envelope_v(self, v: V2) -> V2:
         if self.is_empty:

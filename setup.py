@@ -37,7 +37,7 @@ setup(
         "loguru",
         "planar @ git+https://github.com/chalk-diagrams/planar",
         "typing-extensions",
-        "importlib-metadata"
+        "importlib-metadata",
     ],
     extras_require={
         "tikz": ["pylatex"],
