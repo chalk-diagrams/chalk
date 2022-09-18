@@ -12,7 +12,6 @@ import chalk.backend.svg
 import chalk.backend.tikz
 import chalk.combinators
 import chalk.model
-import chalk.padding
 import chalk.subdiagram
 import chalk.trace
 import chalk.types
