@@ -13,7 +13,7 @@ def show_origin(self: Diagram) -> Diagram:
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
-    origin_size = min(envelope.height, envelope.width) / 50
+    origin_size = max(0.1, min(envelope.height, envelope.width) / 50)
     origin = circle(origin_size).line_color(Color("red"))
     return self + origin
 
