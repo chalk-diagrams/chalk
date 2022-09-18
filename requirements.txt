@@ -7,3 +7,4 @@ git+https://github.com/chalk-diagrams/planar
 latextools
 loguru
 typing-extensions
+importlib-metadata
