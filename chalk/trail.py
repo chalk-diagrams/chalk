@@ -105,7 +105,7 @@ class Trail(Transformable, TrailLike):
 
     def reverse(self) -> Trail:
         return Trail(
-            [seg.scale(-1) for seg in reversed(self.segments)],
+            [seg.reverse() for seg in reversed(self.segments)],
             self.closed,
         )
 

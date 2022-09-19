@@ -80,6 +80,9 @@ class Segment(LocatedSegment, TrailLike):
     def apply_transform(self, t: tx.Affine) -> Segment:  # type: ignore
         return Segment(tx.apply_affine(tx.remove_translation(t), self.offset))
 
+    def reverse(self) -> Segment:
+        return self.scale(-1)
+
 
 def seg(offset: V2) -> Trail:
     return Segment(offset).to_trail()
