@@ -369,10 +369,10 @@ class Text(Shape):
         return dwg.text(
             self.text,
             transform=f"translate({dx}, 0)",
-            style=f"""text-align:center; text-anchor:middle; dominant-baseline:middle;
-                      font-family:sans-serif; font-weight: bold;
-                      font-size:{self.font_size}px;
-                      vector-effect: non-scaling-stroke;""",
+            style="text-align:center; text-anchor:middle; dominant-baseline:middle;" +
+                  "font-family:sans-serif; font-weight: bold;" +
+                  f"font-size:{self.font_size}px;" +
+                  "vector-effect: non-scaling-stroke;",
         )
 
     def render_tikz(self, pylatex: PyLatex, style: Style) -> PyLatexElement:
