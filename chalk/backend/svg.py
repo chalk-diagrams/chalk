@@ -166,8 +166,8 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
             transform=f"translate({dx}, 0)",
             style=";".join(
                 [
-                    "text-align:center"
-                    "text-anchor:middle"
+                    "text-align:center",
+                    "text-anchor:middle",
                     "dominant-baseline:middle",
                     "font-family:sans-serif",
                     "font-weight: bold",
