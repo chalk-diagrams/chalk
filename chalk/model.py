@@ -50,7 +50,7 @@ def show_envelope(
 
     new = self + outer
     if phantom:
-        new.with_envelope(self)
+        new = new.with_envelope(self)
     return new
 
 
