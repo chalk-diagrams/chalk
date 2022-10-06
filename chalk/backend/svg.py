@@ -164,10 +164,17 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         return self.dwg.text(
             shape.text,
             transform=f"translate({dx}, 0)",
-            style=f"""text-align:center; text-anchor:middle; dominant-baseline:middle;
-                      font-family:sans-serif; font-weight: bold;
-                      font-size:{shape.font_size}px;
-                      vector-effect: non-scaling-stroke;""",
+            style=";".join(
+                [
+                    "text-align:center",
+                    "text-anchor:middle",
+                    "dominant-baseline:middle",
+                    "font-family:sans-serif",
+                    "font-weight: bold",
+                    f"font-size:{shape.font_size}px",
+                    "vector-effect: non-scaling-stroke",
+                ]
+            ),
         )
 
         raise NotImplementedError("Text is not implemented")
@@ -190,7 +197,8 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         dx = -shape.width / 2
         dy = -shape.height / 2
         return self.dwg.image(
-            href=shape.url_path, transform=f"translate({dx}, {dy})"
+            href=shape.url_path,
+            transform=f"translate({dx}, {dy}) scale(0.05, 0.05)",
         )
 
 

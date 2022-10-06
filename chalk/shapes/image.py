@@ -8,6 +8,7 @@ from PIL import Image as Im
 from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox, origin
 from chalk.types import Diagram
+from chalk.visitor import A, ShapeVisitor
 
 
 def from_pil(
@@ -43,8 +44,8 @@ class Image(Shape):
             out = open(self.local_path, "rb")  # type:ignore
 
         self.im = PIL.Image.open(out)
-        self.height = self.im.height
-        self.width = self.im.width
+        self.height = self.im.height * 0.05
+        self.width = self.im.width * 0.05
 
     def get_bounding_box(self) -> BoundingBox:
         left = origin.x - self.width / 2
@@ -52,6 +53,9 @@ class Image(Shape):
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
+
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+        return visitor.visit_image(self, **kwargs)
 
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:
