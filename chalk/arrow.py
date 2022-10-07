@@ -30,27 +30,42 @@ class ArrowOpts:
 def connect(
     self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    ps = self.get_subdiagram_location(name1)
-    pe = self.get_subdiagram_location(name2)
+    sub1 = self.get_subdiagram(name1)
+    sub2 = self.get_subdiagram(name2)
+
+    if not sub1 or not sub2:
+        raise ValueError("Cannot connect")
+
+    ps = sub1.get_location()
+    pe = sub2.get_location()
+
     return self + arrow_between(ps, pe, style)
 
 
 def connect_outside(
     self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    loc1 = self.get_subdiagram_location(name1)
-    loc2 = self.get_subdiagram_location(name2)
+    sub1 = self.get_subdiagram(name1)
+    sub2 = self.get_subdiagram(name2)
 
-    tr1 = self.get_subdiagram_trace(name1)
-    tr2 = self.get_subdiagram_trace(name2)
+    if not sub1 or not sub2:
+        raise ValueError("Cannot connect")
+
+    loc1 = sub1.get_location()
+    loc2 = sub2.get_location()
+
+    tr1 = sub1.get_trace()
+    tr2 = sub2.get_trace()
 
     v = loc2 - loc1
     midpoint = loc1 + v / 2
 
     ps = tr1.trace_p(midpoint, -v)
     pe = tr2.trace_p(midpoint, v)
+
     assert ps is not None, "Cannot connect"
     assert pe is not None, "Cannot connect"
+
     return self + arrow_between(ps, pe, style)
 
 
@@ -62,14 +77,21 @@ def connect_perim(
     v2: V2,
     style: ArrowOpts = ArrowOpts(),
 ) -> Diagram:
-    loc1 = self.get_subdiagram_location(name1)
-    loc2 = self.get_subdiagram_location(name2)
+    sub1 = self.get_subdiagram(name1)
+    sub2 = self.get_subdiagram(name2)
 
-    tr1 = self.get_subdiagram_trace(name1)
-    tr2 = self.get_subdiagram_trace(name2)
+    if not sub1 or not sub2:
+        raise ValueError("Cannot connect")
+
+    loc1 = sub1.get_location()
+    loc2 = sub2.get_location()
+
+    tr1 = sub1.get_trace()
+    tr2 = sub2.get_trace()
 
     ps = tr1.max_trace_p(loc1, v1)
     pe = tr2.max_trace_p(loc2, v2)
+
     assert ps is not None, "Cannot connect"
     assert pe is not None, "Cannot connect"
 

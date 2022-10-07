@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from chalk.envelope import Envelope
@@ -20,31 +22,22 @@ if TYPE_CHECKING:
 
 
 Ident = Affine.identity()
-Subdiagram = Tuple[Diagram, Affine]
 
 
-def get_subdiagram_envelope(
-    self: Diagram, name: str, t: Affine = Ident
-) -> Envelope:
-    """Get the bounding envelope of the subdiagram."""
-    subdiagram = self.get_subdiagram(name)
-    assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_envelope(t=subdiagram[1])  # type: ignore
+@dataclass
+class Subdiagram:
+    diagram: Diagram
+    transform: Affine
+    # style: Style
 
+    def get_location(self) -> P2:
+        return apply_affine(self.transform, origin)
 
-def get_subdiagram_trace(self: Diagram, name: str, t: Affine = Ident) -> Trace:
-    """Get the trace of the sub-diagram."""
-    subdiagram = self.get_subdiagram(name)
-    assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_trace(t=subdiagram[1])  # type: ignore
+    def get_envelope(self) -> Envelope:
+        return self.diagram.get_envelope().apply_transform(self.transform)
 
-
-def get_subdiagram_location(self: Diagram, name: str) -> P2:
-    """Get local origin of the sub-diagram."""
-    subdiagram = self.get_subdiagram(name)
-    assert subdiagram is not None, "Subdiagram does not exist"
-    _, t = subdiagram
-    return apply_affine(t, origin)
+    def get_trace(self) -> Trace:
+        return self.diagram.get_trace().apply_transform(self.transform)
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
@@ -95,7 +88,7 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
         t: Affine = Ident,
     ) -> Optional[Subdiagram]:
         if self.name == diagram.dname:
-            return diagram.diagram, t
+            return Subdiagram(diagram.diagram, t)
         else:
             return None
 
