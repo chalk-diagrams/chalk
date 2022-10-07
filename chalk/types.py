@@ -12,6 +12,7 @@ from chalk.transform import P2, V2
 
 if TYPE_CHECKING:
     from chalk.path import Path
+    from chalk.subdiagram import Subdiagram
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
@@ -132,18 +133,7 @@ class Diagram(
 
     def get_subdiagram(
         self, name: str, t: tx.Affine = Ident
-    ) -> Optional[Tuple[Diagram, tx.Affine]]:
-        ...
-
-    def get_subdiagram_trace(self, name: str, t: tx.Affine = Ident) -> Trace:
-        ...
-
-    def get_subdiagram_envelope(
-        self, name: str, t: tx.Affine = Ident
-    ) -> Envelope:
-        ...
-
-    def get_subdiagram_location(self, name: str) -> P2:
+    ) -> Optional[Subdiagram]:
         ...
 
     def _style(self, style: Style) -> Diagram:
