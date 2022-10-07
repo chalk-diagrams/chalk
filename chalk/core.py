@@ -162,6 +162,7 @@ class BaseDiagram(
     get_subdiagram = chalk.subdiagram.get_subdiagram
     get_subdiagram_envelope = chalk.subdiagram.get_subdiagram_envelope
     get_subdiagram_trace = chalk.subdiagram.get_subdiagram_trace
+    get_subdiagram_location = chalk.subdiagram.get_subdiagram_location
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         raise NotImplementedError

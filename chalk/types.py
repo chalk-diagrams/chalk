@@ -143,6 +143,9 @@ class Diagram(
     ) -> Envelope:
         ...
 
+    def get_subdiagram_location(self, name: str) -> P2:
+        ...
+
     def _style(self, style: Style) -> Diagram:
         ...
 
