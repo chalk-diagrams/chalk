@@ -30,22 +30,22 @@ class ArrowOpts:
 def connect(
     self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    bb1 = self.get_subdiagram_envelope(name1)
-    bb2 = self.get_subdiagram_envelope(name2)
-    return self + arrow_between(bb1.center, bb2.center, style)
+    ps = self.get_subdiagram_location(name1)
+    pe = self.get_subdiagram_location(name2)
+    return self + arrow_between(ps, pe, style)
 
 
 def connect_outside(
     self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    env1 = self.get_subdiagram_envelope(name1)
-    env2 = self.get_subdiagram_envelope(name2)
+    loc1 = self.get_subdiagram_location(name1)
+    loc2 = self.get_subdiagram_location(name2)
 
     tr1 = self.get_subdiagram_trace(name1)
     tr2 = self.get_subdiagram_trace(name2)
 
-    v = env2.center - env1.center
-    midpoint = env1.center + v / 2
+    v = loc2 - loc1
+    midpoint = loc1 + v / 2
 
     ps = tr1.trace_p(midpoint, -v)
     pe = tr2.trace_p(midpoint, v)
@@ -62,14 +62,14 @@ def connect_perim(
     v2: V2,
     style: ArrowOpts = ArrowOpts(),
 ) -> Diagram:
-    env1 = self.get_subdiagram_envelope(name1)
-    env2 = self.get_subdiagram_envelope(name2)
+    loc1 = self.get_subdiagram_location(name1)
+    loc2 = self.get_subdiagram_location(name2)
 
     tr1 = self.get_subdiagram_trace(name1)
     tr2 = self.get_subdiagram_trace(name2)
 
-    ps = tr1.max_trace_p(env1.center, v1)
-    pe = tr2.max_trace_p(env2.center, v2)
+    ps = tr1.max_trace_p(loc1, v1)
+    pe = tr2.max_trace_p(loc2, v2)
     assert ps is not None, "Cannot connect"
     assert pe is not None, "Cannot connect"
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import Affine
+from chalk.transform import Affine, P2, apply_affine, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -37,6 +37,14 @@ def get_subdiagram_trace(self: Diagram, name: str, t: Affine = Ident) -> Trace:
     subdiagram = self.get_subdiagram(name)
     assert subdiagram is not None, "Subdiagram does not exist"
     return subdiagram[0].get_trace(t=subdiagram[1])  # type: ignore
+
+
+def get_subdiagram_location(self: Diagram, name: str) -> P2:
+    """Get local origin of the sub-diagram."""
+    subdiagram = self.get_subdiagram(name)
+    assert subdiagram is not None, "Subdiagram does not exist"
+    _, t = subdiagram
+    return apply_affine(t, origin)
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
