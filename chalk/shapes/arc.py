@@ -192,7 +192,7 @@ class ArcSegment(LocatedArcSegment, TrailLike):
 
     def reverse(self) -> ArcSegment:
         angle = self.angle + self.dangle
-        dangle = - self.dangle
+        dangle = -self.dangle
         return ArcSegment(angle, dangle).apply_transform(self.t)
 
 

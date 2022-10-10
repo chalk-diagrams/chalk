@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Optional, List, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 
 Ident = Affine.identity()
+Name = List[str]
 
 
 @dataclass
@@ -41,7 +42,7 @@ class Subdiagram:
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
-    def __init__(self, name: str, t: Affine = Ident):
+    def __init__(self, name: Name, t: Affine = Ident):
         self.name = name
 
     def visit_primitive(
@@ -94,6 +95,18 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
 
 
 def get_subdiagram(
-    self: Diagram, name: str, t: Affine = Ident
+    self: Diagram, name: Union[str, Name], t: Affine = Ident
 ) -> Optional[Subdiagram]:
+    if isinstance(name, str):
+        name = [name]
     return self.accept(GetSubdiagram(name), t=t)
+
+
+def with_name(
+    self: Diagram, name: Name, f: Callable[[Subdiagram, Diagram], Diagram]
+) -> Diagram:
+    sub = self.get_subdiagram(name)
+    if not sub:
+        return self
+    else:
+        return f(sub[0], self)
