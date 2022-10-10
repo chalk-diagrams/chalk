@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, Optional, TypeVar
+from typing import Any, List, Optional, Union, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -19,6 +19,7 @@ from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope
 from chalk.style import Stylable, Style
+from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
@@ -64,15 +65,17 @@ class BaseDiagram(
     ) -> Diagram:
         return Compose(envelope, self, other if other is not None else Empty())
 
-    def named(self, name: str) -> Diagram:
+    def named(self, name: Union[str, List[str]]) -> Diagram:
         """Add a name to a diagram.
 
         Args:
-            name (str): Diagram name.
+            name (Union[str, List[str]]): Diagram name.
 
         Returns:
             Diagram: A diagram object.
         """
+        if isinstance(name, str):
+            name = [name]
         return ApplyName(name, self)
 
     # Combinators
@@ -162,6 +165,15 @@ class BaseDiagram(
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         raise NotImplementedError
+
+    def qualify(self, name: Union[str, List[str]]) -> Diagram:
+        """Prefix names in the diagrame by the given `name`, which can be
+        either a string or a list of strings.
+
+        """
+        if isinstance(name, str):
+            name = [name]
+        return self.accept(Qualify(name))
 
 
 @dataclass
@@ -269,8 +281,61 @@ class ApplyStyle(BaseDiagram):
 class ApplyName(BaseDiagram):
     """ApplyName class."""
 
-    dname: str
+    dname: Name
     diagram: Diagram
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         return visitor.visit_apply_name(self, **kwargs)
+
+
+class Qualify(DiagramVisitor[Diagram]):
+    def __init__(self, name: Name):
+        self.name = name
+
+    def visit_primitive(
+        self,
+        diagram: Primitive,
+    ) -> Diagram:
+        return diagram
+
+    def visit_empty(
+        self,
+        diagram: Empty,
+    ) -> Diagram:
+        return diagram
+
+    def visit_compose(
+        self,
+        diagram: Compose,
+    ) -> Diagram:
+        return Compose(
+            diagram.envelope,
+            diagram.diagram1.accept(self),
+            diagram.diagram2.accept(self),
+        )
+
+    def visit_apply_transform(
+        self,
+        diagram: ApplyTransform,
+    ) -> Diagram:
+        return ApplyTransform(
+            diagram.transform,
+            diagram.diagram.accept(self),
+        )
+
+    def visit_apply_style(
+        self,
+        diagram: ApplyStyle,
+    ) -> Diagram:
+        return ApplyStyle(
+            diagram.style,
+            diagram.diagram.accept(self),
+        )
+
+    def visit_apply_name(
+        self,
+        diagram: ApplyName,
+    ) -> Diagram:
+        return ApplyName(
+            self.name + diagram.dname, diagram.diagram.accept(self)
+        )

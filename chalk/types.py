@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from typing_extensions import Protocol
 
@@ -132,7 +132,7 @@ class Diagram(
         ...
 
     def get_subdiagram(
-        self, name: str, t: tx.Affine = Ident
+        self, name: Union[str, List[str]], t: tx.Affine = Ident
     ) -> Optional[Subdiagram]:
         ...
 
