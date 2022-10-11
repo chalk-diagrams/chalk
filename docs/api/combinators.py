@@ -113,3 +113,14 @@ help(hcat)
 #
 
 hcat([triangle(1), square(1), triangle(1)], 0.2)
+
+# ### place_on_path
+
+# + tags=["hide_inp"]
+help(place_on_path)
+# -
+
+place_on_path(
+    [circle(0.25) for _ in range(6)],
+    Trail.regular_polygon(6, 1).to_path(),
+)
