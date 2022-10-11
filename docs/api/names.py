@@ -32,6 +32,13 @@ diagram
 help(BaseDiagram.get_subdiagram)
 # -
 
+# A `Subdiagram` is a `Diagram` paired with its enclosing context (a `Transformation` for the moment; but `Style` should also be added at some point).
+# It has the following methods:
+# - `get_envelope`, which returns the corresponding `Envelope`
+# - `get_trace`, which returns the corresponding `Trace`
+# - `get_location`, which returns the local origin of the `Subdiagram`
+# - `boundary_from`, which return the furthest point on the boundary of the `Subdiagram`, starting from the local origin of the `Subdigram` and going in the direction of a given vector.
+
 #
 
 diagram = circle(0.5).named("x") | square(1)
