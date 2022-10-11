@@ -165,8 +165,7 @@ class BaseDiagram(
     get_subdiagram = chalk.subdiagram.get_subdiagram
     get_sub_map = chalk.subdiagram.get_sub_map
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        raise NotImplementedError
+    with_names = chalk.subdiagram.with_names
 
     def qualify(self, name: Union[str, Name]) -> Diagram:
         """Prefix names in the diagrame by the given `name`, which can be
@@ -176,6 +175,9 @@ class BaseDiagram(
         if isinstance(name, str):
             name = (name,)
         return self.accept(Qualify(name))
+
+    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+        raise NotImplementedError
 
 
 @dataclass
