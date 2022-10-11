@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable, Optional, List, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import Affine, P2, apply_affine, origin
+from chalk.transform import Affine, P2, V2, apply_affine, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -39,6 +39,18 @@ class Subdiagram:
 
     def get_trace(self) -> Trace:
         return self.diagram.get_trace().apply_transform(self.transform)
+
+    def boundary_from(self, v: V2) -> P2:
+        """Returns the furthest point on the boundary of the subdiagram,
+        starting from the local origin of the subdigram and going in the
+        direction of the given vector `v`.
+        """
+        o = self.get_location()
+        p = self.get_trace().trace_p(o, -v)
+        if not p:
+            return origin
+        else:
+            return p
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
