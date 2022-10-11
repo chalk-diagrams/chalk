@@ -1,10 +1,14 @@
 from colour import Color
 
 from chalk.combinators import concat
-from chalk.shapes import Path, circle
+from chalk.shapes import Path, circle, text
 from chalk.shapes.segment import seg
 from chalk.transform import V2, origin
 from chalk.types import Diagram
+
+
+RED = Color("red")
+BLUE = Color("blue")
 
 
 def show_origin(self: Diagram) -> Diagram:
@@ -14,7 +18,7 @@ def show_origin(self: Diagram) -> Diagram:
     if envelope.is_empty:
         return self
     origin_size = max(0.1, min(envelope.height, envelope.width) / 50)
-    origin = circle(origin_size).line_color(Color("red"))
+    origin = circle(origin_size).line_color(RED)
     return self + origin
 
 
@@ -40,11 +44,11 @@ def show_envelope(
         Path.from_points(list(envelope.to_path(angle)))
         .stroke()
         .fill_opacity(0)
-        .line_color(Color("red"))
+        .line_color(RED)
     )
     outer += (
         concat([seg(y).stroke() for (x, y) in envelope.to_segments(angle)])
-        .line_color(Color("red"))
+        .line_color(RED)
         .dashing([0.01, 0.01], 0)
     )
 
@@ -52,9 +56,6 @@ def show_envelope(
     if phantom:
         new = new.with_envelope(self)
     return new
-
-
-# show_label
 
 
 def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
@@ -66,7 +67,7 @@ def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     one: Diagram = (
         Path.from_points([origin, v1])
         .stroke()
-        .line_color(Color("red"))
+        .line_color(RED)
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
@@ -74,7 +75,7 @@ def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     two: Diagram = (
         Path.from_points([origin, v2])
         .stroke()
-        .line_color(Color("red"))
+        .line_color(RED)
         .dashing([0.01, 0.01], 0)
         .line_width(0.01)
     )
@@ -86,9 +87,20 @@ def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
             ]
         )
         .stroke()
-        .line_color(Color("blue"))
+        .line_color(BLUE)
         .line_width(0.02)
     )
     one = (self.show_origin() + one + split).with_envelope(self)
     two = (other.show_origin() + two).with_envelope(other)
     return one.beside(two, direction)
+
+
+def show_labels(self: Diagram, font_size: int = 1) -> Diagram:
+    """Shows the labels of all named subdiagrams of a diagram at their
+    corresponding origin."""
+    for name, subs in self.get_sub_map().items():
+        for sub in subs:
+            n = "·".join(name)
+            p = sub.get_location()
+            self = self + text(n, font_size).fill_color(RED).translate_by(p)
+    return self

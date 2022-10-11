@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Callable, Optional, List, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Optional, List, Tuple, Union
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 Ident = Affine.identity()
-Name = List[str]
+Name = Tuple[str, ...]
 
 
 @dataclass
@@ -110,7 +110,7 @@ def get_subdiagram(
     self: Diagram, name: Union[str, Name], t: Affine = Ident
 ) -> Optional[Subdiagram]:
     if isinstance(name, str):
-        name = [name]
+        name = (name,)
     return self.accept(GetSubdiagram(name), t=t)
 
 
@@ -121,4 +121,66 @@ def with_name(
     if not sub:
         return self
     else:
-        return f(sub[0], self)
+        return f(sub, self)
+
+
+SubMap = Dict[Name, List[Subdiagram]]
+
+
+class GetSubMap(DiagramVisitor[SubMap]):
+    def visit_primitive(
+        self,
+        diagram: Primitive,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return {}
+
+    def visit_empty(
+        self,
+        diagram: Empty,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return {}
+
+    def visit_compose(
+        self,
+        diagram: Compose,
+        t: Affine = Ident,
+    ) -> SubMap:
+        d1 = diagram.diagram1.accept(self, t=t)
+        d2 = diagram.diagram2.accept(self, t=t)
+        return self._union(d1, d2)
+
+    def visit_apply_transform(
+        self,
+        diagram: ApplyTransform,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return diagram.diagram.accept(self, t=t * diagram.transform)
+
+    def visit_apply_style(
+        self,
+        diagram: ApplyStyle,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return diagram.diagram.accept(self, t=t)
+
+    def visit_apply_name(
+        self,
+        diagram: ApplyName,
+        t: Affine = Ident,
+    ) -> SubMap:
+        d1 = {tuple(diagram.dname): [Subdiagram(diagram.diagram, t)]}
+        d2 = diagram.diagram.accept(self, t=t)
+        return self._union(d1, d2)
+
+    @staticmethod
+    def _union(d1: SubMap, d2: SubMap) -> SubMap:
+        return {k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)}
+
+
+def get_sub_map(self: Diagram, t: Affine = Ident) -> SubMap:
+    """Retrieves all named subdiagrams in the given diagram and accumulates
+    them in a dictionary (map) indexed by their name.
+    """
+    return self.accept(GetSubMap(), t=t)

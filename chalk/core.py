@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional, Union, TypeVar
+from typing import Any, List, Optional, Union, Tuple, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -65,17 +65,17 @@ class BaseDiagram(
     ) -> Diagram:
         return Compose(envelope, self, other if other is not None else Empty())
 
-    def named(self, name: Union[str, List[str]]) -> Diagram:
+    def named(self, name: Union[str, Tuple[str]]) -> Diagram:
         """Add a name to a diagram.
 
         Args:
-            name (Union[str, List[str]]): Diagram name.
+            name (Union[str, Tuple[str]]): Diagram name.
 
         Returns:
             Diagram: A diagram object.
         """
         if isinstance(name, str):
-            name = [name]
+            name = (name,)
         return ApplyName(name, self)
 
     # Combinators
@@ -112,6 +112,7 @@ class BaseDiagram(
     show_origin = chalk.model.show_origin
     show_envelope = chalk.model.show_envelope
     show_beside = chalk.model.show_beside
+    show_labels = chalk.model.show_labels
 
     # Combinators
     frame = chalk.combinators.frame
@@ -162,17 +163,18 @@ class BaseDiagram(
     get_envelope = chalk.envelope.get_envelope
     get_trace = chalk.trace.get_trace
     get_subdiagram = chalk.subdiagram.get_subdiagram
+    get_sub_map = chalk.subdiagram.get_sub_map
 
     def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
         raise NotImplementedError
 
-    def qualify(self, name: Union[str, List[str]]) -> Diagram:
+    def qualify(self, name: Union[str, Name]) -> Diagram:
         """Prefix names in the diagrame by the given `name`, which can be
         either a string or a list of strings.
 
         """
         if isinstance(name, str):
-            name = [name]
+            name = (name,)
         return self.accept(Qualify(name))
 
 
