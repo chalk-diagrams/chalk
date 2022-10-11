@@ -114,14 +114,20 @@ def get_subdiagram(
     return self.accept(GetSubdiagram(name), t=t)
 
 
-def with_name(
-    self: Diagram, name: Name, f: Callable[[Subdiagram, Diagram], Diagram]
+def with_names(
+    self: Diagram,
+    names: List[Name],
+    f: Callable[[List[Subdiagram], Diagram], Diagram],
 ) -> Diagram:
-    sub = self.get_subdiagram(name)
-    if not sub:
+    # NOTE Instead of performing a pass of the AST for each `name` in `names`,
+    # it might be more efficient to retrieve all named subdiagrams using the
+    # `get_sub_map` function and then filter the subdiagrams specified by
+    # `names`.
+    subs = [self.get_subdiagram(name) for name in names]
+    if any(sub is None for sub in subs):
         return self
     else:
-        return f(sub, self)
+        return f(subs, self)
 
 
 SubMap = Dict[Name, List[Subdiagram]]
