@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Callable, Dict, Optional, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, List, Tuple, Union
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
@@ -22,7 +22,8 @@ if TYPE_CHECKING:
 
 
 Ident = Affine.identity()
-Name = Tuple[str, ...]
+AtomicName = Any
+Name = Tuple[AtomicName, ...]
 
 
 @dataclass
@@ -106,12 +107,8 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
             return None
 
 
-def get_subdiagram(
-    self: Diagram, name: Union[str, Name], t: Affine = Ident
-) -> Optional[Subdiagram]:
-    if isinstance(name, str):
-        name = (name,)
-    return self.accept(GetSubdiagram(name), t=t)
+def get_subdiagram(self: Diagram, *name: AtomicName) -> Optional[Subdiagram]:
+    return self.accept(GetSubdiagram(name), t=Ident)
 
 
 def with_names(
@@ -123,7 +120,7 @@ def with_names(
     # it might be more efficient to retrieve all named subdiagrams using the
     # `get_sub_map` function and then filter the subdiagrams specified by
     # `names`.
-    subs = [self.get_subdiagram(name) for name in names]
+    subs = [self.get_subdiagram(*name) for name in names]
     if any(sub is None for sub in subs):
         return self
     else:
