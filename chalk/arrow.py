@@ -6,6 +6,7 @@ from colour import Color
 from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
 from chalk.style import Style
 from chalk.trail import Trail
+from chalk.subdiagram import Name
 from chalk.transform import P2, V2, unit_x
 from chalk.types import Diagram
 
@@ -28,10 +29,10 @@ class ArrowOpts:
 
 
 def connect(
-    self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    sub1 = self.get_subdiagram(name1)
-    sub2 = self.get_subdiagram(name2)
+    sub1 = self.get_subdiagram(*name1)
+    sub2 = self.get_subdiagram(*name2)
 
     if not sub1 or not sub2:
         raise ValueError("Cannot connect")
@@ -43,10 +44,10 @@ def connect(
 
 
 def connect_outside(
-    self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    sub1 = self.get_subdiagram(name1)
-    sub2 = self.get_subdiagram(name2)
+    sub1 = self.get_subdiagram(*name1)
+    sub2 = self.get_subdiagram(*name2)
 
     if not sub1 or not sub2:
         raise ValueError("Cannot connect")
@@ -71,14 +72,14 @@ def connect_outside(
 
 def connect_perim(
     self: Diagram,
-    name1: str,
-    name2: str,
+    name1: Name,
+    name2: Name,
     v1: V2,
     v2: V2,
     style: ArrowOpts = ArrowOpts(),
 ) -> Diagram:
-    sub1 = self.get_subdiagram(name1)
-    sub2 = self.get_subdiagram(name2)
+    sub1 = self.get_subdiagram(*name1)
+    sub2 = self.get_subdiagram(*name2)
 
     if not sub1 or not sub2:
         raise ValueError("Cannot connect")
