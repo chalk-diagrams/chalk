@@ -12,7 +12,7 @@ from chalk.transform import P2, V2
 
 if TYPE_CHECKING:
     from chalk.path import Path
-    from chalk.subdiagram import Name, Subdiagram, SubMap
+    from chalk.subdiagram import AtomicName, Subdiagram, SubMap
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
@@ -131,9 +131,7 @@ class Diagram(
     def center_xy(self: Diagram) -> Diagram:
         ...
 
-    def get_subdiagram(
-        self, name: Union[str, Name], t: tx.Affine = Ident
-    ) -> Optional[Subdiagram]:
+    def get_subdiagram(self, *name: AtomicName) -> Optional[Subdiagram]:
         ...
 
     def get_sub_map(self, t: tx.Affine = Ident) -> SubMap:

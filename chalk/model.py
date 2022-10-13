@@ -100,7 +100,7 @@ def show_labels(self: Diagram, font_size: int = 1) -> Diagram:
     corresponding origin."""
     for name, subs in self.get_sub_map().items():
         for sub in subs:
-            n = "·".join(name)
+            n = "·".join(map(str, name))
             p = sub.get_location()
             self = self + text(n, font_size).fill_color(RED).translate_by(p)
     return self
