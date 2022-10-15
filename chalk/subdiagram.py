@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, List, Tuple, Un
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import Affine, P2, V2, apply_affine, origin
+from chalk.transform import Affine, P2, V2, apply_p2_affine, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -33,7 +33,7 @@ class Subdiagram:
     # style: Style
 
     def get_location(self) -> P2:
-        return apply_affine(self.transform, origin)
+        return apply_p2_affine(self.transform, origin)
 
     def get_envelope(self) -> Envelope:
         return self.diagram.get_envelope().apply_transform(self.transform)
@@ -124,7 +124,11 @@ def with_names(
     if any(sub is None for sub in subs):
         return self
     else:
-        return f(subs, self)
+        # NOTE Unfortunately, mypy is not narrowing the type when using the
+        # `any` or `all` functions.
+        # https://github.com/python/mypy/issues/13069
+        # Hopefully this bug will be fixed at some point in the future.
+        return f(subs, self)  # type: ignore
 
 
 SubMap = Dict[Name, List[Subdiagram]]
