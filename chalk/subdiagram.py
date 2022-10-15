@@ -130,7 +130,8 @@ def with_names(
     # `names`.
     subs = [self.get_subdiagram(*name) for name in names]
     if any(sub is None for sub in subs):
-        return self
+        # return self
+        raise LookupError("One of the names is missing from the diagram")
     else:
         # NOTE Unfortunately, mypy is not narrowing the type when using the
         # `any` or `all` functions.
