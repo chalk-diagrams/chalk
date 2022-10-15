@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
 from typing_extensions import Protocol
 
@@ -12,7 +12,7 @@ from chalk.transform import P2, V2
 
 if TYPE_CHECKING:
     from chalk.path import Path
-    from chalk.subdiagram import AtomicName, Subdiagram, SubMap
+    from chalk.subdiagram import AtomicName, Name, Subdiagram, SubMap
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
@@ -135,6 +135,13 @@ class Diagram(
         ...
 
     def get_sub_map(self, t: tx.Affine = Ident) -> SubMap:
+        ...
+
+    def with_names(
+        self,
+        names: List[Name],
+        f: Callable[[List[Subdiagram], Diagram], Diagram],
+    ) -> Diagram:
         ...
 
     def _style(self, style: Style) -> Diagram:

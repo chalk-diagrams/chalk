@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional, Union, Tuple, TypeVar
+from typing import Any, Optional, TypeVar
 
 import chalk.align
 import chalk.arrow

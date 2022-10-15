@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from colour import Color
 
 from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
 from chalk.style import Style
 from chalk.trail import Trail
-from chalk.subdiagram import Name
+from chalk.subdiagram import Name, Subdiagram
 from chalk.transform import P2, V2, unit_x
 from chalk.types import Diagram
 
@@ -31,43 +31,41 @@ class ArrowOpts:
 def connect(
     self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    sub1 = self.get_subdiagram(*name1)
-    sub2 = self.get_subdiagram(*name2)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
 
-    if not sub1 or not sub2:
-        raise ValueError("Cannot connect")
+        ps = sub1.get_location()
+        pe = sub2.get_location()
 
-    ps = sub1.get_location()
-    pe = sub2.get_location()
+        return dia + arrow_between(ps, pe, style)
 
-    return self + arrow_between(ps, pe, style)
+    return self.with_names([name1, name2], f)
 
 
 def connect_outside(
     self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    sub1 = self.get_subdiagram(*name1)
-    sub2 = self.get_subdiagram(*name2)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
 
-    if not sub1 or not sub2:
-        raise ValueError("Cannot connect")
+        loc1 = sub1.get_location()
+        loc2 = sub2.get_location()
 
-    loc1 = sub1.get_location()
-    loc2 = sub2.get_location()
+        tr1 = sub1.get_trace()
+        tr2 = sub2.get_trace()
 
-    tr1 = sub1.get_trace()
-    tr2 = sub2.get_trace()
+        v = loc2 - loc1
+        midpoint = loc1 + v / 2
 
-    v = loc2 - loc1
-    midpoint = loc1 + v / 2
+        ps = tr1.trace_p(midpoint, -v)
+        pe = tr2.trace_p(midpoint, v)
 
-    ps = tr1.trace_p(midpoint, -v)
-    pe = tr2.trace_p(midpoint, v)
+        assert ps is not None, "Cannot connect"
+        assert pe is not None, "Cannot connect"
 
-    assert ps is not None, "Cannot connect"
-    assert pe is not None, "Cannot connect"
+        return dia + arrow_between(ps, pe, style)
 
-    return self + arrow_between(ps, pe, style)
+    return self.with_names([name1, name2], f)
 
 
 def connect_perim(
@@ -78,25 +76,24 @@ def connect_perim(
     v2: V2,
     style: ArrowOpts = ArrowOpts(),
 ) -> Diagram:
-    sub1 = self.get_subdiagram(*name1)
-    sub2 = self.get_subdiagram(*name2)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
 
-    if not sub1 or not sub2:
-        raise ValueError("Cannot connect")
+        loc1 = sub1.get_location()
+        loc2 = sub2.get_location()
 
-    loc1 = sub1.get_location()
-    loc2 = sub2.get_location()
+        tr1 = sub1.get_trace()
+        tr2 = sub2.get_trace()
 
-    tr1 = sub1.get_trace()
-    tr2 = sub2.get_trace()
+        ps = tr1.max_trace_p(loc1, v1)
+        pe = tr2.max_trace_p(loc2, v2)
 
-    ps = tr1.max_trace_p(loc1, v1)
-    pe = tr2.max_trace_p(loc2, v2)
+        assert ps is not None, "Cannot connect"
+        assert pe is not None, "Cannot connect"
 
-    assert ps is not None, "Cannot connect"
-    assert pe is not None, "Cannot connect"
+        return dia + arrow_between(ps, pe, style)
 
-    return self + arrow_between(ps, pe, style)
+    return self.with_names([name1, name2], f)
 
 
 # Arrow primitives

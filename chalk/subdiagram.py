@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, List, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    List,
+    Tuple,
+)
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
