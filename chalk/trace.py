@@ -29,7 +29,7 @@ SignedDistance = float
 Ident = Affine.identity()
 
 
-class Trace(Transformable):
+class Trace(Transformable["Trace"]):
     def __init__(self, f: Callable[[P2, V2], List[SignedDistance]]) -> None:
         self.f = f
 
@@ -54,7 +54,7 @@ class Trace(Transformable):
     def concat(traces: Iterable[Trace]) -> Trace:
         return reduce(Trace.mappend, traces, Trace.empty())
 
-    def apply_transform(self, t: Affine) -> Trace:  # type: ignore
+    def apply_transform(self, t: Affine) -> Trace:
         def wrapped(p: P2, d: V2) -> List[SignedDistance]:
             t1 = ~t
             return self(

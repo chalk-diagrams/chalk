@@ -36,7 +36,9 @@ def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> bool:
 
 
 @dataclass
-class LocatedArcSegment(Traceable, Enveloped, tx.Transformable):
+class LocatedArcSegment(
+    Traceable, Enveloped, tx.Transformable["LocatedArcSegment"]
+):
     "A ellipse arc represented with the cetner parameterization"
     angle: float
     dangle: float
@@ -171,7 +173,7 @@ class ArcSegment(LocatedArcSegment, TrailLike):
         assert self.p.x == 0, self.p
         assert self.p.y == 0, self.p
 
-    def apply_transform(self, t: tx.Affine) -> ArcSegment:  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> ArcSegment:
         t = tx.remove_translation(t)
         return ArcSegment(self.angle, self.dangle, t * self.t)
 
@@ -192,7 +194,7 @@ class ArcSegment(LocatedArcSegment, TrailLike):
 
     def reverse(self) -> ArcSegment:
         angle = self.angle + self.dangle
-        dangle = - self.dangle
+        dangle = -self.dangle
         return ArcSegment(angle, dangle).apply_transform(self.t)
 
 

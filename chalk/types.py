@@ -48,7 +48,7 @@ class TrailLike(Protocol):
 
 
 class Diagram(
-    Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol
+    Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol["Diagram"]
 ):
     def apply_transform(self, t: tx.Affine) -> Diagram:
         ...

@@ -20,7 +20,7 @@ def make_path(
 
 
 @dataclass
-class Path(Shape, Enveloped, Traceable, Transformable):
+class Path(Shape, Enveloped, Traceable, Transformable["Path"]):
     """Path class."""
 
     loc_trails: List[Located]
@@ -33,7 +33,7 @@ class Path(Shape, Enveloped, Traceable, Transformable):
     def __add__(self, other: Path) -> Path:
         return Path(self.loc_trails + other.loc_trails)
 
-    def apply_transform(self, t: tx.Affine) -> Path:  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> Path:
         return Path(
             [loc_trail.apply_transform(t) for loc_trail in self.loc_trails]
         )

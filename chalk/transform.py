@@ -1,5 +1,5 @@
 import math
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
@@ -35,51 +35,51 @@ def apply_affine(aff: Affine, x: Any) -> Any:
     return aff * x
 
 
-TTrans = TypeVar("TTrans", bound="TransformableProtocol")
+TTrans = TypeVar("TTrans", covariant=True)
 
 
-class TransformableProtocol(Protocol):
-    def scale(self: TTrans, α: float) -> TTrans:
+class TransformableProtocol(Protocol[TTrans]):
+    def scale(self, α: float) -> TTrans:
         ...
 
-    def scale_x(self: TTrans, α: float) -> TTrans:
+    def scale_x(self, α: float) -> TTrans:
         ...
 
-    def scale_y(self: TTrans, α: float) -> TTrans:
+    def scale_y(self, α: float) -> TTrans:
         ...
 
-    def rotate(self: TTrans, θ: float) -> TTrans:
+    def rotate(self, θ: float) -> TTrans:
         ...
 
-    def rotate_rad(self: TTrans, θ: float) -> TTrans:
+    def rotate_rad(self, θ: float) -> TTrans:
         ...
 
-    def rotate_by(self: TTrans, turns: float) -> TTrans:
+    def rotate_by(self, turns: float) -> TTrans:
         ...
 
-    def reflect_x(self: TTrans) -> TTrans:
+    def reflect_x(self) -> TTrans:
         ...
 
-    def reflect_y(self: TTrans) -> TTrans:
+    def reflect_y(self) -> TTrans:
         ...
 
-    def shear_y(self: TTrans, λ: float) -> TTrans:
+    def shear_y(self, λ: float) -> TTrans:
         ...
 
-    def shear_x(self: TTrans, λ: float) -> TTrans:
+    def shear_x(self, λ: float) -> TTrans:
         ...
 
-    def translate(self: TTrans, dx: float, dy: float) -> TTrans:
+    def translate(self, dx: float, dy: float) -> TTrans:
         ...
 
-    def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
+    def translate_by(self, vector) -> TTrans:  # type: ignore
         ...
 
     def _app(self, t: Affine) -> TTrans:
         ...
 
 
-class Transformable(TransformableProtocol):
+class Transformable(Generic[TTrans]):
     """Transformable class."""
 
     def apply_transform(self, t: Affine) -> TTrans:
@@ -91,44 +91,44 @@ class Transformable(TransformableProtocol):
     def _app(self, t: Affine) -> TTrans:
         return self.apply_transform(t)
 
-    def scale(self: TTrans, α: float) -> TTrans:
+    def scale(self, α: float) -> TTrans:
         return self._app(Affine.scale(Vec2(α, α)))
 
-    def scale_x(self: TTrans, α: float) -> TTrans:
+    def scale_x(self, α: float) -> TTrans:
         return self._app(Affine.scale(Vec2(α, 1)))
 
-    def scale_y(self: TTrans, α: float) -> TTrans:
+    def scale_y(self, α: float) -> TTrans:
         return self._app(Affine.scale(Vec2(1, α)))
 
-    def rotate(self: TTrans, θ: float) -> TTrans:
+    def rotate(self, θ: float) -> TTrans:
         "Rotate by θ degrees counterclockwise"
         return self._app(Affine.rotation(θ))
 
-    def rotate_rad(self: TTrans, θ: float) -> TTrans:
+    def rotate_rad(self, θ: float) -> TTrans:
         "Rotate by θ radians counterclockwise"
         return self._app(Affine.rotation(from_radians(θ)))
 
-    def rotate_by(self: TTrans, turns: float) -> TTrans:
+    def rotate_by(self, turns: float) -> TTrans:
         "Rotate by fractions of a circle (turn)."
         θ = 2 * math.pi * turns
         return self._app(Affine.rotation(from_radians(θ)))
 
-    def reflect_x(self: TTrans) -> TTrans:
+    def reflect_x(self) -> TTrans:
         return self._app(Affine.scale(Vec2(-1, +1)))
 
-    def reflect_y(self: TTrans) -> TTrans:
+    def reflect_y(self) -> TTrans:
         return self._app(Affine.scale(Vec2(+1, -1)))
 
-    def shear_y(self: TTrans, λ: float) -> TTrans:
+    def shear_y(self, λ: float) -> TTrans:
         return self._app(Affine(1.0, 0.0, 0.0, λ, 1.0, 0.0))
 
-    def shear_x(self: TTrans, λ: float) -> TTrans:
+    def shear_x(self, λ: float) -> TTrans:
         return self._app(Affine(1.0, λ, 0.0, 0.0, 1.0, 0.0))
 
-    def translate(self: TTrans, dx: float, dy: float) -> TTrans:
+    def translate(self, dx: float, dy: float) -> TTrans:
         return self._app(Affine.translation(Vec2(dx, dy)))
 
-    def translate_by(self: TTrans, vector) -> TTrans:  # type: ignore
+    def translate_by(self, vector) -> TTrans:  # type: ignore
         return self._app(Affine.translation(vector))
 
 

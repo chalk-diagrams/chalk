@@ -34,7 +34,7 @@ SignedDistance = float
 Ident = Affine.identity()
 
 
-class Envelope(Transformable):
+class Envelope(Transformable["Envelope"]):
     def __init__(
         self, f: Callable[[V2], SignedDistance], is_empty: bool = False
     ) -> None:
@@ -85,7 +85,7 @@ class Envelope(Transformable):
     def concat(envelopes: Iterable[Envelope]) -> Envelope:
         return reduce(Envelope.mappend, envelopes, Envelope.empty())
 
-    def apply_transform(self, t: Affine) -> Envelope:  # type: ignore
+    def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:
             return self
         rt = remove_translation(t)

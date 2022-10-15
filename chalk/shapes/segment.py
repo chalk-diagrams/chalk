@@ -22,7 +22,9 @@ ORIGIN = P2(0, 0)
 
 
 @dataclass
-class LocatedSegment(Traceable, Enveloped, tx.Transformable, TrailLike):
+class LocatedSegment(
+    Traceable, Enveloped, tx.Transformable["LocatedSegment"], TrailLike
+):
     offset: V2
     origin: P2 = ORIGIN
 
@@ -34,7 +36,7 @@ class LocatedSegment(Traceable, Enveloped, tx.Transformable, TrailLike):
     def from_points(p: P2, q: P2) -> LocatedSegment:
         return LocatedSegment(q - p, p)
 
-    def apply_transform(self, t: tx.Affine) -> LocatedSegment:  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> LocatedSegment:
         return LocatedSegment(
             tx.apply_affine(t, self.offset), tx.apply_affine(t, self.origin)
         )
@@ -77,10 +79,10 @@ class Segment(LocatedSegment, TrailLike):
     def p(self) -> P2:
         return ORIGIN
 
-    def apply_transform(self, t: tx.Affine) -> Segment:  # type: ignore
+    def apply_transform(self, t: tx.Affine) -> Segment:
         return Segment(tx.apply_affine(tx.remove_translation(t), self.offset))
 
-    def reverse(self) -> Segment:
+    def reverse(self):  # type: ignore
         return self.scale(-1)
 
 

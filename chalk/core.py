@@ -44,11 +44,13 @@ def set_svg_draw_height(height: int) -> None:
 
 
 @dataclass
-class BaseDiagram(Stylable, tx.Transformable, chalk.types.Diagram):
+class BaseDiagram(
+    Stylable, tx.Transformable["BaseDiagram"], chalk.types.Diagram
+):
     """Diagram class."""
 
     # Core composition
-    def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
+    def apply_transform(self, t: Affine) -> BaseDiagram:
         return ApplyTransform(t, self)
 
     def apply_style(self, style: Style) -> Diagram:  # type: ignore
@@ -191,7 +193,7 @@ class Primitive(BaseDiagram):
         """
         return cls(shape, Style.empty(), Ident)
 
-    def apply_transform(self, t: Affine) -> Primitive:  # type: ignore
+    def apply_transform(self, t: Affine) -> Primitive:
         """Applies a transform and returns a primitive.
 
         Args:

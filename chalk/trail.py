@@ -28,7 +28,7 @@ SegmentLike = Union[Segment, ArcSegment]
 
 
 @dataclass
-class Located(Enveloped, Traceable, Transformable):
+class Located(Enveloped, Traceable, Transformable["Located"]):
     trail: Trail
     location: P2
 
@@ -53,7 +53,7 @@ class Located(Enveloped, Traceable, Transformable):
     def stroke(self) -> Diagram:
         return self.to_path().stroke()
 
-    def apply_transform(self, t: Affine) -> Located:  # type: ignore
+    def apply_transform(self, t: Affine) -> Located:
         return Located(
             apply_affine(t, self.trail), apply_affine(t, self.location)
         )
@@ -65,7 +65,7 @@ class Located(Enveloped, Traceable, Transformable):
 
 
 @dataclass
-class Trail(Transformable, TrailLike):
+class Trail(Transformable["Trail"], TrailLike):
     segments: List[SegmentLike]
     closed: bool = False
 
@@ -82,6 +82,9 @@ class Trail(Transformable, TrailLike):
     def concat(trails: Iterable[Trail]) -> Trail:
         return reduce(Trail.__add__, trails, Trail.empty())
 
+    def to_trail(self) -> Trail:
+        return self
+
     def close(self) -> Trail:
         return Trail(self.segments, True)
 
@@ -94,7 +97,7 @@ class Trail(Transformable, TrailLike):
         return pts
 
     # Apply transform to all
-    def apply_transform(self, t: Affine) -> Trail:  # type: ignore
+    def apply_transform(self, t: Affine) -> Trail:
         t = remove_translation(t)
         return Trail(
             [seg.apply_transform(t) for seg in self.segments], self.closed
