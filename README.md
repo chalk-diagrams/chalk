@@ -1,6 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/examples/output/logo-sm.png" width=300></p>
 
-Chalk is a declarative drawing library built on top of [PyCairo](https://pycairo.readthedocs.io).
+Chalk is a declarative drawing library.
 The API draws heavy inspiration from
 Haskell's [diagrams](https://diagrams.github.io/),
 Scala's [doodle](https://github.com/creativescala/doodle/) and
@@ -18,7 +18,7 @@ The library is available on PyPI as `chalk-diagrams` and can be installed with `
 pip install git+https://github.com/chalk-diagrams/chalk/
 ```
 
-On Debian (or Colab) you will need to install Cairo
+On Debian (or Colab) you will need to install Cairo for [PyCairo](https://pycairo.readthedocs.io)
 
 ```bash
 sudo apt-get install libcairo2-dev
