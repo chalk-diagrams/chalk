@@ -15,6 +15,7 @@ from chalk.core import empty, set_svg_draw_height, set_svg_height
 from chalk.envelope import Envelope
 from chalk.shapes import *  # noqa: F403
 from chalk.style import Style
+from chalk.subdiagram import Name
 from chalk.trail import Trail
 from chalk.transform import (
     P2,

@@ -19,7 +19,7 @@ from chalk import backend
 from chalk import transform as tx
 from chalk.envelope import Envelope
 from chalk.style import Stylable, Style
-from chalk.subdiagram import AtomicName, Name
+from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
@@ -65,7 +65,7 @@ class BaseDiagram(
     ) -> Diagram:
         return Compose(envelope, self, other if other is not None else Empty())
 
-    def named(self, *name: AtomicName) -> Diagram:
+    def named(self, name: Name) -> Diagram:
         """Add a name (or a sequnce of names) to a diagram."""
         return ApplyName(name, self)
 
@@ -158,7 +158,7 @@ class BaseDiagram(
 
     with_names = chalk.subdiagram.with_names
 
-    def qualify(self, *name: AtomicName) -> Diagram:
+    def qualify(self, name: Name) -> Diagram:
         """Prefix names in the diagram by a given name or sequence of names."""
         return self.accept(Qualify(name))
 

@@ -31,7 +31,28 @@ if TYPE_CHECKING:
 
 Ident = Affine.identity()
 AtomicName = Any
-Name = Tuple[AtomicName, ...]
+
+
+@dataclass
+class Name:
+    atomic_names: Tuple[AtomicName, ...]
+
+    def __init__(self, atomic_name: AtomicName):
+        self.atomic_names = (atomic_name, )
+
+    def __hash__(self) -> int:
+        return hash(self.atomic_names)
+
+    def __str__(self) -> str:
+        return "·".join(map(str, self.atomic_names))
+
+    def __add__(self, other: Name) -> Name:
+        new_name = Name(None)
+        new_name.atomic_names = self.atomic_names + other.atomic_names
+        return new_name
+
+    def qualify(self, name: Name) -> Name:
+        return name + self
 
 
 @dataclass
@@ -51,7 +72,7 @@ class Subdiagram:
 
     def boundary_from(self, v: V2) -> P2:
         """Returns the furthest point on the boundary of the subdiagram,
-        starting from the local origin of the subdigram and going in the
+        starting from the local origin of the subdiagram and going in the
         direction of the given vector `v`.
         """
         o = self.get_location()
@@ -115,7 +136,7 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
             return None
 
 
-def get_subdiagram(self: Diagram, *name: AtomicName) -> Optional[Subdiagram]:
+def get_subdiagram(self: Diagram, name: Name) -> Optional[Subdiagram]:
     return self.accept(GetSubdiagram(name), t=Ident)
 
 
@@ -128,7 +149,7 @@ def with_names(
     # it might be more efficient to retrieve all named subdiagrams using the
     # `get_sub_map` function and then filter the subdiagrams specified by
     # `names`.
-    subs = [self.get_subdiagram(*name) for name in names]
+    subs = [self.get_subdiagram(name) for name in names]
     if any(sub is None for sub in subs):
         # return self
         raise LookupError("One of the names is missing from the diagram")
@@ -186,7 +207,7 @@ class GetSubMap(DiagramVisitor[SubMap]):
         diagram: ApplyName,
         t: Affine = Ident,
     ) -> SubMap:
-        d1 = {tuple(diagram.dname): [Subdiagram(diagram.diagram, t)]}
+        d1 = {diagram.dname: [Subdiagram(diagram.diagram, t)]}
         d2 = diagram.diagram.accept(self, t=t)
         return self._union(d1, d2)
 
