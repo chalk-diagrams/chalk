@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from colour import Color
 
 from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
 from chalk.style import Style
 from chalk.trail import Trail
+from chalk.subdiagram import Name, Subdiagram
 from chalk.transform import P2, V2, unit_x
 from chalk.types import Diagram
 
@@ -28,52 +29,71 @@ class ArrowOpts:
 
 
 def connect(
-    self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    bb1 = self.get_subdiagram_envelope(name1)
-    bb2 = self.get_subdiagram_envelope(name2)
-    return self + arrow_between(bb1.center, bb2.center, style)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
+
+        ps = sub1.get_location()
+        pe = sub2.get_location()
+
+        return dia + arrow_between(ps, pe, style)
+
+    return self.with_names([name1, name2], f)
 
 
 def connect_outside(
-    self: Diagram, name1: str, name2: str, style: ArrowOpts = ArrowOpts()
+    self: Diagram, name1: Name, name2: Name, style: ArrowOpts = ArrowOpts()
 ) -> Diagram:
-    env1 = self.get_subdiagram_envelope(name1)
-    env2 = self.get_subdiagram_envelope(name2)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
 
-    tr1 = self.get_subdiagram_trace(name1)
-    tr2 = self.get_subdiagram_trace(name2)
+        loc1 = sub1.get_location()
+        loc2 = sub2.get_location()
 
-    v = env2.center - env1.center
-    midpoint = env1.center + v / 2
+        tr1 = sub1.get_trace()
+        tr2 = sub2.get_trace()
 
-    ps = tr1.trace_p(midpoint, -v)
-    pe = tr2.trace_p(midpoint, v)
-    assert ps is not None, "Cannot connect"
-    assert pe is not None, "Cannot connect"
-    return self + arrow_between(ps, pe, style)
+        v = loc2 - loc1
+        midpoint = loc1 + v / 2
+
+        ps = tr1.trace_p(midpoint, -v)
+        pe = tr2.trace_p(midpoint, v)
+
+        assert ps is not None, "Cannot connect"
+        assert pe is not None, "Cannot connect"
+
+        return dia + arrow_between(ps, pe, style)
+
+    return self.with_names([name1, name2], f)
 
 
 def connect_perim(
     self: Diagram,
-    name1: str,
-    name2: str,
+    name1: Name,
+    name2: Name,
     v1: V2,
     v2: V2,
     style: ArrowOpts = ArrowOpts(),
 ) -> Diagram:
-    env1 = self.get_subdiagram_envelope(name1)
-    env2 = self.get_subdiagram_envelope(name2)
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
 
-    tr1 = self.get_subdiagram_trace(name1)
-    tr2 = self.get_subdiagram_trace(name2)
+        loc1 = sub1.get_location()
+        loc2 = sub2.get_location()
 
-    ps = tr1.max_trace_p(env1.center, v1)
-    pe = tr2.max_trace_p(env2.center, v2)
-    assert ps is not None, "Cannot connect"
-    assert pe is not None, "Cannot connect"
+        tr1 = sub1.get_trace()
+        tr2 = sub2.get_trace()
 
-    return self + arrow_between(ps, pe, style)
+        ps = tr1.max_trace_p(loc1, v1)
+        pe = tr2.max_trace_p(loc2, v2)
+
+        assert ps is not None, "Cannot connect"
+        assert pe is not None, "Cannot connect"
+
+        return dia + arrow_between(ps, pe, style)
+
+    return self.with_names([name1, name2], f)
 
 
 # Arrow primitives

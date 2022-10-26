@@ -1,19 +1,27 @@
+import sys
+
 from chalk import *
 from colour import Color
 
-black = Color("#000000")
-white = Color("#ffffff")
+sys.setrecursionlimit(100_000)
+
+BLACK = Color("black")
 STEPS = 7
 NODES = 7
-x = hcat(vcat((rectangle(1, 0.4, 0.1).named((i, j)) + text(f"Node {i} {j}", 0.2).fill_color(black)) / vrule(1).line_width(0) for j in range(NODES)) | hrule(2).line_width(0)
-         for i in range(STEPS))
 
-connects = []
-for i in range(NODES-1):
+
+def node(i, j):
+    r = rectangle(1, 0.4, 0.1).named(i, j)
+    t = text(f"Node {i} {j}", 0.2).fill_color(BLACK)
+    return r + t
+
+
+d = hcat([vcat([node(i, j) for j in range(NODES)], sep=1) for i in range(STEPS)], sep=2)
+
+for i in range(NODES - 1):
     for j in range(STEPS):
         for j2 in range(STEPS):
-            connects.append(connect_outer(x, (i, j), "E", (i+1, j2), "W").line_color(black))
-d = x + concat(connects)
+            d = d.connect_perim((i, j), (i + 1, j2), unit_x, -unit_x)
 
 
 path = "examples/output/lattice.svg"

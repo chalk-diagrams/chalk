@@ -1,10 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple
+from dataclasses import dataclass
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    List,
+    Tuple,
+)
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import Affine
+from chalk.transform import Affine, P2, V2, apply_p2_affine, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -20,27 +30,61 @@ if TYPE_CHECKING:
 
 
 Ident = Affine.identity()
-Subdiagram = Tuple[Diagram, Affine]
+AtomicName = Any
 
 
-def get_subdiagram_envelope(
-    self: Diagram, name: str, t: Affine = Ident
-) -> Envelope:
-    """Get the bounding envelope of the subdiagram."""
-    subdiagram = self.get_subdiagram(name)
-    assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_envelope(t=subdiagram[1])  # type: ignore
+@dataclass
+class Name:
+    atomic_names: Tuple[AtomicName, ...]
+
+    def __init__(self, atomic_name: AtomicName):
+        self.atomic_names = (atomic_name, )
+
+    def __hash__(self) -> int:
+        return hash(self.atomic_names)
+
+    def __str__(self) -> str:
+        return "·".join(map(str, self.atomic_names))
+
+    def __add__(self, other: Name) -> Name:
+        new_name = Name(None)
+        new_name.atomic_names = self.atomic_names + other.atomic_names
+        return new_name
+
+    def qualify(self, name: Name) -> Name:
+        return name + self
 
 
-def get_subdiagram_trace(self: Diagram, name: str, t: Affine = Ident) -> Trace:
-    """Get the trace of the sub-diagram."""
-    subdiagram = self.get_subdiagram(name)
-    assert subdiagram is not None, "Subdiagram does not exist"
-    return subdiagram[0].get_trace(t=subdiagram[1])  # type: ignore
+@dataclass
+class Subdiagram:
+    diagram: Diagram
+    transform: Affine
+    # style: Style
+
+    def get_location(self) -> P2:
+        return apply_p2_affine(self.transform, origin)
+
+    def get_envelope(self) -> Envelope:
+        return self.diagram.get_envelope().apply_transform(self.transform)
+
+    def get_trace(self) -> Trace:
+        return self.diagram.get_trace().apply_transform(self.transform)
+
+    def boundary_from(self, v: V2) -> P2:
+        """Returns the furthest point on the boundary of the subdiagram,
+        starting from the local origin of the subdiagram and going in the
+        direction of the given vector `v`.
+        """
+        o = self.get_location()
+        p = self.get_trace().trace_p(o, -v)
+        if not p:
+            return origin
+        else:
+            return p
 
 
 class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
-    def __init__(self, name: str, t: Affine = Ident):
+    def __init__(self, name: Name, t: Affine = Ident):
         self.name = name
 
     def visit_primitive(
@@ -87,12 +131,93 @@ class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
         t: Affine = Ident,
     ) -> Optional[Subdiagram]:
         if self.name == diagram.dname:
-            return diagram.diagram, t
+            return Subdiagram(diagram.diagram, t)
         else:
             return None
 
 
-def get_subdiagram(
-    self: Diagram, name: str, t: Affine = Ident
-) -> Optional[Subdiagram]:
-    return self.accept(GetSubdiagram(name), t=t)
+def get_subdiagram(self: Diagram, name: Name) -> Optional[Subdiagram]:
+    return self.accept(GetSubdiagram(name), t=Ident)
+
+
+def with_names(
+    self: Diagram,
+    names: List[Name],
+    f: Callable[[List[Subdiagram], Diagram], Diagram],
+) -> Diagram:
+    # NOTE Instead of performing a pass of the AST for each `name` in `names`,
+    # it might be more efficient to retrieve all named subdiagrams using the
+    # `get_sub_map` function and then filter the subdiagrams specified by
+    # `names`.
+    subs = [self.get_subdiagram(name) for name in names]
+    if any(sub is None for sub in subs):
+        # return self
+        raise LookupError("One of the names is missing from the diagram")
+    else:
+        # NOTE Unfortunately, mypy is not narrowing the type when using the
+        # `any` or `all` functions.
+        # https://github.com/python/mypy/issues/13069
+        # Hopefully this bug will be fixed at some point in the future.
+        return f(subs, self)  # type: ignore
+
+
+SubMap = Dict[Name, List[Subdiagram]]
+
+
+class GetSubMap(DiagramVisitor[SubMap]):
+    def visit_primitive(
+        self,
+        diagram: Primitive,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return {}
+
+    def visit_empty(
+        self,
+        diagram: Empty,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return {}
+
+    def visit_compose(
+        self,
+        diagram: Compose,
+        t: Affine = Ident,
+    ) -> SubMap:
+        d1 = diagram.diagram1.accept(self, t=t)
+        d2 = diagram.diagram2.accept(self, t=t)
+        return self._union(d1, d2)
+
+    def visit_apply_transform(
+        self,
+        diagram: ApplyTransform,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return diagram.diagram.accept(self, t=t * diagram.transform)
+
+    def visit_apply_style(
+        self,
+        diagram: ApplyStyle,
+        t: Affine = Ident,
+    ) -> SubMap:
+        return diagram.diagram.accept(self, t=t)
+
+    def visit_apply_name(
+        self,
+        diagram: ApplyName,
+        t: Affine = Ident,
+    ) -> SubMap:
+        d1 = {diagram.dname: [Subdiagram(diagram.diagram, t)]}
+        d2 = diagram.diagram.accept(self, t=t)
+        return self._union(d1, d2)
+
+    @staticmethod
+    def _union(d1: SubMap, d2: SubMap) -> SubMap:
+        return {k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)}
+
+
+def get_sub_map(self: Diagram, t: Affine = Ident) -> SubMap:
+    """Retrieves all named subdiagrams in the given diagram and accumulates
+    them in a dictionary (map) indexed by their name.
+    """
+    return self.accept(GetSubMap(), t=t)
