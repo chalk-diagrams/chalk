@@ -125,7 +125,12 @@ class ToCairoShape(ShapeVisitor[None]):
             if loc_trail.trail.closed:
                 ctx.close_path()
 
-    def visit_latex(self, shape: Latex, style: Style = EMPTY_STYLE) -> None:
+    def visit_latex(
+        self,
+        shape: Latex,
+        ctx: PyCairoContext = None,
+        style: Style = EMPTY_STYLE
+    ) -> None:
         raise NotImplementedError("Latex is not implemented")
 
     def visit_text(
