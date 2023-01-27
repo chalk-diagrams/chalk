@@ -26,10 +26,15 @@ class Latex(Shape):
             ),
         )
         self.eq = latex_eq.as_svg()
-        c = "<g>\n" + "\n".join(self.eq.content.split("\n")[2:-2]) + "\n</g>"
-        self.width = self.eq.width
-        self.height = self.eq.height
+        eq_lines = self.eq.content.split("\n")
+        c = "<g>\n" + "\n".join(eq_lines[2:-2]) + "\n</g>"
+
+        # Undo scaling done by latextools
+        # https://github.com/cduck/latextools/blob/caa15da02d88e5a4c82eb06f8fadbe48abd7ad2f/latextools/convert.py#L131
+        self.width = self.eq.width * 3 / 4
+        self.height = self.eq.height * 3 / 4
         self.content = c
+
         # From latextools Ensures no clash between multiple math statements
         id_prefix = f"embed-{hash(self.content)}-"
         self.content = (
