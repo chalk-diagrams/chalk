@@ -11,7 +11,8 @@ NODES = 7
 
 
 def node(i, j):
-    r = rectangle(1, 0.4, 0.1).named(i, j)
+    name = Name((i, j))
+    r = rectangle(1, 0.4, 0.1).named(name)
     t = text(f"Node {i} {j}", 0.2).fill_color(BLACK)
     return r + t
 
@@ -21,7 +22,9 @@ d = hcat([vcat([node(i, j) for j in range(NODES)], sep=1) for i in range(STEPS)]
 for i in range(NODES - 1):
     for j in range(STEPS):
         for j2 in range(STEPS):
-            d = d.connect_perim((i, j), (i + 1, j2), unit_x, -unit_x)
+            src = Name((i, j))
+            tgt = Name((i + 1, j2))
+            d = d.connect_perim(src, tgt, unit_x, -unit_x)
 
 
 path = "examples/output/lattice.svg"

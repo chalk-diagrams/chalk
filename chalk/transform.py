@@ -82,7 +82,7 @@ class TransformableProtocol(Protocol[TTrans]):
 class Transformable(Generic[TTrans]):
     """Transformable class."""
 
-    def apply_transform(self, t: Affine) -> TTrans:
+    def apply_transform(self, t: Affine) -> TTrans:  # type: ignore[empty-body]
         pass
 
     def __rmul__(self, t: Affine) -> TTrans:

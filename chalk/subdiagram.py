@@ -1,20 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Optional,
-    List,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
-from chalk.transform import Affine, P2, V2, apply_p2_affine, origin
+from chalk.transform import P2, V2, Affine, apply_p2_affine, origin
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -38,7 +29,7 @@ class Name:
     atomic_names: Tuple[AtomicName, ...]
 
     def __init__(self, atomic_name: AtomicName):
-        self.atomic_names = (atomic_name, )
+        self.atomic_names = (atomic_name,)
 
     def __hash__(self) -> int:
         return hash(self.atomic_names)

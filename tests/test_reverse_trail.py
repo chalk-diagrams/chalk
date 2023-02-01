@@ -8,14 +8,9 @@ from hypothesis.strategies import (
 )
 
 import chalk
-
-from chalk import (
-    V2,
-    Trail,
-    unit_x,
-)
-from chalk.shapes.segment import seg
+from chalk import V2, Trail, unit_x
 from chalk.shapes.arc import arc_seg_angle
+from chalk.shapes.segment import seg
 
 
 @composite

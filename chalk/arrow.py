@@ -5,8 +5,8 @@ from colour import Color
 
 from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
 from chalk.style import Style
-from chalk.trail import Trail
 from chalk.subdiagram import Name, Subdiagram
+from chalk.trail import Trail
 from chalk.transform import P2, V2, unit_x
 from chalk.types import Diagram
 

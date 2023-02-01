@@ -17,21 +17,20 @@ def label(te):
     "Create text."
     return text(te, 2).fill_color(black).line_width(0)
 
-def cover(d, a, b):
+def cover(d, a, b, n):
     "Draw a bounding_box around a subdiagram"
-    b1 = d.get_subdiagram_envelope(a)
-    b2 = d.get_subdiagram_envelope(b)
-    new_bb = b1 + b2
-    return rectangle(new_bb.width, new_bb.height) \
-            .translate(new_bb.center.x, new_bb.center.y)
+    e1 = d.get_subdiagram(a).get_envelope()
+    e2 = d.get_subdiagram(b).get_envelope()
+    envelope = e1 + e2
+    bbox = rectangle(envelope.width, envelope.height)
+    return bbox.named(n).translate(envelope.center.x, envelope.center.y)
 
-def tile(d, m, n, name = ""):
+def tile(d, m, n, name=""):
     "Tile a digram with names"
     return hcat(vcat(d.named((name, j, i)) for j in range(n)) for i in range(m)).center_xy()
 
 def connect_all(d, a, b):
     "Connect all corners of two diagrams"
-    
     for x_border in [-unit_x, unit_x]:
         for y_border in [-unit_y, unit_y]:
             p = x_border + y_border
@@ -56,6 +55,7 @@ def stack(n, size, l, top, bot):
     m = matrix(n, size, size).fill_color(Color("#dddddd"))
     r = rectangle(size, size).fill_color(grey).line_width(lw)
     return (label(top) / (back(r, l) + m) / label(bot)).center_xy()
+
 stack("a", 32, 0, "", "")
 
 def network(n, size, top, bot):
@@ -88,8 +88,7 @@ boxes = [(("a", 2, 2), ("a", 6, 6)),
          (("d", 6, 4), ("d", 9, 7)),
          (("e", 3, 2), ("e", 4, 3))]
 
-d += concat([cover(d, *b).fill_color(papaya).fill_opacity(0.3).named(("box", i))
-             for i, b in enumerate(boxes)])
+d += concat([cover(d, *b, ("box", i)).fill_color(papaya).fill_opacity(0.3) for i, b in enumerate(boxes)])
 
 connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)]
 

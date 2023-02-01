@@ -129,7 +129,7 @@ class ToCairoShape(ShapeVisitor[None]):
         self,
         shape: Latex,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE
+        style: Style = EMPTY_STYLE,
     ) -> None:
         raise NotImplementedError("Latex is not implemented")
 

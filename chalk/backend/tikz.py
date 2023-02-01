@@ -147,7 +147,9 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
             options=self.pylatex.TikZOptions(**style.to_tikz(self.pylatex)),
         )
 
-    def visit_latex(self, shape: Latex, style: Style = EMPTY_STYLE) -> PyLatexElement:
+    def visit_latex(
+        self, shape: Latex, style: Style = EMPTY_STYLE
+    ) -> PyLatexElement:
         raise NotImplementedError("Latex is not implemented")
 
     def visit_text(

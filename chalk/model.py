@@ -6,7 +6,6 @@ from chalk.shapes.segment import seg
 from chalk.transform import V2, origin
 from chalk.types import Diagram
 
-
 RED = Color("red")
 BLUE = Color("blue")
 
