@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from colour import Color
@@ -16,11 +16,11 @@ black = Color("black")
 
 @dataclass
 class ArrowOpts:
-    head_style: Style = Style()
+    head_style: Style = field(default_factory=Style)
     head_pad: float = 0.0
     tail_pad: float = 0.0
     head_arrow: Optional[Diagram] = None
-    shaft_style: Style = Style()
+    shaft_style: Style = field(default_factory=Style)
     trail: Optional[Trail] = None
     arc_height: float = 0.0
 
