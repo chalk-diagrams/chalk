@@ -1,13 +1,16 @@
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass, field, replace
+from typing import Dict, List, Literal, Optional, Tuple
 
 from colour import Color
 
+from planar.py import Ray
+
 from chalk.shapes import ArcSegment, ArrowHead, arc_seg, dart
+from chalk.shapes.segment import ray_ray_intersection
 from chalk.style import Style
 from chalk.subdiagram import Name, Subdiagram
 from chalk.trail import Trail
-from chalk.transform import P2, V2, unit_x
+from chalk.transform import P2, V2, unit_x, unit_y
 from chalk.types import Diagram
 
 black = Color("black")
@@ -64,6 +67,60 @@ def connect_outside(
         assert pe is not None, "Cannot connect"
 
         return dia + arrow_between(ps, pe, style)
+
+    return self.with_names([name1, name2], f)
+
+
+ElbowType = Literal["hv", "vh"]
+
+
+def connect_outside_elbow(
+    self: Diagram,
+    name1: Name,
+    name2: Name,
+    elbow_type: ElbowType,
+    style: ArrowOpts = ArrowOpts(),
+) -> Diagram:
+    from chalk.core import empty
+
+    directions = {
+        "hv": (unit_x, unit_y),
+        "vh": (unit_y, unit_x),
+    }
+
+    def f(subs: List[Subdiagram], dia: Diagram) -> Diagram:
+        sub1, sub2 = subs
+
+        loc1 = sub1.get_location()
+        loc2 = sub2.get_location()
+
+        dir1, dir2 = directions[elbow_type]
+        ray1 = Ray(loc1, dir1)
+        ray2 = Ray(loc2, dir2)
+
+        t = ray_ray_intersection(ray1, ray2)
+
+        assert t is not None, "Cannot connect"
+        t1, _ = t
+        pm = ray1.anchor + t1 * ray1.direction
+
+        tr1 = sub1.get_trace()
+        tr2 = sub2.get_trace()
+
+        if loc1 != pm:
+            dir1 = loc1 - pm
+
+        if loc2 != pm:
+            dir2 = loc2 - pm
+
+        ps = tr1.trace_p(loc1, dir1)
+        pe = tr2.trace_p(loc2, dir2)
+
+        assert ps is not None, "Cannot connect"
+        assert pe is not None, "Cannot connect"
+
+        style1 = replace(style, head_arrow=empty())
+        return dia + arrow_between(ps, pm, style1) + arrow_between(pm, pe, style)
 
     return self.with_names([name1, name2], f)
 
@@ -139,7 +196,5 @@ def arrow_at(base: P2, vec: V2, style: ArrowOpts = ArrowOpts()) -> Diagram:
     return arrow_v(vec, style).translate_by(base)
 
 
-def arrow_between(
-    start: P2, end: P2, style: ArrowOpts = ArrowOpts()
-) -> Diagram:
+def arrow_between(start: P2, end: P2, style: ArrowOpts = ArrowOpts()) -> Diagram:
     return arrow_at(start, end - start, style)
