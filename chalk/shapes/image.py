@@ -53,6 +53,9 @@ class Image(Shape):
         br = P2(left + self.width, top + self.height)
         return BoundingBox([tl, br])
 
+    def accept(self, visitor, **kwargs):
+        return visitor.visit_image(self, **kwargs)
+
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:
     from chalk.core import Primitive
