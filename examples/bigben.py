@@ -28,7 +28,7 @@ grey = Color("#444444")
 
 
 # To begin, we will introduce some of the concepts of the Chalk library
-# by mimicking the shape of the roman numberal I, V, and X.
+# by mimicking the shape of the roman numeral I, V, and X.
 
 # ![](part0.png)
 
@@ -153,7 +153,7 @@ part0.show_origin()
 
 # ![](part1.png)
 
-# This inner patten is a bit more complex. We are going to need more than just
+# This inner pattern is a bit more complex. We are going to need more than just
 # simple shapes to draw it.
 
 # To start, let us make a function for rotational symmetry.

@@ -45,7 +45,7 @@ def tx_to_cairo(affine: Affine) -> Any:
 
 
 class ToList(DiagramVisitor[List["Primitive"]]):
-    """Compiles a `Diagram` to a list of `Primitive`s. The transfomation `t`
+    """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
     is accumulated upwards, from the tree's leaves.
     """
 

@@ -30,7 +30,7 @@ def vrule(length: float) -> Diagram:
 #     Args:
 #        sides (int): Number of sides.
 #        radius (float): Internal radius.
-#        rotation: (int): Rotation in degress
+#        rotation: (int): Rotation in degrees
 
 #     Returns:
 #        Diagram
@@ -113,7 +113,7 @@ def arc_between(
     at a distance of abs(height) away from the straight line from point1 to
     point2. A positive value of height results in an arc to the left of the
     line from point1 to point2; a negative value yields one to the right.
-    The implementaion is based on the the function arcBetween from Haskell's
+    The implementation is based on the the function arcBetween from Haskell's
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """

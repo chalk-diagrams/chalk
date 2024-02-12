@@ -66,7 +66,7 @@ class BaseDiagram(
         return Compose(envelope, self, other if other is not None else Empty())
 
     def named(self, name: Name) -> Diagram:
-        """Add a name (or a sequnce of names) to a diagram."""
+        """Add a name (or a sequence of names) to a diagram."""
         return ApplyName(name, self)
 
     # Combinators
