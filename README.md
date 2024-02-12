@@ -129,7 +129,7 @@ their output is illustrated below:
 <tr>
 <td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/squares.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/squares.py">squares.py</a></code></td>
 <td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/logo.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/logo.py">logo.py</a></code></td>
-<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/escher_square.py">escher_square.py</a></code></td>
+<td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/escher-square-limit.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/escher_square_limit.py">escher_square_limit.py</a></code></td>
 </tr>
 <tr>
 <td align="center"><img src="https://raw.githubusercontent.com/chalk-diagrams/chalk/master/doc/imgs/hilbert.png"><br><code><a href="https://github.com/chalk-diagrams/chalk/tree/master/examples/hilbert.py">hilbert.py</a></code></td>
