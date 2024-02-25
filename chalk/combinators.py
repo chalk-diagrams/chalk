@@ -1,9 +1,15 @@
-from functools import reduce
 from typing import Iterable, List, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.shapes import Path, Spacer
-from chalk.transform import V2, Affine, origin, unit_x, unit_y
+from chalk.transform import (
+    V2,
+    Affine,
+    associative_reduce,
+    origin,
+    unit_x,
+    unit_y,
+)
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
@@ -114,7 +120,7 @@ def cat(
     sep_dia = hstrut(sep).rotate(v.angle)
     if start is None:
         return empty()
-    return reduce(
+    return associative_reduce(
         lambda a, b: a.beside(sep_dia, v).beside(b, v), diagrams, start
     )
 
@@ -132,7 +138,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
     from chalk.core import empty
 
-    return reduce(atop, diagrams, empty())
+    return associative_reduce(atop, diagrams, empty())
 
 
 # CompaseAligned.
