@@ -6,7 +6,6 @@ from chalk import *
 from chalk.transform import *
 # Needed for recursion 
 import sys
-sys.setrecursionlimit(100000)
 
 unit_x, unit_y = Trail.hrule(1), Trail.vrule(1)
 
