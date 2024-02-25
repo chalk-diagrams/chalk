@@ -4,8 +4,6 @@
 from PIL import Image as PILImage
 from chalk import *
 from chalk.transform import *
-# Needed for recursion 
-import sys
 
 unit_x, unit_y = Trail.hrule(1), Trail.vrule(1)
 
