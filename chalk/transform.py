@@ -1,12 +1,16 @@
 import math
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, Generic, Iterable, TypeVar
 
 from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 from typing_extensions import Protocol
 
+o = TypeVar("o")
 
-def associative_reduce(fn, iter, initial):
+
+def associative_reduce(
+    fn: Callable[[o, o], o], iter: Iterable[o], initial: o
+) -> o:
     "Reduce for associative operations."
     ls = list(iter)
     if len(ls) == 0:
