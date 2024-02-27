@@ -19,7 +19,7 @@ def mkCoords(n):
 
 def floret(r):
     n = math.floor(1.8 * math.sqrt(r)) % 5
-    # Hippie color palatte.
+    # Hippie color palette.
     colors = [Color(h) for h in ["#18b0dc",
                                  "#056753",
                                  "#b564ac",

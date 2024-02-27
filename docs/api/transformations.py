@@ -9,7 +9,7 @@ def help(f):
 # -
 
 
-# Any Diagram (or other object in Chalk) can be transformed by affine transfomation.
+# Any Diagram (or other object in Chalk) can be transformed by affine transformation.
 # These produce a new diagram in the standard manner.
 
 # ### scale
