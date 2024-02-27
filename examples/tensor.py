@@ -52,8 +52,4 @@ path = "examples/output/tensor.png"
 m.render(path, 500)
 PILImage.open(path)
 
-# Needed for recursion 
-import sys
-sys.setrecursionlimit(10000)
-
 m.render_pdf("examples/output/tensor.pdf", 50)

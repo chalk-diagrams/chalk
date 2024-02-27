@@ -2,7 +2,6 @@
 Contains arithmetic for arc calculations.
 """
 
-
 from __future__ import annotations
 
 import math

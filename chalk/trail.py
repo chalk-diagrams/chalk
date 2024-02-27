@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from functools import reduce
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
@@ -15,6 +14,7 @@ from chalk.transform import (
     Affine,
     Transformable,
     apply_affine,
+    associative_reduce,
     remove_translation,
     unit_x,
     unit_y,
@@ -80,7 +80,7 @@ class Trail(Transformable["Trail"], TrailLike):
 
     @staticmethod
     def concat(trails: Iterable[Trail]) -> Trail:
-        return reduce(Trail.__add__, trails, Trail.empty())
+        return associative_reduce(Trail.__add__, trails, Trail.empty())
 
     def to_trail(self) -> Trail:
         return self

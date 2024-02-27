@@ -1,11 +1,6 @@
 from colour import Color
 from chalk import *
 
-# Needed for recursion 
-import sys
-sys.setrecursionlimit(100000)
-
-
 # This code is for a Vogel subflower, ported from:
 # https://diagrams.github.io/gallery/Sunflower.html
 

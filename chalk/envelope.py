@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import reduce
 from typing import TYPE_CHECKING, Callable, Iterable, Tuple
 
 from chalk.transform import (
@@ -10,6 +9,7 @@ from chalk.transform import (
     BoundingBox,
     Transformable,
     apply_affine,
+    associative_reduce,
     origin,
     remove_translation,
     transpose_translation,
@@ -83,7 +83,9 @@ class Envelope(Transformable["Envelope"]):
 
     @staticmethod
     def concat(envelopes: Iterable[Envelope]) -> Envelope:
-        return reduce(Envelope.mappend, envelopes, Envelope.empty())
+        return associative_reduce(
+            Envelope.mappend, envelopes, Envelope.empty()
+        )
 
     def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:

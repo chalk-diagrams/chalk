@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import reduce
 from typing import TYPE_CHECKING, Callable, Iterable, List, Optional
 
 from chalk.transform import (
@@ -9,6 +8,7 @@ from chalk.transform import (
     Affine,
     Transformable,
     apply_affine,
+    associative_reduce,
     remove_translation,
 )
 from chalk.visitor import DiagramVisitor
@@ -52,7 +52,7 @@ class Trace(Transformable["Trace"]):
 
     @staticmethod
     def concat(traces: Iterable[Trace]) -> Trace:
-        return reduce(Trace.mappend, traces, Trace.empty())
+        return associative_reduce(Trace.mappend, traces, Trace.empty())
 
     def apply_transform(self, t: Affine) -> Trace:
         def wrapped(p: P2, d: V2) -> List[SignedDistance]:
