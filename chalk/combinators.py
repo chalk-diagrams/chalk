@@ -108,8 +108,6 @@ def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
 
 
 # position, atPoints
-
-
 def cat(
     diagrams: Iterable[Diagram], v: V2, sep: Optional[float] = None
 ) -> Diagram:
@@ -120,9 +118,11 @@ def cat(
     sep_dia = hstrut(sep).rotate(v.angle)
     if start is None:
         return empty()
-    return associative_reduce(
-        lambda a, b: a.beside(sep_dia, v).beside(b, v), diagrams, start
-    )
+
+    def fn(a, b):
+        return a.beside(sep_dia, v).beside(b, v)
+
+    return fn(start, associative_reduce(fn, diagrams, empty()))
 
 
 def concat(diagrams: Iterable[Diagram]) -> Diagram:
