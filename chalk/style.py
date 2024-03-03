@@ -15,21 +15,28 @@ TStyle = TypeVar("TStyle", bound="StylableProtocol")
 
 
 class StylableProtocol(Protocol):
-    def line_width(self: TStyle, width: float) -> TStyle: ...
+    def line_width(self: TStyle, width: float) -> TStyle:
+        ...
 
-    def line_width_local(self: TStyle, width: float) -> TStyle: ...
+    def line_width_local(self: TStyle, width: float) -> TStyle:
+        ...
 
-    def line_color(self: TStyle, color: Color) -> TStyle: ...
+    def line_color(self: TStyle, color: Color) -> TStyle:
+        ...
 
-    def fill_color(self: TStyle, color: Color) -> TStyle: ...
+    def fill_color(self: TStyle, color: Color) -> TStyle:
+        ...
 
-    def fill_opacity(self: TStyle, opacity: float) -> TStyle: ...
+    def fill_opacity(self: TStyle, opacity: float) -> TStyle:
+        ...
 
     def dashing(
         self: TStyle, dashing_strokes: List[float], offset: float
-    ) -> TStyle: ...
+    ) -> TStyle:
+        ...
 
-    def apply_style(self: TStyle, style: Style) -> TStyle: ...
+    def apply_style(self: TStyle, style: Style) -> TStyle:
+        ...
 
 
 class Stylable:
@@ -211,8 +218,8 @@ class Style(Stylable):
         if self.fill_opacity_ is not None:
             style["fill opacity"] = f"{self.fill_opacity_}"
         if self.dashing_ is not None:
-            style["dash pattern"] = (
-                f"{{on {self.dashing_[0][0]}pt off {self.dashing_[0][0]}pt}}"
-            )
+            style[
+                "dash pattern"
+            ] = f"{{on {self.dashing_[0][0]}pt off {self.dashing_[0][0]}pt}}"
 
         return style
