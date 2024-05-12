@@ -25,6 +25,9 @@ d = vcat(koch(i).stroke().line_width(0.01) for i in range(1, 5))
 # Render
 height = 512
 d.render_svg("examples/output/koch.svg", height)
-d.render("examples/output/koch.png", height)
-d.render_pdf("examples/output/koch.pdf", height)
-PILImage.open("examples/output/koch.png")
+try:
+    d.render("examples/output/koch.png", height)
+    d.render_pdf("examples/output/koch.pdf", height)
+    PILImage.open("examples/output/koch.png")
+except ModuleNotFoundError:
+    print("Need to install Cairo")

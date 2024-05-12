@@ -11,12 +11,13 @@ import chalk.align as align
 from chalk.align import *  # noqa: F403
 from chalk.arrow import ArrowOpts, arrow_at, arrow_between, arrow_v
 from chalk.combinators import *  # noqa: F403
-from chalk.core import empty, set_svg_draw_height, set_svg_height
+from chalk.core import set_svg_draw_height, set_svg_height
 from chalk.envelope import Envelope
 from chalk.shapes import *  # noqa: F403
 from chalk.style import Style
 from chalk.subdiagram import Name
 from chalk.trail import Trail
+from chalk.monoid import Monoid, MList, Maybe
 from chalk.transform import (
     P2,
     V2,

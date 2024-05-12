@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Self, Tuple
 
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.transform import P2, V2, Affine, apply_p2_affine, origin
 from chalk.types import Diagram
+from chalk.monoid import Monoid, Maybe
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
     from chalk.core import (
         ApplyName,
-        ApplyStyle,
         ApplyTransform,
         Compose,
-        Empty,
-        Primitive,
     )
 
 
@@ -47,7 +45,7 @@ class Name:
 
 
 @dataclass
-class Subdiagram:
+class Subdiagram(Monoid):
     diagram: Diagram
     transform: Affine
     # style: Style
@@ -74,61 +72,43 @@ class Subdiagram:
             return p
 
 
-class GetSubdiagram(DiagramVisitor[Optional[Subdiagram]]):
+class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
+    A_type = Maybe[Subdiagram]
+
     def __init__(self, name: Name, t: Affine = Ident):
         self.name = name
-
-    def visit_primitive(
-        self,
-        diagram: Primitive,
-        t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
-        return None
-
-    def visit_empty(
-        self,
-        diagram: Empty,
-        t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
-        return None
 
     def visit_compose(
         self,
         diagram: Compose,
         t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
-        bb = diagram.diagram1.accept(self, t=t)
-        if bb is None:
-            bb = diagram.diagram2.accept(self, t=t)
-        return bb
+    ) -> Maybe[Subdiagram]:
+        for d in diagram.diagrams:
+            bb = d.accept(self, t)
+            if bb.data is not None:
+                return bb
+        return Maybe.empty()
 
     def visit_apply_transform(
         self,
         diagram: ApplyTransform,
         t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
-        return diagram.diagram.accept(self, t=t * diagram.transform)
-
-    def visit_apply_style(
-        self,
-        diagram: ApplyStyle,
-        t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
-        return diagram.diagram.accept(self, t=t)
+    ) -> Maybe[Subdiagram]:
+        return diagram.diagram.accept(self, t * diagram.transform)
 
     def visit_apply_name(
         self,
         diagram: ApplyName,
         t: Affine = Ident,
-    ) -> Optional[Subdiagram]:
+    ) -> Maybe[Subdiagram]:
         if self.name == diagram.dname:
-            return Subdiagram(diagram.diagram, t)
+            return Maybe(Subdiagram(diagram.diagram, t))
         else:
-            return None
+            return Maybe.empty()
 
 
 def get_subdiagram(self: Diagram, name: Name) -> Optional[Subdiagram]:
-    return self.accept(GetSubdiagram(name), t=Ident)
+    return self.accept(GetSubdiagram(name), Ident).data
 
 
 def with_names(
@@ -151,64 +131,42 @@ def with_names(
         # Hopefully this bug will be fixed at some point in the future.
         return f(subs, self)  # type: ignore
 
+@dataclass
+class SubMap(Monoid):
+    data : Dict[Name, List[Subdiagram]]
 
-SubMap = Dict[Name, List[Subdiagram]]
+    def __add__(self, other: SubMap) -> SubMap:
+        d1 = self.data
+        d2 = other.data
+        return SubMap({k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)})
 
+    @classmethod
+    def empty(cls) -> SubMap:
+        return SubMap({})
 
-class GetSubMap(DiagramVisitor[SubMap]):
-    def visit_primitive(
-        self,
-        diagram: Primitive,
-        t: Affine = Ident,
-    ) -> SubMap:
-        return {}
-
-    def visit_empty(
-        self,
-        diagram: Empty,
-        t: Affine = Ident,
-    ) -> SubMap:
-        return {}
-
-    def visit_compose(
-        self,
-        diagram: Compose,
-        t: Affine = Ident,
-    ) -> SubMap:
-        d1 = diagram.diagram1.accept(self, t=t)
-        d2 = diagram.diagram2.accept(self, t=t)
-        return self._union(d1, d2)
+class GetSubMap(DiagramVisitor[SubMap, Affine]):
+    A_type = SubMap
 
     def visit_apply_transform(
         self,
         diagram: ApplyTransform,
         t: Affine = Ident,
     ) -> SubMap:
-        return diagram.diagram.accept(self, t=t * diagram.transform)
-
-    def visit_apply_style(
-        self,
-        diagram: ApplyStyle,
-        t: Affine = Ident,
-    ) -> SubMap:
-        return diagram.diagram.accept(self, t=t)
+        return diagram.diagram.accept(self, t * diagram.transform)
 
     def visit_apply_name(
         self,
         diagram: ApplyName,
         t: Affine = Ident,
     ) -> SubMap:
-        d1 = {diagram.dname: [Subdiagram(diagram.diagram, t)]}
-        d2 = diagram.diagram.accept(self, t=t)
-        return self._union(d1, d2)
-
-    @staticmethod
-    def _union(d1: SubMap, d2: SubMap) -> SubMap:
-        return {k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)}
+        d1 = SubMap({diagram.dname: [Subdiagram(diagram.diagram, t)]})
+        d2 = diagram.diagram.accept(self, t)
+        return d1 + d2
 
 
-def get_sub_map(self: Diagram, t: Affine = Ident) -> SubMap:
+
+def get_sub_map(self: Diagram, t: Affine = Ident) -> Dict[Name, List[Subdiagram]]:
     """Retrieves all named subdiagrams in the given diagram and accumulates
     them in a dictionary (map) indexed by their name.
     """
-    return self.accept(GetSubMap(), t=t)
+    return self.accept(GetSubMap(), t).data

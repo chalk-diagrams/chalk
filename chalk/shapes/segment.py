@@ -23,7 +23,7 @@ ORIGIN = P2(0, 0)
 
 @dataclass
 class LocatedSegment(
-    Traceable, Enveloped, tx.Transformable["LocatedSegment"], TrailLike
+    Traceable, Enveloped, tx.Transformable, TrailLike
 ):
     offset: V2
     origin: P2 = ORIGIN

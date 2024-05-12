@@ -2,66 +2,38 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Protocol, Self
 
 from colour import Color
-from typing_extensions import Protocol
 
 PyCairoContext = Any
 PyLatex = Any
 
-
-TStyle = TypeVar("TStyle", bound="StylableProtocol")
-
-
-class StylableProtocol(Protocol):
-    def line_width(self: TStyle, width: float) -> TStyle:
-        ...
-
-    def line_width_local(self: TStyle, width: float) -> TStyle:
-        ...
-
-    def line_color(self: TStyle, color: Color) -> TStyle:
-        ...
-
-    def fill_color(self: TStyle, color: Color) -> TStyle:
-        ...
-
-    def fill_opacity(self: TStyle, opacity: float) -> TStyle:
-        ...
-
-    def dashing(
-        self: TStyle, dashing_strokes: List[float], offset: float
-    ) -> TStyle:
-        ...
-
-    def apply_style(self: TStyle, style: Style) -> TStyle:
-        ...
-
-
 class Stylable:
-    def line_width(self: TStyle, width: float) -> TStyle:
+    def line_width(self, width: float) -> Self:
         return self.apply_style(
             Style(line_width_=(WidthType.NORMALIZED, width))
         )
 
-    def line_width_local(self: TStyle, width: float) -> TStyle:
+    def line_width_local(self, width: float) -> Self:
         return self.apply_style(Style(line_width_=(WidthType.LOCAL, width)))
 
-    def line_color(self: TStyle, color: Color) -> TStyle:
+    def line_color(self, color: Color) -> Self:
         return self.apply_style(Style(line_color_=color))
 
-    def fill_color(self: TStyle, color: Color) -> TStyle:
+    def fill_color(self, color: Color) -> Self:
         return self.apply_style(Style(fill_color_=color))
 
-    def fill_opacity(self: TStyle, opacity: float) -> TStyle:
+    def fill_opacity(self, opacity: float) -> Self:
         return self.apply_style(Style(fill_opacity_=opacity))
 
     def dashing(
-        self: TStyle, dashing_strokes: List[float], offset: float
-    ) -> TStyle:
+        self, dashing_strokes: List[float], offset: float
+    ) -> Self:
         return self.apply_style(Style(dashing_=(dashing_strokes, offset)))
 
+    def apply_style(self: Self, style: Style) -> Self:
+        raise NotImplementedError("Abstract")
 
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b
@@ -218,8 +190,8 @@ class Style(Stylable):
         if self.fill_opacity_ is not None:
             style["fill opacity"] = f"{self.fill_opacity_}"
         if self.dashing_ is not None:
-            style[
-                "dash pattern"
-            ] = f"{{on {self.dashing_[0][0]}pt off {self.dashing_[0][0]}pt}}"
+            style["dash pattern"] = (
+                f"{{on {self.dashing_[0][0]}pt off {self.dashing_[0][0]}pt}}"
+            )
 
         return style

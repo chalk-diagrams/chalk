@@ -43,7 +43,11 @@ mask = rectangle(1.6, 0.6).translate(-0.15, 0)
 # assemble
 d = (background + floret + logo).align_t().with_envelope(mask.align_t())
 
-d.render("examples/output/logo.png", 500)
+
 d.render_svg("examples/output/logo.svg", 500)
 
-d.render_pdf("examples/output/logo.pdf", 50)
+try:
+    d.render("examples/output/logo.png", 500)
+    d.render_pdf("examples/output/logo.pdf", 50)
+except ModuleNotFoundError:
+    print("Need to install Cairo")

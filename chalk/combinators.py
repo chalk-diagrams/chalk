@@ -5,12 +5,12 @@ from chalk.shapes import Path, Spacer
 from chalk.transform import (
     V2,
     Affine,
-    associative_reduce,
     origin,
     unit_x,
     unit_y,
 )
 from chalk.types import Diagram
+from chalk.monoid import associative_reduce
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
 
@@ -111,7 +111,6 @@ def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
 def cat(
     diagrams: Iterable[Diagram], v: V2, sep: Optional[float] = None
 ) -> Diagram:
-    from chalk.core import empty
 
     diagrams = iter(diagrams)
     start = next(diagrams, None)
@@ -136,9 +135,16 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
         Diagram: New diagram
 
     """
-    from chalk.core import empty
+    from chalk.core import BaseDiagram
 
-    return associative_reduce(atop, diagrams, empty())
+    return BaseDiagram.concat(diagrams)
+
+def empty() -> Diagram:
+    "Create an empty diagram"
+    from chalk.core import BaseDiagram
+
+    return BaseDiagram.empty()
+
 
 
 # CompaseAligned.
@@ -147,7 +153,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
 
 
 def hstrut(width: Optional[float]) -> Diagram:
-    from chalk.core import Primitive, empty
+    from chalk.core import Primitive
 
     if width is None:
         return empty()
@@ -155,7 +161,7 @@ def hstrut(width: Optional[float]) -> Diagram:
 
 
 def vstrut(height: Optional[float]) -> Diagram:
-    from chalk.core import Primitive, empty
+    from chalk.core import Primitive
 
     if height is None:
         return empty()

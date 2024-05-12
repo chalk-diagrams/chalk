@@ -97,8 +97,13 @@ for b in connect:
     d = connect_all(d, *b)
 d
 
-d.render("examples/output/lenet.png", 400)
-d.render_svg("examples/output/lenet.svg", 400)
-PILImage.open("examples/output/lenet.png")
 
-d.render_pdf("examples/output/lenet.pdf", 400)
+d.render_svg("examples/output/lenet.svg", 400)
+
+try:
+    d.render("examples/output/lenet.png", 400)
+    PILImage.open("examples/output/lenet.png")
+    d.render_pdf("examples/output/lenet.pdf", 400)
+except ModuleNotFoundError:
+    print("Need to install Cairo")
+
