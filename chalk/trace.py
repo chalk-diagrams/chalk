@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from chalk.monoid import Monoid
 from chalk.transform import (
@@ -14,14 +14,7 @@ from chalk.transform import (
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import ApplyTransform, Primitive
     from chalk.types import Diagram
 
 

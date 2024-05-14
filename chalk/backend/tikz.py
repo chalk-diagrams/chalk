@@ -40,7 +40,7 @@ def tx_to_tikz(affine: tx.Affine) -> str:
 
 
 class ToTikZ(DiagramVisitor[MList[PyLatexElement], Style]):
-    A_type = PyLatexElement
+    A_type = MList[PyLatexElement]
 
     def __init__(self, pylatex: PyLatex):
         self.pylatex = pylatex

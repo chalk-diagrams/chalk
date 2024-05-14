@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Optional
 
-from chalk.monoid import Maybe, MList
+from chalk.monoid import MList
 from chalk.shapes import (
     ArcSegment,
     ArrowHead,
@@ -42,7 +42,8 @@ class ToList(DiagramVisitor[MList[Any], Affine]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
     is accumulated upwards, from the tree's leaves.
     """
-
+    A_type = MList[Any]
+    
     def visit_primitive(
         self, diagram: Primitive, t: Affine = Ident
     ) -> MList[Primitive]:

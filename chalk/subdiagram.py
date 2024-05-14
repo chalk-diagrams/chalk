@@ -1,16 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Self,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.monoid import Maybe, Monoid

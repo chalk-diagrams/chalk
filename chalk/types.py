@@ -1,19 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Protocol,
-    Self,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
@@ -141,8 +128,9 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
 
     def get_subdiagram(self, name: Name) -> Optional[Subdiagram]: ...
 
-    def get_sub_map(self, t: tx.Affine = Ident) -> Dict[Name, List[Subdiagram]]:  # type: ignore[empty-body]
-        ...
+    def get_sub_map(  # type: ignore[empty-body]
+        self, t: tx.Affine = Ident
+    ) -> Dict[Name, List[Subdiagram]]: ...
 
     def with_names(  # type: ignore[empty-body]
         self,

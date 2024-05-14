@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Self, Tuple
 
 from colour import Color
 
