@@ -42,7 +42,7 @@ mkdocs-bibtex>=1.0.0
 
 ## Code execution, variables & templating
 #  source: https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins#code-execution-variables--templating
-pydoc-markdown==4.6.3
+pydoc-markdown>=4.6.3
 mkdocs-jupyter>=0.18.2
 mkdocs-markdownextradata-plugin>=0.2.4
 mkdocs-markmap>=2.1.2
