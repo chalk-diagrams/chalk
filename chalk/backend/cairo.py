@@ -42,8 +42,9 @@ class ToList(DiagramVisitor[MList[Any], Affine]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
     is accumulated upwards, from the tree's leaves.
     """
+
     A_type = MList[Any]
-    
+
     def visit_primitive(
         self, diagram: Primitive, t: Affine = Ident
     ) -> MList[Primitive]:

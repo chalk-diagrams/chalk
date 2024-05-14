@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Generic, Iterable, List, Optional, Self, TypeVar
+from typing import Callable, Generic, Iterable, List, Optional, TypeVar
+
+from typing_extensions import Self
 
 o = TypeVar("o")
 
