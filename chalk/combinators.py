@@ -1,16 +1,10 @@
 from typing import Iterable, List, Optional, Tuple
 
 from chalk.envelope import Envelope
-from chalk.shapes import Path, Spacer
-from chalk.transform import (
-    V2,
-    Affine,
-    origin,
-    unit_x,
-    unit_y,
-)
-from chalk.types import Diagram
 from chalk.monoid import associative_reduce
+from chalk.shapes import Path, Spacer
+from chalk.transform import V2, Affine, origin, unit_x, unit_y
+from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
 
@@ -139,12 +133,12 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
 
     return BaseDiagram.concat(diagrams)
 
+
 def empty() -> Diagram:
     "Create an empty diagram"
     from chalk.core import BaseDiagram
 
     return BaseDiagram.empty()
-
 
 
 # CompaseAligned.

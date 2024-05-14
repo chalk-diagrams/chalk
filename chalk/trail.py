@@ -18,7 +18,7 @@ from chalk.transform import (
     unit_x,
     unit_y,
 )
-from chalk.types import Diagram, Enveloped, Traceable, TrailLike, Monoid
+from chalk.types import Diagram, Enveloped, Monoid, Traceable, TrailLike
 
 if TYPE_CHECKING:
     from chalk.shapes.path import Path
@@ -166,5 +166,3 @@ class Trail(Monoid, Transformable, TrailLike):
         return Trail.concat(
             edge.rotate_by(i / sides) for i in range(sides)
         ).close()
-
-

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Protocol, Self
+from typing import Any, Dict, List, Optional, Protocol, Self, Tuple, TypeVar
 
 from colour import Color
 
 PyCairoContext = Any
 PyLatex = Any
+
 
 class Stylable:
     def line_width(self, width: float) -> Self:
@@ -27,13 +28,12 @@ class Stylable:
     def fill_opacity(self, opacity: float) -> Self:
         return self.apply_style(Style(fill_opacity_=opacity))
 
-    def dashing(
-        self, dashing_strokes: List[float], offset: float
-    ) -> Self:
+    def dashing(self, dashing_strokes: List[float], offset: float) -> Self:
         return self.apply_style(Style(dashing_=(dashing_strokes, offset)))
 
     def apply_style(self: Self, style: Style) -> Self:
         raise NotImplementedError("Abstract")
+
 
 def m(a: Optional[Any], b: Optional[Any]) -> Optional[Any]:
     return a if a is not None else b

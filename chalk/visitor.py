@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, TypeVar, Type
-
+from typing import TYPE_CHECKING, Generic, Type, TypeVar
 
 if TYPE_CHECKING:
     from chalk.ArrowHead import ArrowHead
-    from chalk.types import Monoid
     from chalk.core import (
         ApplyName,
         ApplyStyle,
@@ -16,12 +14,14 @@ if TYPE_CHECKING:
     )
     from chalk.Path import Path
     from chalk.shapes import Image, Latex, Spacer, Text
+    from chalk.types import Monoid
 
     A = TypeVar("A", bound=Monoid)
-else: 
+else:
     A = TypeVar("A")
 
 B = TypeVar("B")
+
 
 class DiagramVisitor(Generic[A, B]):
     A_type: type[A]
@@ -36,9 +36,10 @@ class DiagramVisitor(Generic[A, B]):
 
     def visit_compose(self, diagram: Compose, arg: B) -> A:
         "Compose defaults to monoid over children"
-        return self.A_type.concat([
-            d.accept(self, arg) for d in diagram.diagrams]) 
-    
+        return self.A_type.concat(
+            [d.accept(self, arg) for d in diagram.diagrams]
+        )
+
     def visit_apply_transform(self, diagram: ApplyTransform, arg: B) -> A:
         "Defaults to pass over"
         return diagram.diagram.accept(self, arg)
@@ -51,7 +52,10 @@ class DiagramVisitor(Generic[A, B]):
         "Defaults to pass over"
         return diagram.diagram.accept(self, arg)
 
+
 C = TypeVar("C")
+
+
 class ShapeVisitor(Generic[C]):
     def visit_path(self, shape: Path) -> C:
         raise NotImplementedError

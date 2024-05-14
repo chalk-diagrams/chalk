@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
+from chalk.monoid import Maybe, MList
 from chalk.shapes import (
     ArcSegment,
     ArrowHead,
@@ -17,16 +18,10 @@ from chalk.shapes import (
 from chalk.style import Style
 from chalk.transform import P2, Affine, to_radians, unit_x, unit_y
 from chalk.types import Diagram
-from chalk.monoid import MList, Maybe
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Primitive,
-    )
+    from chalk.core import ApplyName, ApplyStyle, ApplyTransform, Primitive
 
 
 Ident = Affine.identity()
@@ -57,18 +52,22 @@ class ToList(DiagramVisitor[MList[Any], Affine]):
         self, diagram: ApplyTransform, t: Affine = Ident
     ) -> MList[Primitive]:
         t_new = t * diagram.transform
-        return MList([
-            prim.apply_transform(t_new)
-            for prim in diagram.diagram.accept(self, t).data
-        ])
+        return MList(
+            [
+                prim.apply_transform(t_new)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
 
     def visit_apply_style(
         self, diagram: ApplyStyle, t: Affine = Ident
     ) -> MList[Primitive]:
-        return MList([
-            prim.apply_style(diagram.style)
-            for prim in diagram.diagram.accept(self, t).data
-        ])
+        return MList(
+            [
+                prim.apply_style(diagram.style)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
 
     def visit_apply_name(
         self, diagram: ApplyName, t: Affine = Ident

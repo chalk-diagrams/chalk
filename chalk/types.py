@@ -1,14 +1,26 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, List, Optional, Protocol, Self, Iterable, TypeVar, Dict
+from dataclasses import dataclass
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Protocol,
+    Self,
+    TypeVar,
+)
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
-from chalk.style import Style, Stylable
+from chalk.monoid import Monoid
+from chalk.style import Stylable, Style
 from chalk.trace import Trace
 from chalk.transform import P2, V2
-from dataclasses import dataclass
-from chalk.monoid import Monoid
 
 if TYPE_CHECKING:
     from chalk.path import Path
@@ -17,6 +29,7 @@ if TYPE_CHECKING:
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
 Ident = tx.Affine.identity()
+
 
 class Enveloped(Protocol):
     def get_envelope(self) -> Envelope: ...
@@ -43,9 +56,7 @@ class TrailLike(Protocol):
         return self.at(P2(0, 0)).stroke()
 
 
-class Diagram(
-    Enveloped, Traceable, Stylable, tx.Transformable, Monoid
-):
+class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     def apply_transform(self, t: tx.Affine) -> Diagram:  # type: ignore[empty-body]
         ...
 
@@ -139,7 +150,7 @@ class Diagram(
         f: Callable[[List[Subdiagram], Diagram], Diagram],
     ) -> Diagram: ...
 
-    def _style(self, style: Style) -> Diagram:# type: ignore[empty-body]
+    def _style(self, style: Style) -> Diagram:  # type: ignore[empty-body]
         ...
 
     def with_envelope(self, other: Diagram) -> Diagram:  # type: ignore[empty-body]

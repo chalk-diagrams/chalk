@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Generic, Iterable, List, Self, TypeVar
 
-
 o = TypeVar("o")
+
 
 def associative_reduce(
     fn: Callable[[o, o], o], iter: Iterable[o], initial: o
@@ -23,11 +23,12 @@ def associative_reduce(
         v = fn(v, ls[-1])
     return v
 
+
 class Monoid:
     @classmethod
     def empty(cls) -> Self:
         raise NotImplementedError()
-    
+
     def __add__(self, other: Self) -> Self:
         raise NotImplementedError()
 
@@ -35,7 +36,9 @@ class Monoid:
     def concat(cls, elems: Iterable[Self]) -> Self:
         return associative_reduce(cls.__add__, elems, cls.empty())
 
+
 A = TypeVar("A")
+
 
 @dataclass
 class Maybe(Generic[A], Monoid):
@@ -44,9 +47,10 @@ class Maybe(Generic[A], Monoid):
     @classmethod
     def empty(cls) -> Maybe:
         return Maybe(None)
-    
+
     def __add__(self, other: Maybe) -> Maybe:
-        if self.data is None: return other
+        if self.data is None:
+            return other
         return self
 
 
@@ -57,7 +61,7 @@ class MList(Generic[A], Monoid):
     @classmethod
     def empty(cls) -> MList:
         return MList([])
-    
+
     def __add__(self, other: MList) -> MList:
         return MList(self.data + other.data)
 

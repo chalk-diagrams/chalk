@@ -1,9 +1,9 @@
 import math
 from typing import Any, Callable, Generic, Iterable, Protocol, Self, TypeVar
-from typing_extensions import Self
 
 from planar import Affine as Affine
 from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
+from typing_extensions import Self
 
 
 def from_radians(θ: float) -> float:
@@ -159,9 +159,9 @@ def affine(affine: Affine, other: Any) -> Any:
 
 
 Affine.__mul__ = affine  # type: ignore
-Affine.remove_translation = remove_translation # type: ignore
-Affine.remove_linear = remove_linear # type: ignore
-Affine.transpose_translation = transpose_translation # type: ignore
+Affine.remove_translation = remove_translation  # type: ignore
+Affine.remove_linear = remove_linear  # type: ignore
+Affine.transpose_translation = transpose_translation  # type: ignore
 
 # Explicit rexport
 

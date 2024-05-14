@@ -64,6 +64,7 @@ class Raw(Rect):  # type: ignore
 
 class ToSVG(DiagramVisitor[BaseElement, Style]):
     A_type = BaseElement
+
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
         self.shape_renderer = ToSVGShape(dwg)
@@ -93,7 +94,7 @@ class ToSVG(DiagramVisitor[BaseElement, Style]):
         self, diagram: Compose, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g()
-        
+
         for d in diagram.diagrams:
             g.add(d.accept(self, style))
         return g

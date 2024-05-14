@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Iterable, Tuple
 
+from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
@@ -15,15 +16,10 @@ from chalk.transform import (
     unit_x,
     unit_y,
 )
-from chalk.monoid import Monoid
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyTransform,
-        Compose,
-        Primitive,
-    )
+    from chalk.core import ApplyTransform, Compose, Primitive
     from chalk.types import Diagram
 
 
@@ -74,7 +70,6 @@ class Envelope(Transformable, Monoid):
     def height(self) -> float:
         assert not self.is_empty
         return self(unit_y) + self(-unit_y)
-
 
     def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:
@@ -142,6 +137,7 @@ class Envelope(Transformable, Monoid):
 
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):
     A_type = Envelope
+
     def visit_primitive(
         self, diagram: Primitive, t: Affine = Ident
     ) -> Envelope:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Iterable, List, Optional
 
+from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
@@ -10,7 +11,6 @@ from chalk.transform import (
     apply_affine,
     remove_translation,
 )
-from chalk.monoid import Monoid
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ class Trace(Monoid, Transformable):
 
 
 class GetTrace(DiagramVisitor[Trace, Affine]):
-    A_type = Trace  
+    A_type = Trace
 
     def visit_primitive(self, diagram: Primitive, t: Affine = Ident) -> Trace:
         new_transform = t * diagram.transform

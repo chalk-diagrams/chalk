@@ -1,21 +1,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Self, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Self,
+    Tuple,
+)
 
 from chalk.envelope import Envelope
+from chalk.monoid import Maybe, Monoid
 from chalk.trace import Trace
 from chalk.transform import P2, V2, Affine, apply_p2_affine, origin
 from chalk.types import Diagram
-from chalk.monoid import Monoid, Maybe
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyTransform,
-        Compose,
-    )
+    from chalk.core import ApplyName, ApplyTransform, Compose
 
 
 Ident = Affine.identity()
@@ -104,7 +109,7 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
         if self.name == diagram.dname:
             return Maybe(Subdiagram(diagram.diagram, t))
         else:
-            return Maybe.empty()
+            return diagram.diagram.accept(self, t)
 
 
 def get_subdiagram(self: Diagram, name: Name) -> Optional[Subdiagram]:
@@ -131,18 +136,22 @@ def with_names(
         # Hopefully this bug will be fixed at some point in the future.
         return f(subs, self)  # type: ignore
 
+
 @dataclass
 class SubMap(Monoid):
-    data : Dict[Name, List[Subdiagram]]
+    data: Dict[Name, List[Subdiagram]]
 
     def __add__(self, other: SubMap) -> SubMap:
         d1 = self.data
         d2 = other.data
-        return SubMap({k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)})
+        return SubMap(
+            {k: d1.get(k, []) + d2.get(k, []) for k in set(d1) | set(d2)}
+        )
 
     @classmethod
     def empty(cls) -> SubMap:
         return SubMap({})
+
 
 class GetSubMap(DiagramVisitor[SubMap, Affine]):
     A_type = SubMap
@@ -164,8 +173,9 @@ class GetSubMap(DiagramVisitor[SubMap, Affine]):
         return d1 + d2
 
 
-
-def get_sub_map(self: Diagram, t: Affine = Ident) -> Dict[Name, List[Subdiagram]]:
+def get_sub_map(
+    self: Diagram, t: Affine = Ident
+) -> Dict[Name, List[Subdiagram]]:
     """Retrieves all named subdiagrams in the given diagram and accumulates
     them in a dictionary (map) indexed by their name.
     """

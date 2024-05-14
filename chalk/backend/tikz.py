@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List
 
 from chalk import transform as tx
+from chalk.monoid import MList
 from chalk.shapes import (
     ArcSegment,
     ArrowHead,
@@ -17,15 +18,10 @@ from chalk.shapes import (
 from chalk.style import Style
 from chalk.transform import P2, origin
 from chalk.types import Diagram
-from chalk.monoid import MList
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyStyle,
-        ApplyTransform,
-        Primitive,
-    )
+    from chalk.core import ApplyStyle, ApplyTransform, Primitive
 
 
 PyLatex = Any
@@ -80,7 +76,6 @@ class ToTikZ(DiagramVisitor[MList[PyLatexElement], Style]):
     ) -> MList[PyLatexElement]:
         style_new = diagram.style.merge(style)
         return diagram.diagram.accept(self, style_new)
-
 
 
 class ToTikZShape(ShapeVisitor[PyLatexElement]):

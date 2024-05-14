@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional, Sequence, TypeVar
+from typing import Any, List, Optional, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -50,9 +50,9 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Monoid
     __add__ = chalk.combinators.atop
-    
+
     @classmethod
-    def empty(cls) -> Diagram: # type: ignore
+    def empty(cls) -> Diagram:  # type: ignore
         return Empty()
 
     # Tranformable
@@ -74,7 +74,9 @@ class BaseDiagram(chalk.types.Diagram):
                 return Compose(envelope, self.diagrams + other.diagrams)
             if other is not None:
                 return Compose(envelope, list(self.diagrams) + [other])
-        return Compose(envelope, [self, other if other is not None else Empty()])
+        return Compose(
+            envelope, [self, other if other is not None else Empty()]
+        )
 
     def named(self, name: Name) -> Diagram:
         """Add a name (or a sequence of names) to a diagram."""
@@ -126,7 +128,6 @@ class BaseDiagram(chalk.types.Diagram):
 
     __truediv__ = chalk.combinators.above
     __floordiv__ = chalk.combinators.above2
-
 
     def display(
         self, height: int = 256, verbose: bool = True, **kwargs: Any
@@ -290,51 +291,33 @@ class ApplyName(BaseDiagram):
 
 class Qualify(DiagramVisitor[Diagram, None]):
     A_type = Diagram
+
     def __init__(self, name: Name):
         self.name = name
 
-    def visit_primitive(
-        self,
-        diagram: Primitive,
-        args: None
-    ) -> Diagram:
+    def visit_primitive(self, diagram: Primitive, args: None) -> Diagram:
         return diagram
 
-    def visit_compose(
-        self,
-        diagram: Compose,
-            args: None
-    ) -> Diagram:
+    def visit_compose(self, diagram: Compose, args: None) -> Diagram:
         return Compose(
-            diagram.envelope,
-            [d.accept(self, None) for d in diagram.diagrams]
+            diagram.envelope, [d.accept(self, None) for d in diagram.diagrams]
         )
 
     def visit_apply_transform(
-        self,
-        diagram: ApplyTransform,
-        args: None
+        self, diagram: ApplyTransform, args: None
     ) -> Diagram:
         return ApplyTransform(
             diagram.transform,
             diagram.diagram.accept(self, None),
         )
 
-    def visit_apply_style(
-        self,
-        diagram: ApplyStyle,
-        args: None
-    ) -> Diagram:
+    def visit_apply_style(self, diagram: ApplyStyle, args: None) -> Diagram:
         return ApplyStyle(
             diagram.style,
             diagram.diagram.accept(self, None),
         )
 
-    def visit_apply_name(
-        self,
-        diagram: ApplyName,
-        args: None
-    ) -> Diagram:
+    def visit_apply_name(self, diagram: ApplyName, args: None) -> Diagram:
         return ApplyName(
             self.name + diagram.dname, diagram.diagram.accept(self, None)
         )
