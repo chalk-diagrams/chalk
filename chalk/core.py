@@ -69,14 +69,15 @@ class BaseDiagram(chalk.types.Diagram):
     def compose(
         self, envelope: Envelope, other: Optional[Diagram] = None
     ) -> Diagram:
-        if isinstance(self, Compose):
-            if isinstance(other, Compose) and other is not None:
-                return Compose(envelope, self.diagrams + other.diagrams)
-            if other is not None:
-                return Compose(envelope, list(self.diagrams) + [other])
-        return Compose(
-            envelope, [self, other if other is not None else Empty()]
-        )
+        other = other if other is not None else Empty()
+        if isinstance(self, Compose) and isinstance(other, Compose):
+            return Compose(envelope, self.diagrams + other.diagrams)
+        elif isinstance(self, Compose):
+            return Compose(envelope, self.diagrams + [other])
+        elif isinstance(other, Compose):
+            return Compose(envelope, [self] + other.diagrams)
+        else:
+            return Compose(envelope, [self, other])
 
     def named(self, name: Name) -> Diagram:
         """Add a name (or a sequence of names) to a diagram."""

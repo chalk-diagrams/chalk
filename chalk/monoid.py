@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Generic, Iterable, List, Optional, TypeVar
+from typing import (
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TypeVar,
+)
 
 from typing_extensions import Self
 
@@ -47,10 +55,10 @@ class Maybe(Generic[A], Monoid):
     data: Optional[A]
 
     @classmethod
-    def empty(cls) -> Maybe:
+    def empty(cls) -> Maybe[A]:
         return Maybe(None)
 
-    def __add__(self, other: Maybe) -> Maybe:
+    def __add__(self, other: Maybe[A]) -> Maybe[A]:
         if self.data is None:
             return other
         return self
@@ -61,11 +69,11 @@ class MList(Generic[A], Monoid):
     data: List[A]
 
     @classmethod
-    def empty(cls) -> MList:
+    def empty(cls) -> MList[A]:
         return MList([])
 
-    def __add__(self, other: MList) -> MList:
+    def __add__(self, other: MList[A]) -> MList[A]:
         return MList(self.data + other.data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[A]:
         return self.data.__iter__()

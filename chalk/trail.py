@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
+from chalk.monoid import Monoid
 from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle
 from chalk.shapes.segment import Segment, seg
 from chalk.trace import Trace
@@ -18,7 +19,7 @@ from chalk.transform import (
     unit_x,
     unit_y,
 )
-from chalk.types import Diagram, Enveloped, Monoid, Traceable, TrailLike
+from chalk.types import Diagram, Enveloped, Traceable, TrailLike
 
 if TYPE_CHECKING:
     from chalk.shapes.path import Path

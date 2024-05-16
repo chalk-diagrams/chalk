@@ -123,3 +123,36 @@ def arc_between(
 
 
 ignore = [Optional]
+
+__all__ = [
+    "Segment",
+    "seg",
+    "Shape",
+    "Spacer",
+    "Text",
+    "text",
+    "SegmentLike",
+    "Trail",
+    "P2",
+    "V2",
+    "Diagram",
+    "hrule",
+    "vrule",
+    "regular_polygon",
+    "triangle",
+    "rectangle",
+    "square",
+    "circle",
+    "arc",
+    "arc_between",
+    "Latex",
+    "Trail",
+    "Path",
+    "Image",
+    "ArrowHead",
+    "arc_seg",
+    "dart",
+    "ArcSegment",
+    "from_pil",
+    "make_path",
+]

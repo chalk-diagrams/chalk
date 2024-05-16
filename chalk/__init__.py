@@ -37,3 +37,5 @@ if not TYPE_CHECKING:
     # must be the same as setup.py:setup(name=?)
     __libname__: str = "chalk-diagrams"  # custom dunder attribute
     __version__: str = metadata.version(__libname__)
+
+__all__ = ["unit_x", "unit_y", "origin"]

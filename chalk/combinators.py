@@ -112,7 +112,7 @@ def cat(
     if start is None:
         return empty()
 
-    def fn(a, b):
+    def fn(a: Diagram, b: Diagram) -> Diagram:
         return a.beside(sep_dia, v).beside(b, v)
 
     return fn(start, associative_reduce(fn, diagrams, empty()))
@@ -131,7 +131,7 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
     from chalk.core import BaseDiagram
 
-    return BaseDiagram.concat(diagrams)
+    return BaseDiagram.concat(diagrams)  # type: ignore
 
 
 def empty() -> Diagram:

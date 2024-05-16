@@ -12,9 +12,9 @@ if TYPE_CHECKING:
         Empty,
         Primitive,
     )
+    from chalk.monoid import Monoid
     from chalk.Path import Path
     from chalk.shapes import Image, Latex, Spacer, Text
-    from chalk.types import Monoid
 
     A = TypeVar("A", bound=Monoid)
 else:
@@ -27,7 +27,7 @@ class DiagramVisitor(Generic[A, B]):
     A_type: type[A]
 
     def visit_primitive(self, diagram: Primitive, arg: B) -> A:
-        "Primitive detauls to empty"
+        "Primitive defaults to empty"
         return self.A_type.empty()
 
     def visit_empty(self, diagram: Empty, arg: B) -> A:
