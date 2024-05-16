@@ -11,7 +11,7 @@ from chalk.types import Diagram
 
 
 def from_pil(
-    im: Im,
+    im: Im.Image,
     alpha: float = 1.0,
 ) -> Any:
     import cairo
