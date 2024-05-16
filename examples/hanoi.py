@@ -94,9 +94,14 @@ diagram = draw_state_sequence(state_sequence(3))
 
 path = "examples/output/hanoi.svg"
 diagram.render_svg(path, height=700)
-path = "examples/output/hanoi.png"
-diagram.render(path, height=700)
-PILImage.open(path)
 
-path = "examples/output/hanoi.pdf"
-diagram.render_pdf(path, height=700)
+
+try: 
+    path = "examples/output/hanoi.png"
+    diagram.render(path, height=700)
+    PILImage.open(path)
+
+    path = "examples/output/hanoi.pdf"
+    diagram.render_pdf(path, height=700)
+except ModuleNotFoundError:
+    print("Need to install Cairo")

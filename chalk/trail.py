@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
+from chalk.monoid import Monoid
 from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle
 from chalk.shapes.segment import Segment, seg
 from chalk.trace import Trace
@@ -14,7 +15,6 @@ from chalk.transform import (
     Affine,
     Transformable,
     apply_affine,
-    associative_reduce,
     remove_translation,
     unit_x,
     unit_y,
@@ -28,7 +28,7 @@ SegmentLike = Union[Segment, ArcSegment]
 
 
 @dataclass
-class Located(Enveloped, Traceable, Transformable["Located"]):
+class Located(Enveloped, Traceable, Transformable):
     trail: Trail
     location: P2
 
@@ -65,11 +65,11 @@ class Located(Enveloped, Traceable, Transformable["Located"]):
 
 
 @dataclass
-class Trail(Transformable["Trail"], TrailLike):
+class Trail(Monoid, Transformable, TrailLike):
     segments: List[SegmentLike]
     closed: bool = False
 
-    # Monoid - concat
+    # Monoid
     @staticmethod
     def empty() -> Trail:
         return Trail([], False)
@@ -78,10 +78,14 @@ class Trail(Transformable["Trail"], TrailLike):
         assert not (self.closed or other.closed), "Cannot add closed trails"
         return Trail(self.segments + other.segments, False)
 
-    @staticmethod
-    def concat(trails: Iterable[Trail]) -> Trail:
-        return associative_reduce(Trail.__add__, trails, Trail.empty())
+    # Transformable
+    def apply_transform(self, t: Affine) -> Trail:
+        t = remove_translation(t)
+        return Trail(
+            [seg.apply_transform(t) for seg in self.segments], self.closed
+        )
 
+    # Trail-like
     def to_trail(self) -> Trail:
         return self
 
@@ -96,13 +100,6 @@ class Trail(Transformable["Trail"], TrailLike):
             pts.append(cur)
         return pts
 
-    # Apply transform to all
-    def apply_transform(self, t: Affine) -> Trail:
-        t = remove_translation(t)
-        return Trail(
-            [seg.apply_transform(t) for seg in self.segments], self.closed
-        )
-
     def at(self, p: P2) -> Located:
         return Located(self, p)
 
@@ -112,7 +109,10 @@ class Trail(Transformable["Trail"], TrailLike):
             self.closed,
         )
 
-    # Constructor
+    def centered(self) -> Located:
+        return self.at(-sum(self.points(), P2(0, 0)) / len(self.segments))
+
+    # Misc. Constructor
     @staticmethod
     def from_offsets(offsets: List[V2], closed: bool = False) -> Trail:
         return Trail([Segment(off) for off in offsets], closed)
@@ -142,9 +142,6 @@ class Trail(Transformable["Trail"], TrailLike):
         ) + seg(0.01 * unit_y)
         return trail.close()
 
-    def centered(self) -> Located:
-        return self.at(-sum(self.points(), P2(0, 0)) / len(self.segments))
-
     @staticmethod
     def circle(radius: float = 1.0, clockwise: bool = True) -> Trail:
         sides = 4
@@ -164,18 +161,9 @@ class Trail(Transformable["Trail"], TrailLike):
             .scale(radius)
         )
 
-    # @staticmethod
-    # def polygon(sides: int) -> Path:
-    #     edge = Trail.hrule(1.0)
-    #     return Trail.concat(edge.rotate_by(i / side) for i in range(sides))
-
     @staticmethod
     def regular_polygon(sides: int, side_length: float) -> Trail:
         edge = Trail.hrule(side_length)
         return Trail.concat(
             edge.rotate_by(i / sides) for i in range(sides)
         ).close()
-
-
-# unit_x = Trail.from_offsets([V2(1, 0)])
-# unit_y = Trail.from_offsets([V2(0, 1)])

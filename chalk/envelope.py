@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Iterable, Tuple
 
+from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
@@ -9,7 +10,6 @@ from chalk.transform import (
     BoundingBox,
     Transformable,
     apply_affine,
-    associative_reduce,
     origin,
     remove_translation,
     transpose_translation,
@@ -19,14 +19,7 @@ from chalk.transform import (
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import ApplyTransform, Compose, Primitive
     from chalk.types import Diagram
 
 
@@ -34,16 +27,21 @@ SignedDistance = float
 Ident = Affine.identity()
 
 
-class Envelope(Transformable["Envelope"]):
+class Envelope(Transformable, Monoid):
     def __init__(
         self, f: Callable[[V2], SignedDistance], is_empty: bool = False
-    ) -> None:
+    ):
         self.f = f
         self.is_empty = is_empty
 
     def __call__(self, direction: V2) -> SignedDistance:
         assert not self.is_empty
         return self.f(direction)
+
+    # Monoid
+    @staticmethod
+    def empty() -> Envelope:
+        return Envelope(lambda v: 0, is_empty=True)
 
     def __add__(self, other: Envelope) -> Envelope:
         if self.is_empty:
@@ -72,20 +70,6 @@ class Envelope(Transformable["Envelope"]):
     def height(self) -> float:
         assert not self.is_empty
         return self(unit_y) + self(-unit_y)
-
-    @staticmethod
-    def mappend(envelope1: Envelope, envelope2: Envelope) -> Envelope:
-        return envelope1 + envelope2
-
-    @staticmethod
-    def empty() -> Envelope:
-        return Envelope(lambda v: 0, is_empty=True)
-
-    @staticmethod
-    def concat(envelopes: Iterable[Envelope]) -> Envelope:
-        return associative_reduce(
-            Envelope.mappend, envelopes, Envelope.empty()
-        )
 
     def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:
@@ -151,15 +135,14 @@ class Envelope(Transformable["Envelope"]):
         return segments
 
 
-class GetEnvelope(DiagramVisitor[Envelope]):
+class GetEnvelope(DiagramVisitor[Envelope, Affine]):
+    A_type = Envelope
+
     def visit_primitive(
         self, diagram: Primitive, t: Affine = Ident
     ) -> Envelope:
         new_transform = t * diagram.transform
         return diagram.shape.get_envelope().apply_transform(new_transform)
-
-    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Envelope:
-        return Envelope.empty()
 
     def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Envelope:
         return diagram.envelope.apply_transform(t)
@@ -168,18 +151,8 @@ class GetEnvelope(DiagramVisitor[Envelope]):
         self, diagram: ApplyTransform, t: Affine = Ident
     ) -> Envelope:
         n = t * diagram.transform
-        return diagram.diagram.accept(self, t=n)
-
-    def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident
-    ) -> Envelope:
-        return diagram.diagram.accept(self, t=t)
-
-    def visit_apply_name(
-        self, diagram: ApplyName, t: Affine = Ident
-    ) -> Envelope:
-        return diagram.diagram.accept(self, t=t)
+        return diagram.diagram.accept(self, n)
 
 
 def get_envelope(self: Diagram, t: Affine = Ident) -> Envelope:
-    return self.accept(GetEnvelope(), t=t)
+    return self.accept(GetEnvelope(), t)

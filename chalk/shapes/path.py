@@ -20,7 +20,7 @@ def make_path(
 
 
 @dataclass
-class Path(Shape, Enveloped, Traceable, Transformable["Path"]):
+class Path(Shape, Enveloped, Traceable, Transformable):
     """Path class."""
 
     loc_trails: List[Located]

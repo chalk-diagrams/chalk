@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, List, Optional
-
-from typing_extensions import Protocol
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
-from chalk.style import StylableProtocol, Style
+from chalk.monoid import Monoid
+from chalk.style import Stylable, Style
 from chalk.trace import Trace
 from chalk.transform import P2, V2
 
 if TYPE_CHECKING:
     from chalk.path import Path
-    from chalk.subdiagram import Name, Subdiagram, SubMap
+    from chalk.subdiagram import Name, Subdiagram
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
@@ -20,23 +19,19 @@ Ident = tx.Affine.identity()
 
 
 class Enveloped(Protocol):
-    def get_envelope(self) -> Envelope:
-        ...
+    def get_envelope(self) -> Envelope: ...
 
 
 class Traceable(Protocol):
-    def get_trace(self) -> Trace:
-        ...
+    def get_trace(self) -> Trace: ...
 
 
 class Shape(Enveloped, Traceable, Protocol):
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
-        ...
+    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A: ...
 
 
 class TrailLike(Protocol):
-    def to_trail(self) -> Trail:
-        ...
+    def to_trail(self) -> Trail: ...
 
     def to_path(self, location: P2 = P2(0, 0)) -> Path:
         return self.at(location).to_path()
@@ -48,9 +43,7 @@ class TrailLike(Protocol):
         return self.at(P2(0, 0)).stroke()
 
 
-class Diagram(
-    Enveloped, Traceable, StylableProtocol, tx.TransformableProtocol["Diagram"]
-):
+class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     def apply_transform(self, t: tx.Affine) -> Diagram:  # type: ignore[empty-body]
         ...
 
@@ -68,18 +61,15 @@ class Diagram(
 
     def juxtapose_snug(  # type: ignore[empty-body]
         self: Diagram, other: Diagram, direction: V2
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def beside_snug(  # type: ignore[empty-body]
         self: Diagram, other: Diagram, direction: V2
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def juxtapose(  # type: ignore[empty-body]
         self: Diagram, other: Diagram, direction: V2
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def atop(self: Diagram, other: Diagram) -> Diagram:  # type: ignore[empty-body]
         ...
@@ -89,8 +79,7 @@ class Diagram(
 
     def beside(  # type: ignore[empty-body]
         self: Diagram, other: Diagram, direction: V2
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def frame(self, extra: float) -> Diagram:  # type: ignore[empty-body]
         ...
@@ -137,18 +126,17 @@ class Diagram(
     def center_xy(self: Diagram) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def get_subdiagram(self, name: Name) -> Optional[Subdiagram]:
-        ...
+    def get_subdiagram(self, name: Name) -> Optional[Subdiagram]: ...
 
-    def get_sub_map(self, t: tx.Affine = Ident) -> SubMap:  # type: ignore[empty-body]
-        ...
+    def get_sub_map(  # type: ignore[empty-body]
+        self, t: tx.Affine = Ident
+    ) -> Dict[Name, List[Subdiagram]]: ...
 
     def with_names(  # type: ignore[empty-body]
         self,
         names: List[Name],
         f: Callable[[List[Subdiagram], Diagram], Diagram],
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def _style(self, style: Style) -> Diagram:  # type: ignore[empty-body]
         ...
@@ -161,20 +149,16 @@ class Diagram(
 
     def show_envelope(  # type: ignore[empty-body]
         self, phantom: bool = False, angle: int = 45
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def compose(  # type: ignore[empty-body]
         self, envelope: Envelope, other: Optional[Diagram] = None
-    ) -> Diagram:
-        ...
+    ) -> Diagram: ...
 
     def to_list(  # type: ignore[empty-body]
         self, t: tx.Affine = Ident
-    ) -> List[Diagram]:
-        ...
+    ) -> List[Diagram]: ...
 
     def accept(  # type: ignore[empty-body]
-        self, visitor: DiagramVisitor[A], **kwargs: Any
-    ) -> A:
-        ...
+        self, visitor: DiagramVisitor[A, Any], args: Any
+    ) -> A: ...

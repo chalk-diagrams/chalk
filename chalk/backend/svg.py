@@ -62,7 +62,9 @@ class Raw(Rect):  # type: ignore
         return self.xml
 
 
-class ToSVG(DiagramVisitor[BaseElement]):
+class ToSVG(DiagramVisitor[BaseElement, Style]):
+    A_type = BaseElement
+
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
         self.shape_renderer = ToSVGShape(dwg)
@@ -92,27 +94,28 @@ class ToSVG(DiagramVisitor[BaseElement]):
         self, diagram: Compose, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g()
-        g.add(diagram.diagram1.accept(self, style=style))
-        g.add(diagram.diagram2.accept(self, style=style))
+
+        for d in diagram.diagrams:
+            g.add(d.accept(self, style))
         return g
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g(transform=tx_to_svg(diagram.transform))
-        g.add(diagram.diagram.accept(self, style=style))
+        g.add(diagram.diagram.accept(self, style))
         return g
 
     def visit_apply_style(
         self, diagram: ApplyStyle, style: Style = EMPTY_STYLE
     ) -> BaseElement:
-        return diagram.diagram.accept(self, style=diagram.style.merge(style))
+        return diagram.diagram.accept(self, diagram.style.merge(style))
 
     def visit_apply_name(
         self, diagram: ApplyName, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g()
-        g.add(diagram.diagram.accept(self, style=style))
+        g.add(diagram.diagram.accept(self, style))
         return g
 
 
@@ -195,7 +198,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
 
 
 def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
-    return self.accept(ToSVG(dwg), style=style)
+    return self.accept(ToSVG(dwg), style)
 
 
 def render(

@@ -1,27 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
+from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
     Affine,
     Transformable,
     apply_affine,
-    associative_reduce,
     remove_translation,
 )
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import ApplyTransform, Primitive
     from chalk.types import Diagram
 
 
@@ -29,13 +22,14 @@ SignedDistance = float
 Ident = Affine.identity()
 
 
-class Trace(Transformable["Trace"]):
+class Trace(Monoid, Transformable):
     def __init__(self, f: Callable[[P2, V2], List[SignedDistance]]) -> None:
         self.f = f
 
     def __call__(self, point: P2, direction: V2) -> List[SignedDistance]:
         return self.f(point, direction)
 
+    # Monoid
     @classmethod
     def empty(cls) -> Trace:
         return cls(lambda point, direction: [])
@@ -46,14 +40,7 @@ class Trace(Transformable["Trace"]):
             + other(point, direction)
         )
 
-    @staticmethod
-    def mappend(trace1: Trace, trace2: Trace) -> Trace:
-        return trace1 + trace2
-
-    @staticmethod
-    def concat(traces: Iterable[Trace]) -> Trace:
-        return associative_reduce(Trace.mappend, traces, Trace.empty())
-
+    # Transformable
     def apply_transform(self, t: Affine) -> Trace:
         def wrapped(p: P2, d: V2) -> List[SignedDistance]:
             t1 = ~t
@@ -84,33 +71,18 @@ class Trace(Transformable["Trace"]):
         return p + u if u else None
 
 
-class GetTrace(DiagramVisitor[Trace]):
+class GetTrace(DiagramVisitor[Trace, Affine]):
+    A_type = Trace
+
     def visit_primitive(self, diagram: Primitive, t: Affine = Ident) -> Trace:
         new_transform = t * diagram.transform
         return diagram.shape.get_trace().apply_transform(new_transform)
 
-    def visit_empty(self, diagram: Empty, t: Affine = Ident) -> Trace:
-        return Trace.empty()
-
-    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Trace:
-        # TODO Should we cache the trace?
-        return diagram.diagram1.accept(self, t=t) + diagram.diagram2.accept(
-            self, t=t
-        )
-
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine = Ident
     ) -> Trace:
-        return diagram.diagram.accept(self, t=t * diagram.transform)
-
-    def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident
-    ) -> Trace:
-        return diagram.diagram.accept(self, t=t)
-
-    def visit_apply_name(self, diagram: ApplyName, t: Affine = Ident) -> Trace:
-        return diagram.diagram.accept(self, t=t)
+        return diagram.diagram.accept(self, t * diagram.transform)
 
 
 def get_trace(self: Diagram, t: Affine = Ident) -> Trace:
-    return self.accept(GetTrace(), t=t)
+    return self.accept(GetTrace(), t)

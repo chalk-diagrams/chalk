@@ -35,9 +35,7 @@ def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> bool:
 
 
 @dataclass
-class LocatedArcSegment(
-    Traceable, Enveloped, tx.Transformable["LocatedArcSegment"]
-):
+class LocatedArcSegment(Traceable, Enveloped, tx.Transformable):
     "A ellipse arc represented with the cetner parameterization"
     angle: float
     dangle: float

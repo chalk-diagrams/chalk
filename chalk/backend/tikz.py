@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List
 
 from chalk import transform as tx
+from chalk.monoid import MList
 from chalk.shapes import (
     ArcSegment,
     ArrowHead,
@@ -20,14 +21,7 @@ from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import ApplyStyle, ApplyTransform, Primitive
 
 
 PyLatex = Any
@@ -45,58 +39,43 @@ def tx_to_tikz(affine: tx.Affine) -> str:
     return convert(*affine[:6])
 
 
-class ToTikZ(DiagramVisitor[List[PyLatexElement]]):
+class ToTikZ(DiagramVisitor[MList[PyLatexElement], Style]):
+    A_type = MList[PyLatexElement]
+
     def __init__(self, pylatex: PyLatex):
         self.pylatex = pylatex
         self.shape_renderer = ToTikZShape(pylatex)
 
     def visit_primitive(
         self, diagram: Primitive, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
+    ) -> MList[PyLatexElement]:
         transform = tx_to_tikz(diagram.transform)
         style_new = diagram.style.merge(style)
         inner = diagram.shape.accept(self.shape_renderer, style=style_new)
         if not style_new and not transform:
-            return [inner]
+            return MList([inner])
         else:
             options = {"cm": tx_to_tikz(diagram.transform)}
             s = self.pylatex.TikZScope(
                 options=self.pylatex.TikZOptions(**options)
             )
             s.append(inner)
-            return [s]
-
-    def visit_empty(
-        self, diagram: Empty, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
-        return []
-
-    def visit_compose(
-        self, diagram: Compose, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
-        elems1 = diagram.diagram1.accept(self, style=style)
-        elems2 = diagram.diagram2.accept(self, style=style)
-        return elems1 + elems2
+            return MList([s])
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
+    ) -> MList[PyLatexElement]:
         options = {"cm": tx_to_tikz(diagram.transform)}
         s = self.pylatex.TikZScope(options=self.pylatex.TikZOptions(**options))
-        for x in diagram.diagram.accept(self, style=style):
+        for x in diagram.diagram.accept(self, style).data:
             s.append(x)
-        return [s]
+        return MList([s])
 
     def visit_apply_style(
         self, diagram: ApplyStyle, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
+    ) -> MList[PyLatexElement]:
         style_new = diagram.style.merge(style)
-        return diagram.diagram.accept(self, style=style_new)
-
-    def visit_apply_name(
-        self, diagram: ApplyName, style: Style = EMPTY_STYLE
-    ) -> List[PyLatexElement]:
-        return diagram.diagram.accept(self, style=style)
+        return diagram.diagram.accept(self, style_new)
 
 
 class ToTikZShape(ShapeVisitor[PyLatexElement]):
@@ -206,7 +185,7 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
 def to_tikz(
     self: Diagram, pylatex: PyLatex, style: Style
 ) -> List[PyLatexElement]:
-    return self.accept(ToTikZ(pylatex), style=style)
+    return self.accept(ToTikZ(pylatex), style).data
 
 
 def render(self: Diagram, path: str, height: int = 128) -> None:

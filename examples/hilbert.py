@@ -20,6 +20,9 @@ def hilbert(n):
 
 d = hilbert(5).stroke().center_xy().line_width(0.05)
 d.render_svg("examples/output/hilbert.svg", 500)
-d.render_pdf("examples/output/hilbert.pdf", 500)
-d.render("examples/output/hilbert.png", 500)
-PILImage.open("examples/output/hilbert.png")
+try: 
+    d.render_pdf("examples/output/hilbert.pdf", 500)
+    d.render("examples/output/hilbert.png", 500)
+    PILImage.open("examples/output/hilbert.png")
+except ModuleNotFoundError:
+    print("Need to install Cairo")

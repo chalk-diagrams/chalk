@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, Optional, TypeVar
+from typing import Any, List, Optional, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -16,9 +16,8 @@ import chalk.subdiagram
 import chalk.trace
 import chalk.types
 from chalk import backend
-from chalk import transform as tx
 from chalk.envelope import Envelope
-from chalk.style import Stylable, Style
+from chalk.style import Style
 from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
 from chalk.types import Diagram, Shape
@@ -27,7 +26,8 @@ from chalk.visitor import DiagramVisitor
 
 Trail = Any
 Ident = Affine.identity()
-A = TypeVar("A")
+A = TypeVar("A", bound=chalk.monoid.Monoid)
+
 SVG_HEIGHT = 200
 SVG_DRAW_HEIGHT = None
 
@@ -45,15 +45,21 @@ def set_svg_draw_height(height: int) -> None:
 
 
 @dataclass
-class BaseDiagram(
-    Stylable, tx.Transformable["BaseDiagram"], chalk.types.Diagram
-):
+class BaseDiagram(chalk.types.Diagram):
     """Diagram class."""
 
-    # Core composition
-    def apply_transform(self, t: Affine) -> BaseDiagram:
+    # Monoid
+    __add__ = chalk.combinators.atop
+
+    @classmethod
+    def empty(cls) -> Diagram:  # type: ignore
+        return Empty()
+
+    # Tranformable
+    def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
         return ApplyTransform(t, self)
 
+    # Stylable
     def apply_style(self, style: Style) -> Diagram:  # type: ignore
         return ApplyStyle(style, self)
 
@@ -63,7 +69,15 @@ class BaseDiagram(
     def compose(
         self, envelope: Envelope, other: Optional[Diagram] = None
     ) -> Diagram:
-        return Compose(envelope, self, other if other is not None else Empty())
+        other = other if other is not None else Empty()
+        if isinstance(self, Compose) and isinstance(other, Compose):
+            return Compose(envelope, self.diagrams + other.diagrams)
+        elif isinstance(self, Compose):
+            return Compose(envelope, self.diagrams + [other])
+        elif isinstance(other, Compose):
+            return Compose(envelope, [self] + other.diagrams)
+        else:
+            return Compose(envelope, [self, other])
 
     def named(self, name: Name) -> Diagram:
         """Add a name (or a sequence of names) to a diagram."""
@@ -115,7 +129,6 @@ class BaseDiagram(
 
     __truediv__ = chalk.combinators.above
     __floordiv__ = chalk.combinators.above2
-    __add__ = chalk.combinators.atop
 
     def display(
         self, height: int = 256, verbose: bool = True, **kwargs: Any
@@ -150,6 +163,10 @@ class BaseDiagram(
         os.unlink(f.name)
         return svg
 
+    def _repr_html_(self) -> str | tuple[str, Any]:
+        """Returns a rich HTML representation of an object."""
+        return self._repr_svg_()
+
     # Getters
     get_envelope = chalk.envelope.get_envelope
     get_trace = chalk.trace.get_trace
@@ -160,9 +177,9 @@ class BaseDiagram(
 
     def qualify(self, name: Name) -> Diagram:
         """Prefix names in the diagram by a given name or sequence of names."""
-        return self.accept(Qualify(name))
+        return self.accept(Qualify(name), None)
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         raise NotImplementedError
 
 
@@ -217,20 +234,16 @@ class Primitive(BaseDiagram):
             self.shape, self.style.merge(other_style), self.transform
         )
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_primitive(self, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_primitive(self, args)
 
 
 @dataclass
 class Empty(BaseDiagram):
     """An Empty diagram class."""
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_empty(self, **kwargs)
-
-
-def empty() -> Diagram:
-    return Empty()
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_empty(self, args)
 
 
 @dataclass
@@ -238,11 +251,10 @@ class Compose(BaseDiagram):
     """Compose class."""
 
     envelope: Envelope
-    diagram1: Diagram
-    diagram2: Diagram
+    diagrams: List[Diagram]
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_compose(self, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_compose(self, args)
 
 
 @dataclass
@@ -252,8 +264,8 @@ class ApplyTransform(BaseDiagram):
     transform: Affine
     diagram: Diagram
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_apply_transform(self, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_apply_transform(self, args)
 
 
 @dataclass
@@ -263,8 +275,8 @@ class ApplyStyle(BaseDiagram):
     style: Style
     diagram: Diagram
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_apply_style(self, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_apply_style(self, args)
 
 
 @dataclass
@@ -274,58 +286,39 @@ class ApplyName(BaseDiagram):
     dname: Name
     diagram: Diagram
 
-    def accept(self, visitor: DiagramVisitor[A], **kwargs: Any) -> A:
-        return visitor.visit_apply_name(self, **kwargs)
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_apply_name(self, args)
 
 
-class Qualify(DiagramVisitor[Diagram]):
+class Qualify(DiagramVisitor[Diagram, None]):
+    A_type = Diagram
+
     def __init__(self, name: Name):
         self.name = name
 
-    def visit_primitive(
-        self,
-        diagram: Primitive,
-    ) -> Diagram:
+    def visit_primitive(self, diagram: Primitive, args: None) -> Diagram:
         return diagram
 
-    def visit_empty(
-        self,
-        diagram: Empty,
-    ) -> Diagram:
-        return diagram
-
-    def visit_compose(
-        self,
-        diagram: Compose,
-    ) -> Diagram:
+    def visit_compose(self, diagram: Compose, args: None) -> Diagram:
         return Compose(
-            diagram.envelope,
-            diagram.diagram1.accept(self),
-            diagram.diagram2.accept(self),
+            diagram.envelope, [d.accept(self, None) for d in diagram.diagrams]
         )
 
     def visit_apply_transform(
-        self,
-        diagram: ApplyTransform,
+        self, diagram: ApplyTransform, args: None
     ) -> Diagram:
         return ApplyTransform(
             diagram.transform,
-            diagram.diagram.accept(self),
+            diagram.diagram.accept(self, None),
         )
 
-    def visit_apply_style(
-        self,
-        diagram: ApplyStyle,
-    ) -> Diagram:
+    def visit_apply_style(self, diagram: ApplyStyle, args: None) -> Diagram:
         return ApplyStyle(
             diagram.style,
-            diagram.diagram.accept(self),
+            diagram.diagram.accept(self, None),
         )
 
-    def visit_apply_name(
-        self,
-        diagram: ApplyName,
-    ) -> Diagram:
+    def visit_apply_name(self, diagram: ApplyName, args: None) -> Diagram:
         return ApplyName(
-            self.name + diagram.dname, diagram.diagram.accept(self)
+            self.name + diagram.dname, diagram.diagram.accept(self, None)
         )

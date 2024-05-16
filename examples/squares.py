@@ -37,9 +37,16 @@ diagram = diagram.line_width(0.02)
 
 path = "examples/output/squares.svg"
 diagram.render_svg(path, height=256)
-path = "examples/output/squares.png"
-diagram.render(path, height=256)
-PILImage.open(path)
 
-path = "examples/output/squares.pdf"
-diagram.render_pdf(path, height=256)
+try:
+    path = "examples/output/squares.png"
+    diagram.render(path, height=256)
+    PILImage.open(path)
+
+    path = "examples/output/squares.pdf"
+    diagram.render_pdf(path, height=256)
+
+except ModuleNotFoundError:
+    print("Need to install Cairo")
+
+

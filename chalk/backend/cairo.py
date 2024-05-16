@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
+from chalk.monoid import MList
 from chalk.shapes import (
     ArcSegment,
     ArrowHead,
@@ -20,14 +21,7 @@ from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import ApplyName, ApplyStyle, ApplyTransform, Primitive
 
 
 Ident = Affine.identity()
@@ -44,52 +38,47 @@ def tx_to_cairo(affine: Affine) -> Any:
     return convert(*affine[:6])  # type: ignore
 
 
-class ToList(DiagramVisitor[List["Primitive"]]):
+class ToList(DiagramVisitor[MList[Any], Affine]):
     """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
     is accumulated upwards, from the tree's leaves.
     """
 
+    A_type = MList[Any]
+
     def visit_primitive(
         self, diagram: Primitive, t: Affine = Ident
-    ) -> List[Primitive]:
-        return [diagram.apply_transform(t)]
-
-    def visit_empty(
-        self, diagram: Empty, t: Affine = Ident
-    ) -> List[Primitive]:
-        return []
-
-    def visit_compose(
-        self, diagram: Compose, t: Affine = Ident
-    ) -> List[Primitive]:
-        elems1 = diagram.diagram1.accept(self, t=t)
-        elems2 = diagram.diagram2.accept(self, t=t)
-        return elems1 + elems2
+    ) -> MList[Primitive]:
+        return MList([diagram.apply_transform(t)])
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine = Ident
-    ) -> List[Primitive]:
+    ) -> MList[Primitive]:
         t_new = t * diagram.transform
-        return [
-            prim.apply_transform(t_new)
-            for prim in diagram.diagram.accept(self, t=t)
-        ]
+        return MList(
+            [
+                prim.apply_transform(t_new)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
 
     def visit_apply_style(
         self, diagram: ApplyStyle, t: Affine = Ident
-    ) -> List[Primitive]:
-        return [
-            prim.apply_style(diagram.style)
-            for prim in diagram.diagram.accept(self, t=t)
-        ]
+    ) -> MList[Primitive]:
+        return MList(
+            [
+                prim.apply_style(diagram.style)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
 
     def visit_apply_name(
         self, diagram: ApplyName, t: Affine = Ident
-    ) -> List[Primitive]:
-        return [prim for prim in diagram.diagram.accept(self, t=t)]
+    ) -> MList[Primitive]:
+        return MList([prim for prim in diagram.diagram.accept(self, t).data])
 
 
 class ToCairoShape(ShapeVisitor[None]):
+
     def render_segment(
         self, seg: SegmentLike, ctx: PyCairoContext, p: P2
     ) -> None:
@@ -183,7 +172,7 @@ def render_cairo_prims(
 ) -> None:
     base = base._style(style)
     shape_renderer = ToCairoShape()
-    for prim in base.accept(ToList()):
+    for prim in base.accept(ToList(), Ident):
         # apply transformation
         matrix = tx_to_cairo(prim.transform)
         ctx.transform(matrix)
