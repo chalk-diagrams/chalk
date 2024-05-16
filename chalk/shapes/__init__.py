@@ -155,4 +155,5 @@ __all__ = [
     "ArcSegment",
     "from_pil",
     "make_path",
+    "arc_seg_angle"
 ]
