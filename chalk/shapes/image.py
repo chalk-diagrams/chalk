@@ -18,7 +18,7 @@ def from_pil(
 
     format: cairo.Format = cairo.FORMAT_ARGB32
     if "A" not in im.getbands():
-        im.putalpha(int(alpha * 256.0))
+        im.putalpha(int(alpha * 256.0))  # type: ignore
     arr = bytearray(im.tobytes("raw", "BGRa"))
     surface = cairo.ImageSurface.create_for_data(
         arr, format, im.width, im.height  # type: ignore
