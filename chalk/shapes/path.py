@@ -8,7 +8,7 @@ from chalk.envelope import Envelope
 from chalk.shapes.shape import Shape
 from chalk.trace import Trace
 from chalk.trail import Located, Trail
-from chalk.transform import P2, Transformable
+from chalk.transform import P2_t, Transformable
 from chalk.types import Diagram, Enveloped, Traceable
 from chalk.visitor import A, ShapeVisitor
 
@@ -38,7 +38,7 @@ class Path(Shape, Enveloped, Traceable, Transformable):
             [loc_trail.apply_transform(t) for loc_trail in self.loc_trails]
         )
 
-    def points(self) -> Iterable[P2]:
+    def points(self) -> Iterable[P2_t]:
         for loc_trails in self.loc_trails:
             for pt in loc_trails.points():
                 yield pt
@@ -54,7 +54,7 @@ class Path(Shape, Enveloped, Traceable, Transformable):
 
     # Constructors
     @staticmethod
-    def from_points(points: List[P2], closed: bool = False) -> Path:
+    def from_points(points: List[P2_t], closed: bool = False) -> Path:
         if not points:
             return Path.empty()
         start = points[0]
@@ -64,11 +64,11 @@ class Path(Shape, Enveloped, Traceable, Transformable):
         return Path([trail.at(start)])
 
     @staticmethod
-    def from_point(point: P2) -> Path:
+    def from_point(point: P2_t) -> Path:
         return Path.from_points([point])
 
     @staticmethod
-    def from_pairs(segs: List[Tuple[P2, P2]], closed: bool = False) -> Path:
+    def from_pairs(segs: List[Tuple[P2_t, P2_t]], closed: bool = False) -> Path:
         if not segs:
             return Path.empty()
         ls = [segs[0][0]]
@@ -81,5 +81,5 @@ class Path(Shape, Enveloped, Traceable, Transformable):
     def from_list_of_tuples(
         coords: List[Tuple[float, float]], closed: bool = False
     ) -> Path:
-        points = list([P2(x, y) for x, y in coords])
+        points = list([tx.P2(x, y) for x, y in coords])
         return Path.from_points(points, closed)

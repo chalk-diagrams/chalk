@@ -20,12 +20,13 @@ from chalk.envelope import Envelope
 from chalk.style import Style
 from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
+import chalk.transform as tx
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
 
 Trail = Any
-Ident = Affine.identity()
+Ident = tx.ident
 A = TypeVar("A", bound=chalk.monoid.Monoid)
 
 SVG_HEIGHT = 200
@@ -218,7 +219,7 @@ class Primitive(BaseDiagram):
         Returns:
             Primitive
         """
-        new_transform = t * self.transform
+        new_transform = t @ self.transform
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> Primitive:

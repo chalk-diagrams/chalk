@@ -5,18 +5,17 @@ from typing import TYPE_CHECKING, Any, List
 from chalk import transform as tx
 from chalk.monoid import MList
 from chalk.shapes import (
-    ArcSegment,
     ArrowHead,
     Image,
     Latex,
     Path,
     Segment,
-    SegmentLike,
     Spacer,
     Text,
 )
 from chalk.style import Style
-from chalk.transform import P2, origin
+from chalk.transform import P2_t, Affine
+import chalk.transform as tx
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -30,13 +29,13 @@ PyLatexElement = Any
 EMPTY_STYLE = Style.empty()
 
 
-def tx_to_tikz(affine: tx.Affine) -> str:
+def tx_to_tikz(affine: Affine) -> str:
     def convert(
         a: float, b: float, c: float, d: float, e: float, f: float
     ) -> str:
         return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
 
-    return convert(*affine[:6])
+    return convert(*affine[0], *affine[1])
 
 
 class ToTikZ(DiagramVisitor[MList[PyLatexElement], Style]):
@@ -83,16 +82,16 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         self.pylatex = pylatex
 
     def render_segment(
-        self, pts: PyLatexElement, seg: SegmentLike, p: P2
+        self, pts: PyLatexElement, seg: Segment, p: P2_t
     ) -> None:
         q = seg.q + p
         if isinstance(seg, Segment):
             pts.append("--")
-            pts.append(self.pylatex.TikZCoordinate(q.x, q.y))
+            pts.append(self.pylatex.TikZCoordinate(q[0], q[1]))
         elif isinstance(seg, ArcSegment):
-            start = (-seg.center).angle
-            end = (seg.q - seg.center).angle
-            det: float = seg.t.determinant  # type: ignore
+            start = tx.angle(-seg.center)
+            end = tx.angle(seg.q - seg.center)
+            det: float = tx.np.linalg.det(seg.t)  # type: ignore
             if det * seg.dangle < 0 and end > start:
                 end = end - 360
             if det * seg.dangle > 0 and end < start:
@@ -116,7 +115,7 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         for loc_trail in path.loc_trails:
             for i, (seg, p) in enumerate(loc_trail.located_segments()):
                 if i == 0:
-                    pts.append(self.pylatex.TikZCoordinate(p.x, p.y))
+                    pts.append(self.pylatex.TikZCoordinate(p[0], p[1]))
                 self.render_segment(pts, seg, p)
             if loc_trail.trail.closed:
                 pts.append("--")
@@ -152,8 +151,8 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
     def visit_spacer(
         self, shape: Spacer, style: Style = EMPTY_STYLE
     ) -> PyLatexElement:
-        left = origin.x - shape.width / 2
-        top = origin.y - shape.height / 2
+        left = - shape.width / 2
+        top = -shape.height / 2
         return self.pylatex.TikZPath(
             [
                 self.pylatex.TikZCoordinate(left, top),
@@ -221,10 +220,10 @@ def render(self: Diagram, path: str, height: int = 128) -> None:
 
     padding = Primitive.from_shape(
         Spacer(envelope.width, envelope.height)
-    ).translate(envelope.center.x, envelope.center.y)
+    ).translate_by(envelope.center)
     diagram = diagram + padding
     with doc.create(pylatex.TikZ()) as pic:
-        for x in to_tikz(diagram, pylatex, Style.root(max(height, width))):
+        for x in to_tikz(diagram, pylatex, Style.root(tx.np.maximum(height, width))):
             pic.append(x)
     doc.generate_tex(path.replace(".pdf", "") + ".tex")
     doc.generate_pdf(path.replace(".pdf", ""), clean_tex=False)

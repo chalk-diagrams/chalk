@@ -1,15 +1,15 @@
 from typing import Optional, Tuple, Union
 
-from chalk.shapes.arc import ArcSegment, arc_seg, arc_seg_angle  # noqa: F401
+from chalk.shapes.arc import Segment, arc_seg, arc_seg_angle  # noqa: F401
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
 from chalk.shapes.latex import Latex, latex  # noqa: F401
 from chalk.shapes.path import Path, make_path  # noqa: F401
-from chalk.shapes.segment import Segment, seg  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
 from chalk.shapes.text import Text, text  # noqa: F401
-from chalk.trail import SegmentLike, Trail  # noqa: F401
-from chalk.transform import P2, V2
+from chalk.trail import Trail  # noqa: F401
+from chalk.transform import P2_t, V2_t, P2, V2
+import chalk.transform as tx
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.2d.Shapes
@@ -78,12 +78,12 @@ def square(side: float) -> Diagram:
     return rectangle(side, side)
 
 
-def circle(radius: float) -> Diagram:
+def circle(radius: tx.Floating) -> Diagram:
     "Draws a circle with the specified ``radius``."
     return Trail.circle().stroke().center_xy().scale(radius)
 
 
-def arc(radius: float, angle0: float, angle1: float) -> Diagram:
+def arc(radius: tx.Floating, angle0: tx.Floating, angle1: tx.Floating) -> Diagram:
     """
     Draws an arc.
 
@@ -97,16 +97,16 @@ def arc(radius: float, angle0: float, angle1: float) -> Diagram:
 
     """
     return (
-        ArcSegment(angle0, angle1 - angle0)
-        .at(V2.polar(angle0, 1))
+        arc_seg_angle(tx.ftos(angle0), tx.ftos(angle1 - angle0))
+        .at(tx.polar(angle0))
         .stroke()
         .scale(radius)
     )
 
 
 def arc_between(
-    point1: Union[P2, Tuple[float, float]],
-    point2: Union[P2, Tuple[float, float]],
+    point1: Union[P2_t, Tuple[float, float]],
+    point2: Union[P2_t, Tuple[float, float]],
     height: float,
 ) -> Diagram:
     """Makes an arc starting at point1 and ending at point2, with the midpoint
@@ -117,8 +117,8 @@ def arc_between(
     diagrams:
     https://hackage.haskell.org/package/diagrams-lib-1.4.5.1/docs/src/Diagrams.TwoD.Arc.html#arcBetween
     """
-    p = P2(*point1)
-    q = P2(*point2)
+    p = tx.P2(*point1)
+    q = tx.P2(*point2)
     return arc_seg(q - p, height).at(p).stroke()
 
 
@@ -126,12 +126,10 @@ ignore = [Optional]
 
 __all__ = [
     "Segment",
-    "seg",
     "Shape",
     "Spacer",
     "Text",
     "text",
-    "SegmentLike",
     "Trail",
     "P2",
     "V2",
@@ -152,7 +150,6 @@ __all__ = [
     "ArrowHead",
     "arc_seg",
     "dart",
-    "ArcSegment",
     "from_pil",
     "make_path",
     "arc_seg_angle",

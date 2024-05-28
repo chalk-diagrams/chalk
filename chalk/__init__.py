@@ -30,7 +30,6 @@ from chalk.transform import (
     unit_y,
 )
 from chalk.types import Diagram
-
 if not TYPE_CHECKING:
 
     # Set library name the same as on PyPI

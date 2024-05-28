@@ -2,10 +2,9 @@ from colour import Color
 
 from chalk.combinators import concat
 from chalk.shapes import Path, circle, text
-from chalk.shapes.segment import seg
-from chalk.transform import V2, origin
+from chalk.transform import V2_t, origin
+import chalk.transform as tx
 from chalk.types import Diagram
-
 RED = Color("red")
 BLUE = Color("blue")
 
@@ -16,7 +15,7 @@ def show_origin(self: Diagram) -> Diagram:
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
-    origin_size = max(0.1, min(envelope.height, envelope.width) / 50)
+    origin_size = tx.np.maximum(0.1, tx.np.minimum(envelope.height, envelope.width) / 50)
     origin = circle(origin_size).line_color(RED)
     return self + origin
 
@@ -57,7 +56,7 @@ def show_envelope(
     return new
 
 
-def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
+def show_beside(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     "Add blue normal line to show placement of combination."
 
     envelope1 = self.get_envelope()
@@ -81,8 +80,8 @@ def show_beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     split: Diagram = (
         Path.from_points(
             [
-                v1 + direction.perpendicular(),
-                v1 - direction.perpendicular(),
+                v1 + tx.perpendicular(direction),
+                v1 - tx.perpendicular(direction)
             ]
         )
         .stroke()

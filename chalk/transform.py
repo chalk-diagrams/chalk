@@ -1,39 +1,121 @@
 import math
-from typing import Any
+from typing import Any, Union, Tuple, Optional, List
 
-from planar import Affine as Affine
-from planar import BoundingBox, Point, Polygon, Ray, Vec2, Vec2Array
 from typing_extensions import Self
+from dataclasses import dataclass
+
+from jaxtyping import Float, Bool, Array
+# import numpy as np 
+import jax.numpy as np
 
 
-def from_radians(θ: float) -> float:
-    t = (θ / math.pi) * 180
-    return t
+Affine = Float[Array, "#B 3 3"]
+V2_t = Float[Array, "#B 3 1"]
+P2_t = Float[Array, "#B 3 1"]
+Scalars = Float[Array, "#B"]
+Scalar = Float[Array, ""]
+Floating = Union[Scalars, Scalar, float, int]
+Mask = Bool[Array, "#B"]
+def ftos(f: Floating) -> Scalars:
+    return np.array(f, dtype=float).reshape(-1)
 
 
-def to_radians(θ: float) -> float:
-    t = (θ / 180) * math.pi
-    return t
+def V2(x: Floating, y: Floating) -> V2_t:
+    x, y, o = ftos(x), ftos(y), ftos(0.)
+    res= np.stack([x, y, o.repeat(x.size)], 
+                    axis=-1)[...,None]
+    return res
+
+def P2(x: Floating, y: Floating) -> P2_t:
+    x, y, o = ftos(x), ftos(y), ftos(1.)
+    return np.stack([x, y, o.repeat(x.size)], 
+                    axis=-1)[..., None]
+
+def norm(v: V2_t) -> V2_t:
+    return v / length(v)[..., None, None]
+
+def length(v: V2_t) -> Scalars:
+    return np.sqrt(length2(v))
+
+def length2(v: V2_t) -> Scalars:
+    return (v * v)[..., :2, 0].sum(-1)
+
+def angle(v: V2_t) -> Scalars:
+    return from_radians(rad(v))
+
+def rad(v: V2_t) -> Scalars:
+    return np.atan2(v[..., 1, 0], v[..., 0, 0])
+
+def perpendicular(v: V2_t) -> V2_t:
+    return np.hstack([-v[..., 1, 0], v[..., 0, 0], v[..., 2, 0]])
+
+
+def make_affine(a: Floating, b:Floating, c:Floating, d:Floating, e:Floating, f:Floating) -> Affine:
+    s = ftos(a).size
+    vals = list([ftos(x) for x in [a, b, c, d, e, f, 0., 0., 1.]])
+    for i in range(6, 9):
+        vals[i] = vals[i].repeat(s)
+    return np.stack(vals, axis=-1).reshape(-1, 3, 3)
+
+ident = make_affine(1., 0., 0., 0., 1., 0.)
+
+def dot(v1: V2_t, v2: V2_t) -> Scalars:
+    return (v1 * v2).sum(-1).sum(-1)
+
+def to_point(v: V2_t) -> P2_t:
+    return v.at[..., 2, 0].set(1)
+
+def polar(angle: Floating, length: Floating = 1.0) -> V2_t:
+    rad = to_radians(angle)
+    x, y = np.cos(rad), np.sin(rad)
+    return V2(x * length, y * length)
+
+def scale(vec: V2_t) -> Affine:
+    return ident.at[..., np.arange(2), np.arange(2)].set(vec[..., :2, 0])
+
+def translation(vec: V2_t) -> Affine:
+    return ident.repeat(vec.shape[0], axis=0).at[..., :2, 2].set(vec[..., :2, 0])
+
+def get_translation(aff: Affine) -> V2_t:
+    return np.zeros([aff.shape[0], 3, 1]).at[..., :2, 0].set(aff[..., :2, 2])
+
+def rotation(rad: Floating) -> Affine:
+    ca, sa = np.cos(rad), np.sin(rad)
+    up = np.stack([ca, sa, -sa, ca], axis=-1).reshape(-1, 2, 2)
+    return ident.at[..., :2, :2].set(up)
+
+def inv(aff: Affine) -> Affine:
+    det = np.linalg.det(aff)
+    assert np.all(np.abs(det) > 1e-5), f"{det} {aff}"
+    print(aff.shape)
+    idet = 1.0 / det
+    sa, sb, sc = aff[..., 0, 0], aff[..., 0, 1], aff[..., 0, 2]
+    sd, se, sf = aff[..., 1, 0], aff[..., 1, 1], aff[..., 1, 2]
+    ra = se * idet
+    rb = -sb * idet
+    rd = -sd * idet
+    re = sa * idet
+    return make_affine(ra, rb, -sc*ra - sf*rb,
+                       rd, re, -sc*rd - sf*re)
+
+def from_radians(θ: Floating) -> Scalars:
+    return (ftos(θ) / math.pi) * 180
+
+def to_radians(θ: Floating) -> Scalars:
+    return (ftos(θ) / 180) * math.pi
 
 
 def remove_translation(aff: Affine) -> Affine:
-    a, b, c, d, e, f = aff[:6]
-    return Affine(a, b, 0, d, e, 0)
-
+    return aff.at[..., :1, 2].set(0)
 
 def remove_linear(aff: Affine) -> Affine:
-    a, b, c, d, e, f = aff[:6]
-    return Affine(1, 0, c, 0, 1, f)
-
+    return aff.at[..., :2, :2].set(np.eye(2))
 
 def transpose_translation(aff: Affine) -> Affine:
-    a, b, c, d, e, f = aff[:6]
-    return Affine(a, d, 0, b, e, 0)
+    return aff.at[..., :2, :2].set(aff[..., :2, :2].transpose(0, 2, 1))
 
-
-def apply_affine(aff: Affine, x: Any) -> Any:
-    return aff * x
-
+# def apply_affine(aff: Affine, x: Float[Array, "3"]) -> Float[Array, "3"]:
+#     return aff @ x
 
 class Transformable:
     """Transformable class."""
@@ -47,123 +129,145 @@ class Transformable:
     def _app(self, t: Affine) -> Self:
         return self.apply_transform(t)
 
-    def scale(self, α: float) -> Self:
-        return self._app(Affine.scale(Vec2(α, α)))
+    def scale(self, α: Floating) -> Self:
+        return self._app(scale(V2(α, α)))
 
-    def scale_x(self, α: float) -> Self:
-        return self._app(Affine.scale(Vec2(α, 1)))
+    def scale_x(self, α: Floating) -> Self:
+        return self._app(scale(V2(α, 1)))
 
-    def scale_y(self, α: float) -> Self:
-        return self._app(Affine.scale(Vec2(1, α)))
+    def scale_y(self, α: Floating) -> Self:
+        return self._app(scale(V2(1, α)))
 
-    def rotate(self, θ: float) -> Self:
+    def rotate(self, θ: Floating) -> Self:
         "Rotate by θ degrees counterclockwise"
-        return self._app(Affine.rotation(θ))
+        return self._app(rotation(to_radians(θ)))
 
-    def rotate_rad(self, θ: float) -> Self:
+    def rotate_rad(self, θ: Floating) -> Self:
         "Rotate by θ radians counterclockwise"
-        return self._app(Affine.rotation(from_radians(θ)))
+        return self._app(rotation((θ)))
 
-    def rotate_by(self, turns: float) -> Self:
+    def rotate_by(self, turns: Floating) -> Self:
         "Rotate by fractions of a circle (turn)."
         θ = 2 * math.pi * turns
-        return self._app(Affine.rotation(from_radians(θ)))
+        return self._app(rotation((θ)))
 
     def reflect_x(self) -> Self:
-        return self._app(Affine.scale(Vec2(-1, +1)))
+        return self._app(scale(V2(-1, +1)))
 
     def reflect_y(self) -> Self:
-        return self._app(Affine.scale(Vec2(+1, -1)))
+        return self._app(scale(V2(+1, -1)))
 
-    def shear_y(self, λ: float) -> Self:
-        return self._app(Affine(1.0, 0.0, 0.0, λ, 1.0, 0.0))
+    def shear_y(self, λ: Floating) -> Self:
+        return self._app(make_affine(1.0, 0.0, 0.0, λ, 1.0, 0.0))
 
-    def shear_x(self, λ: float) -> Self:
-        return self._app(Affine(1.0, λ, 0.0, 0.0, 1.0, 0.0))
+    def shear_x(self, λ: Floating) -> Self:
+        return self._app(make_affine(1.0, λ, 0.0, 0.0, 1.0, 0.0))
 
-    def translate(self, dx: float, dy: float) -> Self:
-        return self._app(Affine.translation(Vec2(dx, dy)))
+    def translate(self, dx: Floating, dy: Floating) -> Self:
+        return self._app(translation(V2(dx, dy)))
 
     def translate_by(self, vector) -> Self:  # type: ignore
-        return self._app(Affine.translation(vector))
+        return self._app(translation(vector))
 
+@dataclass
+class BoundingBox(Transformable):
+    tl: P2_t
+    br: P2_t
 
-# Below here are a collection of hacks to ensure that planar objects
-# behave like the rest of the Chalk library. We do this by monkey
-# patching in methods to Vec2 and by fixing a bug in the Affine
-# transformation. This is not great, but necessary to keep the
-# Object oriented api of Chalk.
+    def apply_transform(self, t: Affine) -> Self:
+        tl = t @ self.tl
+        br = t @ self.br
+        tl2 = np.minimum(tl, br)
+        br2 = np.maximum(tl, br)
+        return BoundingBox(tl2, br2)
 
-Vec2._app = lambda x, y: y * x  # type: ignore
-Vec2.shear_x = Transformable.shear_x  # type: ignore
-Vec2.shear_y = Transformable.shear_y  # type: ignore
-Vec2.scale = Transformable.scale  # type: ignore
-Vec2.scale_x = Transformable.scale_x  # type: ignore
-Vec2.scale_y = Transformable.scale_y  # type: ignore
-Vec2.rotate = Transformable.rotate  # type: ignore
-Vec2.rotate_by = Transformable.rotate_by  # type: ignore
-Vec2.reflect_x = Transformable.reflect_x  # type: ignore
-Vec2.reflect_y = Transformable.reflect_y  # type: ignore
-V2 = Vec2
+    @property
+    def width(self) -> Scalar:
+        return (self.br - self.tl)[0]
 
-
-Vec2.translate = Transformable.translate  # type: ignore
-Vec2.translate_by = Transformable.translate_by  # type: ignore
-P2 = Point
+    @property
+    def height(self) -> Scalar:
+        return (self.br - self.tl)[1]
 
 origin = P2(0, 0)
 unit_x = V2(1, 0)
 unit_y = V2(0, 1)
 
 
-def apply_p2_affine(aff: Affine, x: Point) -> Point:
-    y: Point = aff * x
-    return y
 
+def ray_ray_intersection(
+    ray1: Tuple[P2_t, V2_t], ray2: Tuple[P2_t, V2_t]
+) -> Optional[Tuple[float, float]]:
+    """Given two rays
 
-def affine(affine: Affine, other: Any) -> Any:
-    sa, sb, sc, sd, se, sf, _, _, _ = affine[:]
-    if isinstance(other, Affine):
-        oa, ob, oc, od, oe, of, _, _, _ = other
-        return tuple.__new__(
-            Affine,
-            (
-                sa * oa + sb * od,
-                sa * ob + sb * oe,
-                sa * oc + sb * of + sc,
-                sd * oa + se * od,
-                sd * ob + se * oe,
-                sd * oc + se * of + sf,
-                0.0,
-                0.0,
-                1.0,
-            ),
-        )
+    ray₁ = λ t . p₁ + t v₁
+    ray₂ = λ t . p₂ + t v₂
 
-    elif hasattr(other, "from_points"):
-        # Point/vector array
-        points = getattr(other, "points", other)
-        try:
-            return other.from_points(
-                Point(px * sa + py * sb + sc, px * sd + py * se + sf)
-                for px, py in points
-            )
-        except TypeError:
-            return NotImplemented
+    the function returns the parameters t₁ and t₂ at which the two rays meet,
+    that is:
+
+    ray₁ t₁ = ray₂ t₂
+
+    """
+    u = ray2[0] - ray1[0]
+    x1 =    cross(ray1, ray2[1])
+    x2 = cross(u, ray1[1])
+    x3 = cross(u, ray2[1])
+    if x1 == 0 and x2 != 0:
+        # parallel
+        return None
+    elif x1 == 0 and x2 == 0:
+        return 0.0, 0.0
     else:
-        try:
-            vx, vy = other
-        except Exception:
-            return NotImplemented
-        return Vec2(vx * sa + vy * sb + sc, vx * sd + vy * se + sf)
+        # intersecting or collinear
+        return x3 / x1, x2 / x1
 
 
-Affine.__mul__ = affine  # type: ignore
-Affine.remove_translation = remove_translation  # type: ignore
-Affine.remove_linear = remove_linear  # type: ignore
-Affine.transpose_translation = transpose_translation  # type: ignore
+def ray_circle_intersection(anchor: P2_t, direction: V2_t, circle_radius: Floating) -> List[Floating]:
+    """Given a ray and a circle centered at the origin, return the parameter t
+    where the ray meets the circle, that is:
+
+    ray t = circle θ
+
+    The above equation is solved as follows:
+
+    x + t v_x = r sin θ
+    y + t v_y = r cos θ
+
+    By squaring the equations and adding them we get
+
+    (x + t v_x)² + (y + t v_y)² = r²,
+
+    which is equivalent to the following equation:
+
+    (v_x² + v_y²) t² + 2 (x v_x + y v_y) t + (x² + y² - r²) = 0
+
+    This is a quadratic equation, whose solutions are well known.
+
+    """
+    p = anchor
+
+    a = length2(direction)
+    b = 2 * (p @ direction)
+    c = length2(p) - circle_radius**2
+
+    Δ = b**2 - 4 * a * c
+    eps = 1e-6  # rounding error tolerance
+
+    if Δ < -eps:
+        # no intersection
+        return []
+    elif -eps <= Δ < eps:
+        # tangent
+        return [-b / (2 * a)]
+    else:
+        # the ray intersects at two points
+        return [
+            (-b - np.sqrt(Δ)) / (2 * a),
+            (-b + np.sqrt(Δ)) / (2 * a),
+        ]
+
 
 # Explicit rexport
 
-__all__ = ["BoundingBox", "Polygon", "Vec2Array", "Ray"]
-Affine
+__all__ = ["BoundingBox", "Polygon", "Vec2Array", "Ray", "max", "min", "np"]

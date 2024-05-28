@@ -2,8 +2,9 @@ from typing import Iterable, List, Optional, Tuple
 
 from chalk.envelope import Envelope
 from chalk.monoid import associative_reduce
-from chalk.shapes import Path, Spacer
-from chalk.transform import V2, Affine, origin, unit_x, unit_y
+from chalk.shapes import Path, Spacer   
+from chalk.transform import V2_t, Affine, origin, unit_x, unit_y, Scalar, Floating
+import chalk.transform as tx
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
@@ -16,13 +17,14 @@ def with_envelope(self: Diagram, other: Diagram) -> Diagram:
 # with_trace, phantom,
 
 
-def strut(width: float, height: float) -> Diagram:
+def strut(width: Floating, height: Floating) -> Diagram:
     from chalk.core import Primitive
 
-    return Primitive.from_shape(Spacer(width, height))
+    return Primitive.from_shape(Spacer(tx.ftos(width), 
+                                       tx.ftos(height)))
 
 
-def pad(self: Diagram, extra: float) -> Diagram:
+def pad(self: Diagram, extra: Floating) -> Diagram:
     """Scale outward directed padding for a diagram.
 
     Be careful using this if your diagram is not centered.
@@ -36,7 +38,7 @@ def pad(self: Diagram, extra: float) -> Diagram:
     """
     envelope = self.get_envelope()
 
-    def f(d: V2) -> float:
+    def f(d: V2_t) -> Scalar:
         assert envelope is not None
         return envelope(d) * extra
 
@@ -44,7 +46,7 @@ def pad(self: Diagram, extra: float) -> Diagram:
     return self.compose(new_envelope)
 
 
-def frame(self: Diagram, extra: float) -> Diagram:
+def frame(self: Diagram, extra: Floating) -> Diagram:
     """Add outward directed padding for a diagram.
     This padding is applied uniformly on all sides.
 
@@ -57,7 +59,7 @@ def frame(self: Diagram, extra: float) -> Diagram:
     """
     envelope = self.get_envelope()
 
-    def f(d: V2) -> float:
+    def f(d: V2_t) -> Scalar:
         assert envelope is not None
         return envelope(d) + extra
 
@@ -85,7 +87,7 @@ def above(self: Diagram, other: Diagram) -> Diagram:
 # appends
 
 
-def beside(self: Diagram, other: Diagram, direction: V2) -> Diagram:
+def beside(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     return atop(self, juxtapose(self, other, direction))
 
 
@@ -97,18 +99,18 @@ def place_at(
 
 def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
     return concat(
-        d.translate(p.x, p.y) for d, p in zip(diagrams, path.points())
+        d.translate_by(p) for d, p in zip(diagrams, path.points())
     )
 
 
 # position, atPoints
 def cat(
-    diagrams: Iterable[Diagram], v: V2, sep: Optional[float] = None
+    diagrams: Iterable[Diagram], v: V2_t, sep: Optional[Floating] = None
 ) -> Diagram:
 
     diagrams = iter(diagrams)
     start = next(diagrams, None)
-    sep_dia = hstrut(sep).rotate(v.angle)
+    sep_dia = hstrut(sep).rotate(tx.angle(v))
     if start is None:
         return empty()
 
@@ -146,23 +148,23 @@ def empty() -> Diagram:
 # 2D
 
 
-def hstrut(width: Optional[float]) -> Diagram:
+def hstrut(width: Optional[Floating]) -> Diagram:
     from chalk.core import Primitive
 
     if width is None:
         return empty()
-    return Primitive.from_shape(Spacer(width, 0))
+    return Primitive.from_shape(Spacer(tx.ftos(width), tx.ftos(0)))
 
 
-def vstrut(height: Optional[float]) -> Diagram:
+def vstrut(height: Optional[Floating]) -> Diagram:
     from chalk.core import Primitive
 
     if height is None:
         return empty()
-    return Primitive.from_shape(Spacer(0, height))
+    return Primitive.from_shape(Spacer(tx.ftos(0), tx.ftos(height)))
 
 
-def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+def hcat(diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram:
     """
     Stack diagrams next to each other with `besides`.
 
@@ -177,7 +179,7 @@ def hcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
     return cat(diagrams, unit_x, sep)
 
 
-def vcat(diagrams: Iterable[Diagram], sep: Optional[float] = None) -> Diagram:
+def vcat(diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram:
     """
     Stack diagrams above each other with `above`.
 
@@ -212,29 +214,29 @@ def above2(self: Diagram, other: Diagram) -> Diagram:
     return beside(other, self, -unit_y)
 
 
-def juxtapose_snug(self: Diagram, other: Diagram, direction: V2) -> Diagram:
+def juxtapose_snug(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     trace1 = self.get_trace()
     trace2 = other.get_trace()
     d1 = trace1.trace_v(origin, direction)
     d2 = trace2.trace_v(origin, -direction)
     assert d1 is not None and d2 is not None
     d = d1 - d2
-    t = Affine.translation(d)
+    t = tx.translation(d)
     return other.apply_transform(t)
 
 
-def beside_snug(self: Diagram, other: Diagram, direction: V2) -> Diagram:
+def beside_snug(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     return atop(self, juxtapose_snug(self, other, direction))
 
 
-def juxtapose(self: Diagram, other: Diagram, direction: V2) -> Diagram:
+def juxtapose(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     """Given two diagrams ``a`` and ``b``, ``a.juxtapose(b, v)``
     places ``b`` to touch ``a`` along angle ve .
 
     Args:
         self (Diagram): Diagram object.
         other (Diagram): Another diagram object.
-        direction (V2): (Normalized) vector angle to juxtapose
+        direction (V2_T): (Normalized) vector angle to juxtapose
 
     Returns:
         Diagram: Repositioned ``b`` diagram
@@ -242,7 +244,7 @@ def juxtapose(self: Diagram, other: Diagram, direction: V2) -> Diagram:
     envelope1 = self.get_envelope()
     envelope2 = other.get_envelope()
     d = envelope1.envelope_v(direction) - envelope2.envelope_v(-direction)
-    t = Affine.translation(d)
+    t = tx.translation(d)
     return other.apply_transform(t)
 
 
@@ -264,6 +266,6 @@ def at_center(self: Diagram, other: Diagram) -> Diagram:
     """
     envelope1 = self.get_envelope()
     envelope2 = other.get_envelope()
-    t = Affine.translation(envelope1.center)
-    new_envelope = envelope1 + (t * envelope2)
+    t = tx.translation(envelope1.center)
+    new_envelope = envelope1 + (envelope2.apply_transform(t))
     return self.compose(new_envelope, other.apply_transform(t))

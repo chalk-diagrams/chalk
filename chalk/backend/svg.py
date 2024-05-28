@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Iterator, Optional, Sequence
 
 import svgwrite
 from svgwrite import Drawing
@@ -10,21 +10,19 @@ from svgwrite.shapes import Rect
 
 from chalk import transform as tx
 from chalk.shapes import (
-    ArcSegment,
     ArrowHead,
     Image,
     Latex,
     Path,
     Segment,
-    SegmentLike,
     Spacer,
     Text,
 )
 from chalk.style import Style
-from chalk.transform import P2, unit_x, unit_y
+from chalk.transform import P2_t, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
-
+from chalk.monoid import Monoid, Maybe
 if TYPE_CHECKING:
     from chalk.core import (
         ApplyName,
@@ -41,11 +39,11 @@ EMPTY_STYLE = Style.empty()
 
 def tx_to_svg(affine: tx.Affine) -> str:
     def convert(
-        a: float, b: float, c: float, d: float, e: float, f: float
+        a: tx.Floating, b: tx.Floating, c: tx.Floating, d: tx.Floating, 
+        e: tx.Floating, f: tx.Floating
     ) -> str:
         return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
-
-    return convert(*affine[:6])
+    return convert(*affine[0, 0], *affine[0, 1])
 
 
 class Raw(Rect):  # type: ignore
@@ -62,8 +60,8 @@ class Raw(Rect):  # type: ignore
         return self.xml
 
 
-class ToSVG(DiagramVisitor[BaseElement, Style]):
-    A_type = BaseElement
+class ToSVG(DiagramVisitor[Maybe[BaseElement], Style]):
+    A_type = Maybe[BaseElement]
 
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
@@ -77,18 +75,18 @@ class ToSVG(DiagramVisitor[BaseElement, Style]):
         transform = tx_to_svg(diagram.transform)
         inner = diagram.shape.accept(self.shape_renderer, style=style_new)
         if not style_svg and not transform:
-            return inner
+            return Maybe(inner)
         else:
             if not style_svg:
                 style_svg = ";"
             g = self.dwg.g(transform=transform, style=style_svg)
             g.add(inner)
-            return g
+            return Maybe(g)
 
     def visit_empty(
         self, diagram: Empty, style: Style = EMPTY_STYLE
     ) -> BaseElement:
-        return self.dwg.g()
+        return Maybe(self.dwg.g())
 
     def visit_compose(
         self, diagram: Compose, style: Style = EMPTY_STYLE
@@ -96,15 +94,15 @@ class ToSVG(DiagramVisitor[BaseElement, Style]):
         g = self.dwg.g()
 
         for d in diagram.diagrams:
-            g.add(d.accept(self, style))
-        return g
+            g.add(d.accept(self, style).data)
+        return Maybe(g)
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g(transform=tx_to_svg(diagram.transform))
-        g.add(diagram.diagram.accept(self, style))
-        return g
+        g.add(diagram.diagram.accept(self, style).data)
+        return Maybe(g)
 
     def visit_apply_style(
         self, diagram: ApplyStyle, style: Style = EMPTY_STYLE
@@ -116,24 +114,24 @@ class ToSVG(DiagramVisitor[BaseElement, Style]):
     ) -> BaseElement:
         g = self.dwg.g()
         g.add(diagram.diagram.accept(self, style))
-        return g
+        return Maybe(g)
 
 
 class ToSVGShape(ShapeVisitor[BaseElement]):
     def __init__(self, dwg: Drawing):
         self.dwg = dwg
 
-    def render_segment(self, seg: SegmentLike, p: P2) -> str:
-        q = seg.q + p
-        if isinstance(seg, Segment):
-            return f"L {q.x} {q.y}"
-        elif isinstance(seg, ArcSegment):
-            "https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint"
-            f_A = 1 if abs(seg.dangle) > 180 else 0
-            det: float = seg.t.determinant  # type: ignore
-            f_S = 1 if det * seg.dangle > 0 else 0
-            return f"A {seg.r_x} {seg.r_y} {seg.rot} {f_A} {f_S} {q.x} {q.y}"
+    def render_segment(self, seg: Segment) -> Iterator[str]:
+        # https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
+        dangle = seg.dangle
+        f_A = (abs(dangle) > 180)
+        det: float = tx.np.linalg.det(seg.t)  # type: ignore
+        f_S = (det * dangle > 0)
+        r_x, r_y, rot, q = seg.r_x, seg.r_y, seg.rot, seg.q
 
+        return (f"A {r_x[i]} {seg.r_y[i]} {seg.rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
+                for i in range(q.shape[0]))
+    
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE
     ) -> BaseElement:
@@ -145,9 +143,10 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         )
         for loc_trail in path.loc_trails:
             p = loc_trail.location
-            line.push(f"M {p.x} {p.y}")
-            for i, (seg, p) in enumerate(loc_trail.located_segments()):
-                line.push(self.render_segment(seg, p))
+            line.push(f"M {p[0, 0, 0]} {p[0, 1, 0]}")
+            segments = loc_trail.located_segments()
+            for seg in self.render_segment(segments):
+                line.push(seg)
             if loc_trail.trail.closed:
                 line.push("Z")
         return line
@@ -198,7 +197,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
 
 
 def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
-    return self.accept(ToSVG(dwg), style)
+    return self.accept(ToSVG(dwg), style).data
 
 
 def render(
@@ -227,7 +226,7 @@ def render(
     # infer width to preserve aspect ratio
     assert envelope is not None
     width = width or int(height * envelope.width / envelope.height)
-
+    print(height, envelope.width, envelope.height)
     # determine scale to fit the largest axis in the target frame size
     if envelope.width - width <= envelope.height - height:
         α = height / ((1 + pad) * envelope.height)
@@ -245,6 +244,7 @@ def render(
     dwg.defs.add(marker)
 
     dwg.add(outer)
+    print(α, pad)
     s = self.center_xy().pad(1 + pad).scale(α)
     e = s.get_envelope()
     assert e is not None
