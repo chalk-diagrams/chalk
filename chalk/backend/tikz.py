@@ -14,7 +14,7 @@ from chalk.shapes import (
     Text,
 )
 from chalk.style import Style
-from chalk.transform import P2_t, Affine
+from chalk.transform import P2_t, Affine, Floating
 import chalk.transform as tx
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
@@ -31,11 +31,11 @@ EMPTY_STYLE = Style.empty()
 
 def tx_to_tikz(affine: Affine) -> str:
     def convert(
-        a: float, b: float, c: float, d: float, e: float, f: float
+        a: Floating, b: Floating, c: Floating, d: Floating, e: Floating, f: Floating
     ) -> str:
         return f"{{{a}, {d}, {b}, {e}, ({c}, {f})}}"
 
-    return convert(*affine[0], *affine[1])
+    return convert(*affine[0, 0], *affine[0, 1])
 
 
 class ToTikZ(DiagramVisitor[MList[PyLatexElement], Style]):
@@ -82,26 +82,22 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
         self.pylatex = pylatex
 
     def render_segment(
-        self, pts: PyLatexElement, seg: Segment, p: P2_t
+        self, pts: PyLatexElement, seg: Segment
     ) -> None:
-        q = seg.q + p
-        if isinstance(seg, Segment):
-            pts.append("--")
-            pts.append(self.pylatex.TikZCoordinate(q[0], q[1]))
-        elif isinstance(seg, ArcSegment):
-            start = tx.angle(-seg.center)
-            end = tx.angle(seg.q - seg.center)
-            det: float = tx.np.linalg.det(seg.t)  # type: ignore
-            if det * seg.dangle < 0 and end > start:
-                end = end - 360
-            if det * seg.dangle > 0 and end < start:
-                end = end + 360
-            end_ang = end - seg.rot
+        q, rot, r_x, r_y = seg.q, seg.rot, seg.r_x, seg.r_y
+        start = tx.angle(-seg.center)
+        end = tx.angle(seg.q - seg.center)
+        det: float = tx.np.linalg.det(seg.t)  # type: ignore
+        minus = (det * seg.dangle < 0) & (end > start)
+        plus = (det * seg.dangle > 0) & (end < start)
+        end = end - 360 * minus + 360 * plus
+        end_ang = end - seg.rot
+        for i in range(q.shape[0]):
             pts._arg_list.append(
                 self.pylatex.TikZUserPath(
-                    f"""{{[rotate={seg.rot}] arc [
-                           start angle={start-seg.rot}, end angle={end_ang},
-                           x radius={seg.r_x}, y radius={seg.r_y}]}}"""
+                    f"""{{[rotate={rot[i]}] arc [
+                            start angle={start[i]-rot[i]}, end angle={end_ang[i]},
+                            x radius={r_x[i]}, y radius={r_y[i]}]}}"""
                 )
             )
 
@@ -113,10 +109,10 @@ class ToTikZShape(ShapeVisitor[PyLatexElement]):
             style = style.fill_opacity(0)
 
         for loc_trail in path.loc_trails:
-            for i, (seg, p) in enumerate(loc_trail.located_segments()):
-                if i == 0:
-                    pts.append(self.pylatex.TikZCoordinate(p[0], p[1]))
-                self.render_segment(pts, seg, p)
+            p = loc_trail.location
+            pts.append(self.pylatex.TikZCoordinate(p[0, 0, 0], p[0, 1, 0]))
+            seg = loc_trail.located_segments()
+            self.render_segment(pts, seg)
             if loc_trail.trail.closed:
                 pts.append("--")
                 pts._arg_list.append(self.pylatex.TikZUserPath("cycle"))

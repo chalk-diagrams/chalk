@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union
 
-from chalk.shapes.arc import Segment, arc_seg, arc_seg_angle  # noqa: F401
+from chalk.shapes.arc import Segment, seg, arc_seg, arc_seg_angle  # noqa: F401
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
 from chalk.shapes.latex import Latex, latex  # noqa: F401
@@ -153,4 +153,5 @@ __all__ = [
     "from_pil",
     "make_path",
     "arc_seg_angle",
+    "seg"
 ]

@@ -62,6 +62,9 @@ ident = make_affine(1., 0., 0., 0., 1., 0.)
 def dot(v1: V2_t, v2: V2_t) -> Scalars:
     return (v1 * v2).sum(-1).sum(-1)
 
+def cross(v1: V2_t, v2: V2_t) -> Scalars:
+    return np.cross(v1, v2)
+
 def to_point(v: V2_t) -> P2_t:
     return v.at[..., 2, 0].set(1)
 
@@ -104,7 +107,6 @@ def from_radians(θ: Floating) -> Scalars:
 def to_radians(θ: Floating) -> Scalars:
     return (ftos(θ) / 180) * math.pi
 
-
 def remove_translation(aff: Affine) -> Affine:
     return aff.at[..., :1, 2].set(0)
 
@@ -113,9 +115,6 @@ def remove_linear(aff: Affine) -> Affine:
 
 def transpose_translation(aff: Affine) -> Affine:
     return aff.at[..., :2, :2].set(aff[..., :2, :2].transpose(0, 2, 1))
-
-# def apply_affine(aff: Affine, x: Float[Array, "3"]) -> Float[Array, "3"]:
-#     return aff @ x
 
 class Transformable:
     """Transformable class."""
@@ -210,7 +209,7 @@ def ray_ray_intersection(
 
     """
     u = ray2[0] - ray1[0]
-    x1 =    cross(ray1, ray2[1])
+    x1 = cross(ray1, ray2[1])
     x2 = cross(u, ray1[1])
     x3 = cross(u, ray2[1])
     if x1 == 0 and x2 != 0:
@@ -270,4 +269,4 @@ def ray_circle_intersection(anchor: P2_t, direction: V2_t, circle_radius: Floati
 
 # Explicit rexport
 
-__all__ = ["BoundingBox", "Polygon", "Vec2Array", "Ray", "max", "min", "np"]
+__all__ = ["np"]

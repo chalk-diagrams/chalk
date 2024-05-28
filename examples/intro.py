@@ -30,7 +30,6 @@ d.render(path, height=64)
 
 path = "examples/output/intro-02.svg"
 d.render_svg(path, height=64)
-exit()
 # path = "examples/output/intro-02.pdf"
 # d.render_pdf(path)
 

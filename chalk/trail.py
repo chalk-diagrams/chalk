@@ -128,7 +128,7 @@ class Trail(Monoid, Transformable, TrailLike):
     #     )
 
     def centered(self) -> Located:
-        return self.at(-sum(self.points(), tx.P2(0, 0)) / len(self.segments))
+        return self.at(-sum(self.points(), tx.P2(0, 0)) / self.segments.t.shape[0])
 
     # # Misc. Constructor
     # @staticmethod

@@ -98,13 +98,13 @@ class Envelope(Transformable, Monoid):
         d = self(v)
         return v * d
 
-    # @staticmethod
-    # def from_bounding_box(box: BoundingBox) -> Envelope:
-    #     def wrapped(d: tx.V2_t) -> SignedDistance:
-    #         v = box.rotate_rad(tx.rad(d)).br[0]
-    #         return v / tx.length(d)
+    @staticmethod
+    def from_bounding_box(box: BoundingBox) -> Envelope:
+        def wrapped(d: tx.V2_t) -> SignedDistance:
+            v = box.rotate_rad(tx.rad(d)).br[0]
+            return v / tx.length(d)
         
-    #     return Envelope(wrapped)
+        return Envelope(wrapped)
 
     # @staticmethod
     # def from_circle(radius: tx.Floating) -> Envelope:

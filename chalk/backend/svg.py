@@ -226,7 +226,6 @@ def render(
     # infer width to preserve aspect ratio
     assert envelope is not None
     width = width or int(height * envelope.width / envelope.height)
-    print(height, envelope.width, envelope.height)
     # determine scale to fit the largest axis in the target frame size
     if envelope.width - width <= envelope.height - height:
         α = height / ((1 + pad) * envelope.height)
@@ -244,7 +243,6 @@ def render(
     dwg.defs.add(marker)
 
     dwg.add(outer)
-    print(α, pad)
     s = self.center_xy().pad(1 + pad).scale(α)
     e = s.get_envelope()
     assert e is not None

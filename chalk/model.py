@@ -1,7 +1,7 @@
 from colour import Color
 
 from chalk.combinators import concat
-from chalk.shapes import Path, circle, text
+from chalk.shapes import Path, circle, text, seg
 from chalk.transform import V2_t, origin
 import chalk.transform as tx
 from chalk.types import Diagram
