@@ -1,6 +1,6 @@
-from jaxtyping import install_import_hook
-with install_import_hook("chalk", "typeguard.typechecked"):
-    import chalk          # Any module imported inside this `with` block, whose
+# from jaxtyping import install_import_hook
+# with install_import_hook("chalk", "typeguard.typechecked"):
+#     import chalk          # Any module imported inside this `with` block, whose
 
 from colour import Color
 from chalk import *
@@ -9,11 +9,10 @@ from chalk import *
 papaya = Color("#ff9700")
 blue = Color("#005FDB")
 
-
 path = "examples/output/intro-01.png"
 d = circle(0.5).fill_color(papaya)
 d.render(path, height=64)
-
+print("first")
 
 # # Alternative, render as svg
 path = "examples/output/intro-01.svg"
@@ -46,7 +45,7 @@ d.render_svg(path, height=64)
 # d.render_pdf(path)
 
 path = "examples/output/intro-04.png"
-
+print("sierpinsky")
 def sierpinski(n: int, size: int) -> Diagram:
     if n <= 1:
         return triangle(size)

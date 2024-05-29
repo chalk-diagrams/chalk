@@ -144,10 +144,13 @@ class Trail(Monoid, Transformable, TrailLike):
     def vrule(length: Floating) -> Trail:
         return arc.seg(length * tx.unit_y)
 
+    _rectangle = None
     @staticmethod
     def rectangle(width: Floating, height: Floating) -> Trail:
-        t = arc.seg(tx.unit_x * width) + arc.seg(tx.unit_y * height)
-        return (t + t.rotate_by(0.5)).close()
+        if Trail._rectangle is None:
+            t = arc.seg(tx.unit_x) + arc.seg(tx.unit_y)
+            Trail._rectangle = (t + t.rotate_by(0.5)).close()
+        return Trail._rectangle.scale_x(width).scale_y(height)
 
     @staticmethod
     def rounded_rectangle(width: Floating, height: Floating, radius: Floating) -> Trail:
@@ -161,28 +164,35 @@ class Trail(Monoid, Transformable, TrailLike):
         ) + arc.seg(0.01 * tx.unit_y)
         return trail.close()
 
+    _circle = {}
     @staticmethod
     def circle(radius: Floating = 1.0, clockwise: bool = True) -> Trail:
-        sides = 4
-        dangle = -90
-        rotate_by = 1
-        if not clockwise:
-            dangle = 90
-            rotate_by *= -1
-        return (
-            Trail.concat(
+        if clockwise in Trail._circle:
+            return Trail._circle[clockwise]
+        else:
+            sides = 4
+            dangle = -90
+            rotate_by = 1
+            if not clockwise:
+                dangle = 90
+                rotate_by *= -1
+            Trail._circle[clockwise] = Trail.concat(
                 [
                     arc.arc_seg_angle(0, dangle).rotate_by(rotate_by * i / sides)
                     for i in range(sides)
                 ]
-            )
-            .close()
+            ).close()
+        return (
+            Trail._circle[clockwise]
             .scale(radius)
         )
 
+    _polygon = {}
     @staticmethod
     def regular_polygon(sides: int, side_length: Floating) -> Trail:
-        edge = Trail.hrule(side_length)
-        return Trail.concat(
-            edge.rotate_by(i / sides) for i in range(sides)
-        ).close()
+        if sides not in Trail._polygon:
+            edge = Trail.hrule(1)
+            Trail._polygon[sides] = Trail.concat(
+                edge.rotate_by(i / sides) for i in range(sides)
+            ).close()
+        return Trail._polygon[sides].scale(side_length)

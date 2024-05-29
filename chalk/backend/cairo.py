@@ -170,15 +170,17 @@ def render_cairo_prims(
     shape_renderer = ToCairoShape()
     for prim in base.accept(ToList(), Ident):
         # apply transformation
-        matrix = tx_to_cairo(prim.transform)
-        ctx.transform(matrix)
-        prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
+        for i in range(prim.transform.shape[0]):
+            matrix = tx_to_cairo(prim.transform[i:i+1])
+            ctx.transform(matrix)
+            prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
 
-        # undo transformation
-        matrix.invert()
-        ctx.transform(matrix)
-        prim.style.render(ctx)
-        ctx.stroke()
+            # undo transformation
+            matrix.invert()
+            ctx.transform(matrix)
+
+            prim.style.render(ctx)
+            ctx.stroke()
 
 
 def render(

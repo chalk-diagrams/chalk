@@ -36,8 +36,8 @@ class Segment(TrailLike):
         return Segment(t @ self.transform, self.angles)
     
     def __add__(self, other: Segment) -> Segment:
-        return Segment(tx.np.concat([self.transform, other.transform], axis=0), 
-                       tx.np.concat([self.angles, other.angles], axis=0))
+        return Segment(tx.np.concatenate([self.transform, other.transform], axis=0), 
+                       tx.np.concatenate([self.angles, other.angles], axis=0))
                      
     @property
     def t(self) -> Affine:
@@ -91,7 +91,7 @@ def arc_between(
     #     return LocatedSegment(q - p, p)
     d = tx.length(q - p)
     # Determine the arc's angle θ and its radius r
-    θ = tx.np.acos((d**2 - 4.0 * h**2) / (d**2 + 4.0 * h**2))
+    θ = tx.np.arccos((d**2 - 4.0 * h**2) / (d**2 + 4.0 * h**2))
     r = d / (2 * tx.np.sin(θ))
 
     if height > 0:

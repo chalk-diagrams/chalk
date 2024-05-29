@@ -5,8 +5,12 @@ from typing_extensions import Self
 from dataclasses import dataclass
 
 from jaxtyping import Float, Bool, Array
-# import numpy as np 
-import jax.numpy as np
+if True:
+    ops = None
+    import numpy as np 
+else:
+    from jax import ops
+    #import jax.numpy as np
 
 
 Affine = Float[Array, "#B 3 3"]
@@ -18,6 +22,21 @@ Floating = Union[Scalars, Scalar, float, int]
 Mask = Bool[Array, "#B"]
 def ftos(f: Floating) -> Scalars:
     return np.array(f, dtype=float).reshape(-1)
+
+def index_update(arr, index, values):
+    """
+    Update the array `arr` at the given `index` with `values` and return the updated array.
+    Supports both NumPy and JAX arrays.
+    """
+
+    if ops is None:
+        # If the array is a NumPy array
+        new_arr = arr.copy()
+        new_arr[index] = values
+        return new_arr
+    else:
+        # If the array is a JAX array
+        return ops.index_update(arr, index, values)
 
 
 def V2(x: Floating, y: Floating) -> V2_t:
@@ -44,7 +63,7 @@ def angle(v: V2_t) -> Scalars:
     return from_radians(rad(v))
 
 def rad(v: V2_t) -> Scalars:
-    return np.atan2(v[..., 1, 0], v[..., 0, 0])
+    return np.arctan2(v[..., 1, 0], v[..., 0, 0])
 
 def perpendicular(v: V2_t) -> V2_t:
     return np.hstack([-v[..., 1, 0], v[..., 0, 0], v[..., 2, 0]])
@@ -66,7 +85,8 @@ def cross(v1: V2_t, v2: V2_t) -> Scalars:
     return np.cross(v1, v2)
 
 def to_point(v: V2_t) -> P2_t:
-    return v.at[..., 2, 0].set(1)
+    index = (Ellipsis, 2, 0)
+    return index_update(v, index, 1)
 
 def polar(angle: Floating, length: Floating = 1.0) -> V2_t:
     rad = to_radians(angle)
@@ -74,23 +94,29 @@ def polar(angle: Floating, length: Floating = 1.0) -> V2_t:
     return V2(x * length, y * length)
 
 def scale(vec: V2_t) -> Affine:
-    return ident.at[..., np.arange(2), np.arange(2)].set(vec[..., :2, 0])
+    index = (Ellipsis, np.arange(0, 2), np.arange(0, 2))
+    return index_update(ident, index, vec[..., :2, 0])
 
 def translation(vec: V2_t) -> Affine:
-    return ident.repeat(vec.shape[0], axis=0).at[..., :2, 2].set(vec[..., :2, 0])
+    index = (Ellipsis, slice(0, 2), 2)
+    base = ident.repeat(vec.shape[0], axis=0)
+    return index_update(base, index, vec[..., :2, 0])
+    #return .at[..., :2, 2].set(vec[..., :2, 0])
 
 def get_translation(aff: Affine) -> V2_t:
-    return np.zeros([aff.shape[0], 3, 1]).at[..., :2, 0].set(aff[..., :2, 2])
+    index = (Ellipsis, slice(0, 2), 0)
+    return index_update(np.zeros([aff.shape[0], 3, 1]), index, 
+                        aff[..., :2, 2])
 
 def rotation(rad: Floating) -> Affine:
     ca, sa = np.cos(rad), np.sin(rad)
     up = np.stack([ca, sa, -sa, ca], axis=-1).reshape(-1, 2, 2)
-    return ident.at[..., :2, :2].set(up)
+    index = (Ellipsis, slice(0, 2), slice(0, 2))
+    return index_update(ident, index, up)
 
 def inv(aff: Affine) -> Affine:
     det = np.linalg.det(aff)
     assert np.all(np.abs(det) > 1e-5), f"{det} {aff}"
-    print(aff.shape)
     idet = 1.0 / det
     sa, sb, sc = aff[..., 0, 0], aff[..., 0, 1], aff[..., 0, 2]
     sd, se, sf = aff[..., 1, 0], aff[..., 1, 1], aff[..., 1, 2]
@@ -108,13 +134,18 @@ def to_radians(θ: Floating) -> Scalars:
     return (ftos(θ) / 180) * math.pi
 
 def remove_translation(aff: Affine) -> Affine:
-    return aff.at[..., :1, 2].set(0)
+    #aff.at[..., :1, 2].set(0)
+    index = (Ellipsis, slice(0, 1), 2)
+    return index_update(aff, index, 0)
 
 def remove_linear(aff: Affine) -> Affine:
-    return aff.at[..., :2, :2].set(np.eye(2))
+    # aff.at[..., :2, :2].set(np.eye(2))
+    index = (Ellipsis, slice(0, 2), slice(0, 2))
+    return index_update(aff, index, np.eye(2))
 
 def transpose_translation(aff: Affine) -> Affine:
-    return aff.at[..., :2, :2].set(aff[..., :2, :2].transpose(0, 2, 1))
+    index = (Ellipsis, slice(0, 2), slice(0, 2))
+    return index_update(aff,  index, aff[..., :2, :2].transpose(0, 2, 1))
 
 class Transformable:
     """Transformable class."""

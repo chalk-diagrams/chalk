@@ -62,12 +62,12 @@ class Envelope(Transformable, Monoid):
     @property
     def width(self) -> Scalar:
         assert not self.is_empty
-        return (self(tx.unit_x) + self(-tx.unit_x)).reshape()
+        return (self(tx.unit_x) + self(-tx.unit_x)).reshape(())
 
     @property
     def height(self) -> Scalar:
         assert not self.is_empty
-        return (self(tx.unit_y) + self(-tx.unit_y)).reshape()
+        return (self(tx.unit_y) + self(-tx.unit_y)).reshape(())
 
     def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:
@@ -87,7 +87,7 @@ class Envelope(Transformable, Monoid):
 
             # Translation
             diff = tx.dot((u / tx.dot(v, v)), v)
-            return (after_linear - diff).reshape()
+            return (after_linear - diff).reshape(())
 
         return Envelope(wrapped)
 
