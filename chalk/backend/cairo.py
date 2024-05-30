@@ -85,15 +85,17 @@ class ToCairoShape(ShapeVisitor[None]):
         end = seg.angle + seg.dangle
 
         for i in range(q.shape[0]):
-            ctx.save()
-            matrix = tx_to_cairo(seg.t[i][None])
-            ctx.transform(matrix)
-            if dangle[i] < 0:
-                ctx.arc_negative(0.0, 0.0, 1.0, angle[i], end[i])
+            if tx.np.abs(dangle[i]) < 1:
+                ctx.line_to(q[i, 0, 0], q[i, 1, 0])
             else:
-                ctx.arc(0.0, 0.0, 1.0, angle[i], end[i])
-            ctx.restore()
-
+                ctx.save()
+                matrix = tx_to_cairo(seg.t[i:i+1])
+                ctx.transform(matrix)
+                if dangle[i] < 0:
+                    ctx.arc_negative(0.0, 0.0, 1.0, angle[i], end[i])
+                else:
+                    ctx.arc(0.0, 0.0, 1.0, angle[i], end[i])
+                ctx.restore()
     def visit_path(
         self,
         path: Path,
@@ -104,7 +106,7 @@ class ToCairoShape(ShapeVisitor[None]):
             style.fill_opacity_ = 0
         for loc_trail in path.loc_trails:
             p = loc_trail.location
-            #ctx.move_to(p[0, 0, 0], p[0, 1,0])
+            ctx.move_to(p[0, 0, 0], p[0, 1,0])
             segments = loc_trail.located_segments()
             self.render_segment(segments, ctx)
             if loc_trail.trail.closed:

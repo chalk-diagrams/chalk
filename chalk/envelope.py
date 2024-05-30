@@ -139,13 +139,10 @@ class Envelope(Transformable, Monoid):
             pts.append(self(v) * v)
         return pts
 
-    def to_segments(self, angle: int = 45) -> Iterable[Tuple[P2_t, P2_t]]:
+    def to_segments(self, angle: int = 45):
         "Draws an envelope by sampling every 10 degrees."
-        segments = []
-        for i in range(0, 361, angle):
-            v = tx.polar(i)
-            segments.append((tx.origin, self(v) * v))
-        return segments
+        v = tx.polar(tx.np.arange(0, 361, angle))
+        return v * self(v)[:, None, None]
 
 
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):

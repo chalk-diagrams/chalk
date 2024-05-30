@@ -132,5 +132,5 @@ output_path = "examples/output/escher-square-limit.svg"
 pseudolimit.render_svg(output_path, height=512)
 
 
-output_path = "examples/output/escher-square-limit.pdf"
-pseudolimit.render_pdf(output_path, height=512)
+# output_path = "examples/output/escher-square-limit.pdf"
+# pseudolimit.render_pdf(output_path, height=512)

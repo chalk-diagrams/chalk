@@ -44,9 +44,11 @@ def show_envelope(
         .fill_opacity(0)
         .line_color(RED)
     )
+    segments = envelope.to_segments(angle)
+
     outer += (
-        concat([seg(y).stroke() for (x, y) in envelope.to_segments(angle)])
-        .line_color(RED)
+        concat([seg(segments[i]).stroke() for i in range(segments.shape[0])])
+        .line_color(BLUE)
         .dashing([0.01, 0.01], 0)
     )
 

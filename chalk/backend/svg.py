@@ -128,9 +128,12 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         det: float = tx.np.linalg.det(seg.t)  # type: ignore
         f_S = (det * dangle > 0)
         r_x, r_y, rot, q = seg.r_x, seg.r_y, seg.rot, seg.q
-
-        return (f"A {r_x[i]} {seg.r_y[i]} {seg.rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
-                for i in range(q.shape[0]))
+        
+        for i in range(q.shape[0]):
+            if tx.np.abs(dangle[i]) > 1:            
+                yield f"A {r_x[i]} {seg.r_y[i]} {seg.rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
+            else:
+                yield f"L {q[i, 0, 0]} {q[i, 1, 0]}"
     
     def visit_path(
         self, path: Path, style: Style = EMPTY_STYLE

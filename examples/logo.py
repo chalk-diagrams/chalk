@@ -17,23 +17,28 @@ def from_polar(r, theta):
 def mkCoords(n):
     return [coord(i) for i in range(1, n+1)]
 
+# Hippie color palette.
+colors = [Color(h) for h in ["#18b0dc",
+                            "#056753",
+                            "#b564ac",
+                            "#e0b566",
+                            "#e52828"]
+]
+
+circles = list([circle(0.6).line_width(0).fill_color(colors[n]) for n in range(len(colors))])
+
+
 def floret(r):
     n = math.floor(1.8 * math.sqrt(r)) % 5
-    # Hippie color palette.
-    colors = [Color(h) for h in ["#18b0dc",
-                                 "#056753",
-                                 "#b564ac",
-                                 "#e0b566",
-                                 "#e52828"]
-    ]
+    return circles[n]
 
-    return circle(0.6).line_width(0).fill_color(colors[n])
 
 def florets(m):
     return [floret(math.sqrt(i)) for i in range(1,m+1)]
     
 def sunflower(n):
-    return concat(flor.translate(cord[0], cord[1]) for cord, flor in zip(mkCoords(n), florets(n)))
+    return concat(flor.translate(cord[0], cord[1]) 
+                  for cord, flor in zip(mkCoords(n), florets(n))).close_envelope()
         
 floret = sunflower(1900).center_xy().scale_uniform_to_x(1).center_xy()
 background = rectangle(1.6, 1).fill_color(black).line_width(0).translate(-0.15, 0)
@@ -48,6 +53,6 @@ d.render_svg("examples/output/logo.svg", 500)
 
 try:
     d.render("examples/output/logo.png", 500)
-    d.render_pdf("examples/output/logo.pdf", 50)
+    # d.render_pdf("examples/output/logo.pdf", 50)
 except ModuleNotFoundError:
     print("Need to install Cairo")
