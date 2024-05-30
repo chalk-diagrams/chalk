@@ -9,9 +9,11 @@ from chalk import *
 papaya = Color("#ff9700")
 blue = Color("#005FDB")
 
+print("start")
 path = "examples/output/intro-01.png"
 d = circle(0.5).fill_color(papaya)
 d.render(path, height=64)
+
 print("first")
 
 # # Alternative, render as svg
@@ -24,6 +26,7 @@ d.render_svg(path, height=64)
 
 
 path = "examples/output/intro-02.png"
+# d = circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 d = circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 d.render(path, height=64)
 

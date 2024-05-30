@@ -113,7 +113,7 @@ class ToSVG(DiagramVisitor[Maybe[BaseElement], Style]):
         self, diagram: ApplyName, style: Style = EMPTY_STYLE
     ) -> BaseElement:
         g = self.dwg.g()
-        g.add(diagram.diagram.accept(self, style))
+        g.add(diagram.diagram.accept(self, style).data)
         return Maybe(g)
 
 

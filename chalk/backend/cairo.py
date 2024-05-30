@@ -104,7 +104,7 @@ class ToCairoShape(ShapeVisitor[None]):
             style.fill_opacity_ = 0
         for loc_trail in path.loc_trails:
             p = loc_trail.location
-            ctx.move_to(p[0, 0, 0], p[0, 1,0])
+            #ctx.move_to(p[0, 0, 0], p[0, 1,0])
             segments = loc_trail.located_segments()
             self.render_segment(segments, ctx)
             if loc_trail.trail.closed:

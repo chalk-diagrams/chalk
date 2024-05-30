@@ -17,8 +17,6 @@ from chalk.transform import (
     Transformable,
     Floating
 )
-import jax
-import jax.numpy as np
 from chalk.types import Diagram, Enveloped, Traceable, TrailLike
 
 
@@ -46,19 +44,22 @@ class Located(Enveloped, Traceable, Transformable):
         inv_t = tx.inv(rt)
         trans_t = tx.transpose_translation(rt)
         u: V2_t = -tx.get_translation(t)
-        def wrapped(v: V2_t):
+        def wrapped(v: V2_t) -> Scalars:
             # Linear
+            v = v[:, None, :, :]
+
             vi = inv_t @ v
-            v_prim = tx.norm(trans_t @ v)
+            inp = (trans_t @ v)
+            v_prim = tx.norm_(inp)
             inner = env(v_prim)
             d = tx.dot(v_prim, vi)
             after_linear = inner / d
 
 
             # Translation
-            diff = tx.dot((u / tx.dot(v, v)), v)
+            diff = tx.dot((u / tx.dot(v, v)[..., None, None]), v)
             out = after_linear - diff
-            return tx.np.max(out, axis=0)
+            return tx.np.max(out, axis=1)
 
         return Envelope(wrapped)
 
@@ -92,7 +93,7 @@ class Trail(Monoid, Transformable, TrailLike):
     # Monoid
     @staticmethod
     def empty() -> Trail:
-        return Trail(Segment(np.array([]), np.array([])), False)
+        return Trail(Segment(tx.np.array([]), tx.np.array([])), False)
 
     def __add__(self, other: Trail) -> Trail:
         assert not (self.closed or other.closed), "Cannot add closed trails"
@@ -115,7 +116,7 @@ class Trail(Monoid, Transformable, TrailLike):
 
     def points(self) -> Float[Array, "B 3"]:
         q = self.segments.q
-        return (np.cumsum(q, axis=0) - q).at[..., 2, 0].set(1)
+        return tx.to_point(tx.np.cumsum(q, axis=0) - q)
 
     def at(self, p: P2_t) -> Located:
         return Located(self, p)
@@ -131,10 +132,12 @@ class Trail(Monoid, Transformable, TrailLike):
         return self.at(-sum(self.points(), tx.P2(0, 0)) / self.segments.t.shape[0])
 
     # # Misc. Constructor
-    # @staticmethod
-    # def from_offsets(offsets: List[V2_t], closed: bool = False) -> Trail:
-    #     return Trail([Segment(off) for off in offsets], closed)
-
+    @staticmethod
+    def from_offsets(offsets: List[V2_t], closed: bool = False) -> Trail:
+        trail = Trail.concat([arc.seg(off) for off in offsets])
+        if closed:
+            trail = trail.close()
+        return trail
 
     @staticmethod
     def hrule(length: Floating) -> Trail:

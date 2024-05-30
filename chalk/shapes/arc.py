@@ -72,7 +72,7 @@ class Segment(TrailLike):
         return self.t @ tx.P2(0, 0)
 
 def seg(offset: V2_t) -> Trail:
-    return arc_seg(offset, 1e-3)
+    return arc_seg(offset, 1e-4)
 
 def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> tx.Mask:
     """Checks if x ∈ [a, b] mod 360. See the following link for an
@@ -111,27 +111,27 @@ def arc_between(
     ret = tx.translation(p) @ tx.rotation(-tx.rad(diff)) @  tx.translation(tx.V2(d / 2, dy)) @ tx.rotation(φ) @ tx.scale(tx.V2(r, r))
     return Segment(ret, angles)
 
-def arc_envelope(angle_offset: Float[Array, "#B 2"]) -> Callable[[V2_t], tx.Scalars]:
+def arc_envelope(angle_offset: Float[Array, "#B 2"]):
     "Trace is done as simple arc and transformed"
     angle0_deg = angle_offset[..., 0]
     angle1_deg = angle0_deg + angle_offset[..., 1]
 
+    is_circle = abs(angle0_deg - angle1_deg) >= 360
+    low = tx.np.minimum(angle0_deg, angle1_deg)
+    high = tx.np.maximum(angle0_deg, angle1_deg)
+    check = (low - high) % 360
+
     v1 = tx.polar(angle0_deg)
     v2 = tx.polar(angle1_deg)
-    def wrapped(d: V2_t) -> tx.Scalars:
-        is_circle = abs(angle0_deg - angle1_deg) >= 360
-        q =  tx.np.where(
-            is_circle | is_in_mod_360(
-            tx.angle(d),
-            tx.np.minimum(angle0_deg, angle1_deg),
-            tx.np.maximum(angle0_deg, angle1_deg),
-            ), 
+
+    def wrapped(d):
+        return tx.np.where(
+            (is_circle | (((tx.angle_(d) - high) % 360) > check)),
             # Case 1: P2 at arc
-            1 / tx.length(d), 
+            1 / tx.length_(d), 
             # Case 2: P2 outside of arc
             tx.np.maximum(tx.dot(d, v1), tx.dot(d, v2))
         )
-        return q
     return wrapped
 
 def arc_seg(q: V2_t, height: tx.Floating) -> Trail:

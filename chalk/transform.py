@@ -10,7 +10,7 @@ if True:
     import numpy as np 
 else:
     from jax import ops
-    #import jax.numpy as np
+    import jax.numpy as np
 
 
 Affine = Float[Array, "#B 3 3"]
@@ -21,7 +21,7 @@ Scalar = Float[Array, ""]
 Floating = Union[Scalars, Scalar, float, int]
 Mask = Bool[Array, "#B"]
 def ftos(f: Floating) -> Scalars:
-    return np.array(f, dtype=float).reshape(-1)
+    return np.array(f, dtype=np.double).reshape(-1)
 
 def index_update(arr, index, values):
     """
@@ -36,7 +36,7 @@ def index_update(arr, index, values):
         return new_arr
     else:
         # If the array is a JAX array
-        return ops.index_update(arr, index, values)
+        return arr.at[index].set(values)
 
 
 def V2(x: Floating, y: Floating) -> V2_t:
@@ -56,11 +56,22 @@ def norm(v: V2_t) -> V2_t:
 def length(v: V2_t) -> Scalars:
     return np.sqrt(length2(v))
 
+# These are untyped variants that are needed for multibatch cases.
+def length_(v):
+    return length(v.reshape(-1, 3, 1)).reshape(*v.shape[:2])
+
+def angle_(v):
+    return angle(v.reshape(-1, 3, 1)).reshape(*v.shape[:2])
+
+def norm_(v):
+    return norm(v.reshape(-1, 3, 1)).reshape(*v.shape)
+
 def length2(v: V2_t) -> Scalars:
     return (v * v)[..., :2, 0].sum(-1)
 
 def angle(v: V2_t) -> Scalars:
     return from_radians(rad(v))
+
 
 def rad(v: V2_t) -> Scalars:
     return np.arctan2(v[..., 1, 0], v[..., 0, 0])
@@ -78,13 +89,13 @@ def make_affine(a: Floating, b:Floating, c:Floating, d:Floating, e:Floating, f:F
 
 ident = make_affine(1., 0., 0., 0., 1., 0.)
 
-def dot(v1: V2_t, v2: V2_t) -> Scalars:
+def dot(v1, v2):
     return (v1 * v2).sum(-1).sum(-1)
 
 def cross(v1: V2_t, v2: V2_t) -> Scalars:
     return np.cross(v1, v2)
 
-def to_point(v: V2_t) -> P2_t:
+def to_point(v: Float[Array, "... 1"]) -> P2_t:
     index = (Ellipsis, 2, 0)
     return index_update(v, index, 1)
 
@@ -109,10 +120,12 @@ def get_translation(aff: Affine) -> V2_t:
                         aff[..., :2, 2])
 
 def rotation(rad: Floating) -> Affine:
+    rad = ftos(rad)
     ca, sa = np.cos(rad), np.sin(rad)
     up = np.stack([ca, sa, -sa, ca], axis=-1).reshape(-1, 2, 2)
+    base = ident.repeat(rad.shape[0], axis=0)
     index = (Ellipsis, slice(0, 2), slice(0, 2))
-    return index_update(ident, index, up)
+    return index_update(base, index, up)
 
 def inv(aff: Affine) -> Affine:
     det = np.linalg.det(aff)
@@ -213,11 +226,11 @@ class BoundingBox(Transformable):
 
     @property
     def width(self) -> Scalar:
-        return (self.br - self.tl)[0]
+        return (self.br - self.tl)[0, 0, 0]
 
     @property
     def height(self) -> Scalar:
-        return (self.br - self.tl)[1]
+        return (self.br - self.tl)[0, 1, 0]
 
 origin = P2(0, 0)
 unit_x = V2(1, 0)

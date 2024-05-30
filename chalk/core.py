@@ -70,7 +70,12 @@ class BaseDiagram(chalk.types.Diagram):
     def compose(
         self, envelope: Envelope, other: Optional[Diagram] = None
     ) -> Diagram:
-        other = other if other is not None else Empty()
+        if other is None and isinstance(self, Compose):
+            return Compose(envelope, self.diagrams)
+        if other is None and isinstance(self, Compose):
+            return Compose(envelope, [self])
+        
+        other = other if other is not None else Empty() 
         if isinstance(self, Empty):
             return other
         if isinstance(other, Empty):
@@ -90,6 +95,7 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Combinators
     with_envelope = chalk.combinators.with_envelope
+    close_envelope = chalk.combinators.close_envelope
     juxtapose = chalk.combinators.juxtapose
     juxtapose_snug = chalk.combinators.juxtapose_snug
     beside_snug = chalk.combinators.beside_snug

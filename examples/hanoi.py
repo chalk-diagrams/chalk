@@ -5,8 +5,11 @@ from PIL import Image as PILImage
 from typing import Dict, List, Tuple
 
 from colour import Color  # type: ignore
-from chalk import Diagram, rectangle, concat, hcat, vcat
+from chalk import Diagram, rectangle, concat, hcat, vcat, unit_x
 
+# from jaxtyping import install_import_hook
+# with install_import_hook("chalk", "typeguard.typechecked"):
+#     import chalk          # Any module imported inside this `with` block, whose
 
 Disk = int
 Stack = List[Disk]  # disks on one peg
@@ -18,31 +21,37 @@ colors: List[Color] = [
     Color("#CCCC9F"),
     Color("#DB4105"),
 ]
+colors = colors + colors
+colors = colors + colors
 black = Color("black")
 
-
+disks = {}
 def draw_disk(n: Disk) -> Diagram:
-    return (
-        rectangle(n + 2, 1)
-        .fill_color(colors[n])
-        .line_color(colors[n])
-        .line_width(0.05)
-    )
+    if n not in disks:
+        disks[n] = (
+            rectangle(n + 2, 1)
+            .fill_color(colors[n])
+            .line_color(colors[n])
+            .line_width(0.05)
+        )
+    return disks[n]
 draw_disk(0)
 
-
+stacks = {}
 def draw_stack(s: Stack) -> Diagram:
-    disks = vcat(map(draw_disk, s))
-    post = rectangle(0.8, 6).fill_color(black)
-    return post.align_b() + disks.align_b()
+    k = tuple(s)
+    if k not in stacks:
+        disks = vcat(map(draw_disk, s))
+        post = rectangle(0.8, 6).fill_color(black)
+        stacks[k] = (post.align_b() + disks.align_b()).close_envelope()
+    return stacks[k]
 draw_stack([0, 1])
 
 
 def draw_hanoi(state: Hanoi) -> Diagram:
     hsep = 7
-    return concat(
-        draw_stack(stack).translate(7 * i, 0) for i, stack in enumerate(state)
-    )
+    return concat([draw_stack(stack).translate_by(unit_x * hsep * i)
+                   for i, stack in enumerate(state)]).close_envelope()
 draw_hanoi([[0], [1, 2], []])
 
 def solve_hanoi(num_disks: int) -> List[Move]:
@@ -89,13 +98,14 @@ def draw_state_sequence(seq: List[Hanoi]) -> Diagram:
     return concat(draw_hanoi(state).translate(0, 7.5 * i) for i, state in enumerate(seq))
 
 
-diagram = draw_state_sequence(state_sequence(3))
-
+diagram = draw_state_sequence(state_sequence(5))
+import chalk
+print(chalk.Envelope.total_env)
 
 path = "examples/output/hanoi.svg"
 diagram.render_svg(path, height=700)
 
-
+print(chalk.Envelope.total_env)
 try: 
     path = "examples/output/hanoi.png"
     diagram.render(path, height=700)

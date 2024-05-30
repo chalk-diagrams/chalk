@@ -13,6 +13,12 @@ from chalk.types import Diagram
 def with_envelope(self: Diagram, other: Diagram) -> Diagram:
     return self.compose(other.get_envelope())
 
+def close_envelope(self: Diagram) -> Diagram:
+    from chalk.core import Primitive
+
+    env = self.get_envelope()
+    return self.compose(Envelope.from_bounding_box(env.to_bounding_box()))
+
 
 # with_trace, phantom,
 
