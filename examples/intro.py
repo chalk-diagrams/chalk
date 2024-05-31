@@ -12,8 +12,13 @@ blue = Color("#005FDB")
 print("start")
 path = "examples/output/intro-01.png"
 d = circle(0.5).fill_color(papaya)
-d.render(path, height=64)
 
+d = regular_polygon(8, 1.5).rotate_by(1 / 16)
+t = d.get_trace()
+print("trace", t(P2(0, 0.), V2(1., 0.)))
+#print("trace", t(P2(1, 1.), V2(0., 1.)))
+d.render(path, height=64)
+exit()
 print("first")
 
 # # Alternative, render as svg
@@ -28,7 +33,7 @@ d.render_svg(path, height=64)
 path = "examples/output/intro-02.png"
 # d = circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 d = circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
-d.show_envelope().render(path, height=64)
+d.render(path, height=64)
 
 path = "examples/output/intro-02.svg"
 d.show_envelope().render_svg(path, height=64)

@@ -99,7 +99,7 @@ def make_tile(name):
 
 def quartet(tl, tr, bl, br):
     diagram = (tl | tr) / (bl | br)
-    return diagram.center_xy().scale(0.5)
+    return diagram.center_xy().close_envelope().scale(0.5)
 
 
 def cycle(diagram):

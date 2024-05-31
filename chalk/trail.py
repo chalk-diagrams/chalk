@@ -8,8 +8,9 @@ from chalk.envelope import Envelope
 from chalk.monoid import Monoid
 import chalk.shapes.arc as arc
 from chalk.shapes.arc import Segment
-from chalk.trace import Trace
+from chalk.trace import Trace, Ray
 import chalk.transform as tx
+import functools
 from chalk.transform import (
     P2_t,
     V2_t,
@@ -55,7 +56,6 @@ class Located(Enveloped, Traceable, Transformable):
             d = tx.dot(v_prim, vi)
             after_linear = inner / d
 
-
             # Translation
             diff = tx.dot((u / tx.dot(v, v)[..., None, None]), v)
             out = after_linear - diff
@@ -64,12 +64,24 @@ class Located(Enveloped, Traceable, Transformable):
         return Envelope(wrapped)
 
 
-    # def get_trace(self) -> Trace:
-    #     return Trace.concat(
-    #         segment.get_trace().translate_by(location)
-    #         for segment, location in self.located_segments()
-    #     )
+    def get_trace(self) -> Trace:
+        s = self.located_segments()
+        trace = arc.arc_trace(s.angles)
+        t = s.transform
+        t1 = tx.inv(t)
+        def wrapped(ray):
+            trac, mask = trace(Ray(
+                t1 @ ray.pt[:, None, :, :], 
+                tx.remove_translation(t1) @ ray.v[:, None, :, :])
+            )
+            # #A #B 2
+            
+            z = tx.union_axis((trac, mask), axis=1)
+            print(trac, mask, z)
+            return z
 
+        return Trace(wrapped)
+    
     def stroke(self) -> Diagram:
         return self.to_path().stroke()
 

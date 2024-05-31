@@ -91,7 +91,7 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
         diagram: ApplyTransform,
         t: Affine = Ident,
     ) -> Maybe[Subdiagram]:
-        return diagram.diagram.accept(self, t * diagram.transform)
+        return diagram.diagram.accept(self, t @ diagram.transform)
 
     def visit_apply_name(
         self,

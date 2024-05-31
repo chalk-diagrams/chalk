@@ -141,7 +141,7 @@ class Envelope(Transformable, Monoid):
 
     def to_segments(self, angle: int = 45):
         "Draws an envelope by sampling every 10 degrees."
-        v = tx.polar(tx.np.arange(0, 361, angle))
+        v = tx.polar(tx.np.arange(0, 361, angle) * 1.)
         return v * self(v)[:, None, None]
 
 

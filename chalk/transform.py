@@ -3,7 +3,7 @@ from typing import Any, Union, Tuple, Optional, List
 
 from typing_extensions import Self
 from dataclasses import dataclass
-
+import functools
 from jaxtyping import Float, Bool, Array
 if True:
     ops = None
@@ -11,17 +11,47 @@ if True:
 else:
     from jax import ops
     import jax.numpy as np
+    import jax
 
-
+import jax
 Affine = Float[Array, "#B 3 3"]
 V2_t = Float[Array, "#B 3 1"]
 P2_t = Float[Array, "#B 3 1"]
 Scalars = Float[Array, "#B"]
 Scalar = Float[Array, ""]
+PtB = Float[Array, "... 3 1"]
+
+ScalarsB = Float[Array, "..."]
+ScalarB = Float[Array, "..."]
+
 Floating = Union[Scalars, Scalar, float, int]
+FloatingB = Union[ScalarsB, ScalarB, float, int]
 Mask = Bool[Array, "#B"]
-def ftos(f: Floating) -> Scalars:
+def ftos(f: FloatingB) -> ScalarsB:
     return np.array(f, dtype=np.double).reshape(-1)
+
+
+def union(x, y):
+    if ops is None:
+        n1 = np.concatenate([x[0], y[0]], axis=1)
+        m = np.concatenate([x[1], y[1]], axis=1)
+        keep = np.any(m, axis=0)
+        return n1[:, keep], m[:, keep]
+
+    else:
+        def un(x, y):
+            np.union1d(x, y, size=64, fill_value=-999)
+        return jax.vmap(un)(x, y)
+
+
+def union_axis(x, axis):
+    print("s", x[0].shape)
+    n = np.squeeze(np.split(x[0], x[0].shape[axis], axis=axis), axis)
+    m = np.squeeze(np.split(x[1], x[1].shape[axis], axis=axis), axis)
+    ret =  functools.reduce(union, zip(n, m))
+    print("o", ret[0].shape)
+    return ret
+
 
 def index_update(arr, index, values):
     """
@@ -66,14 +96,20 @@ def angle_(v):
 def norm_(v):
     return norm(v.reshape(-1, 3, 1)).reshape(*v.shape)
 
+def polar_(v):
+    return polar(v.reshape(-1)).reshape(*v.shape, 3, 1)
+
+def length2_(v):
+    return length2(v.reshape(-1, 3, 1)).reshape(*v.shape[:2])
+
 def length2(v: V2_t) -> Scalars:
     return (v * v)[..., :2, 0].sum(-1)
 
-def angle(v: V2_t) -> Scalars:
-    return from_radians(rad(v))
+def angle(v: PtB) -> ScalarsB:
+    return from_rad * rad(v)
 
 
-def rad(v: V2_t) -> Scalars:
+def rad(v: PtB) -> ScalarsB:
     return np.arctan2(v[..., 1, 0], v[..., 0, 0])
 
 def perpendicular(v: V2_t) -> V2_t:
@@ -99,7 +135,8 @@ def to_point(v: Float[Array, "... 1"]) -> P2_t:
     index = (Ellipsis, 2, 0)
     return index_update(v, index, 1)
 
-def polar(angle: Floating, length: Floating = 1.0) -> V2_t:
+def polar(angle: FloatingB, 
+          length: Floating = 1.0) -> PtB:
     rad = to_radians(angle)
     x, y = np.cos(rad), np.sin(rad)
     return V2(x * length, y * length)
@@ -140,8 +177,9 @@ def inv(aff: Affine) -> Affine:
     return make_affine(ra, rb, -sc*ra - sf*rb,
                        rd, re, -sc*rd - sf*re)
 
-def from_radians(θ: Floating) -> Scalars:
-    return (ftos(θ) / math.pi) * 180
+from_rad = (180 / math.pi)
+def from_radians(θ: FloatingB) -> ScalarsB:
+    return ftos(θ)  * from_rad
 
 def to_radians(θ: Floating) -> Scalars:
     return (ftos(θ) / 180) * math.pi
@@ -266,7 +304,9 @@ def ray_ray_intersection(
         return x3 / x1, x2 / x1
 
 
-def ray_circle_intersection(anchor: P2_t, direction: V2_t, circle_radius: Floating) -> List[Floating]:
+def ray_circle_intersection(anchor: Float[Array, "... 3 1"], 
+                            direction: Float[Array, "... 3 1"], 
+                            circle_radius: Floating) -> Float[Array, "..."]:
     """Given a ray and a circle centered at the origin, return the parameter t
     where the ray meets the circle, that is:
 
@@ -288,27 +328,44 @@ def ray_circle_intersection(anchor: P2_t, direction: V2_t, circle_radius: Floati
     This is a quadratic equation, whose solutions are well known.
 
     """
-    p = anchor
-
+    print("dir", direction)
     a = length2(direction)
-    b = 2 * (p @ direction)
-    c = length2(p) - circle_radius**2
-
+    b = 2 * dot(anchor, direction)
+    c = length2(anchor) - circle_radius**2
+    print(a, b, c)
     Δ = b**2 - 4 * a * c
     eps = 1e-6  # rounding error tolerance
 
-    if Δ < -eps:
-        # no intersection
-        return []
-    elif -eps <= Δ < eps:
-        # tangent
-        return [-b / (2 * a)]
-    else:
-        # the ray intersects at two points
-        return [
-            (-b - np.sqrt(Δ)) / (2 * a),
-            (-b + np.sqrt(Δ)) / (2 * a),
-        ]
+
+    ret = np.stack([(-b - np.sqrt(Δ)) / (2 * a),
+                    (-b + np.sqrt(Δ)) / (2 * a)], -1)
+    print("ret", ret)
+    mask = (Δ < -eps)[..., None] | (((-eps <= Δ) & (Δ < eps))[..., None] * np.array([1, 0]))
+    return ret.transpose(2, 0, 1), 1- mask.transpose(2, 0, 1)
+
+
+    v = -b / (2 * a)
+    print(v.shape)
+    ret2 = np.stack([v,
+                     np.zeros(v.shape) + 10000], -1)
+    where2 = np.where( ((-eps <= Δ) & (Δ < eps))[..., None], 
+        ret2, 
+        ret
+    )
+
+    return np.where((Δ < -eps)[..., None],
+                     10000, where2
+             ).transpose(2, 0, 1)
+    # if 
+    #     # no intersection
+    #     return []
+    # elif -eps <= Δ < eps:
+    #     # tangent
+    #     return 
+    # else:
+    #     # the ray intersects at two points
+    #     return [
+    #     ]
 
 
 # Explicit rexport

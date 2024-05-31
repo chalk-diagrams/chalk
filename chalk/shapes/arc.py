@@ -124,7 +124,7 @@ def arc_envelope(angle_offset: Float[Array, "#B 2"]):
     v1 = tx.polar(angle0_deg)
     v2 = tx.polar(angle1_deg)
 
-    def wrapped(d):
+    def wrapped(d: Float[Array, "#A 1 3 1"]) -> Float[Array, "#A #B 3 1"]:
         return tx.np.where(
             (is_circle | (((tx.angle_(d) - high) % 360) > check)),
             # Case 1: P2 at arc
@@ -133,6 +133,35 @@ def arc_envelope(angle_offset: Float[Array, "#B 2"]):
             tx.np.maximum(tx.dot(d, v1), tx.dot(d, v2))
         )
     return wrapped
+
+
+def arc_trace(angle_offset: Float[Array, "#B 2"]):
+    "Trace is done as simple arc and transformed"
+    angle0_deg = angle_offset[..., 0]
+    angle1_deg = angle0_deg + angle_offset[..., 1]
+
+    is_circle = abs(angle0_deg - angle1_deg) >= 360
+    low = tx.np.minimum(angle0_deg, angle1_deg)
+    high = tx.np.maximum(angle0_deg, angle1_deg)
+    check = (low - high) % 360
+
+    def f(ray: Ray) -> Float[Array, "#A #B 2"]:
+        print(ray.pt)
+        print(ray.v)
+        d, mask = tx.ray_circle_intersection(ray.pt, ray.v, 1)
+        print("ray circle", d, mask)
+        print("l", tx.length(ray.v))
+        # 2 #A 1 
+        ang = tx.angle((d[..., None, None] * ray.v) + tx.polar(angle_offset[..., 0]))
+        # 2 #A # B 
+        mask = mask & (((ang - high) % 360) > check)
+        # #B
+    
+        ret = d.transpose(1, 2, 0)
+        print(ret)
+        return ret, mask.transpose(1, 2, 0)
+        # 2 #A #B
+    return f
 
 def arc_seg(q: V2_t, height: tx.Floating) -> Trail:
     return arc_between_trail(q, tx.ftos(height))

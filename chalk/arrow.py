@@ -38,7 +38,6 @@ def connect(
 
         ps = sub1.get_location()
         pe = sub2.get_location()
-
         return dia + arrow_between(ps, pe, style)
 
     return self.with_names([name1, name2], f)
@@ -89,7 +88,7 @@ def connect_perim(
 
         ps = tr1.max_trace_p(loc1, v1)
         pe = tr2.max_trace_p(loc2, v2)
-
+        print("CP", ps, pe, v1, v2)
         assert ps is not None, "Cannot connect"
         assert pe is not None, "Cannot connect"
 
@@ -112,9 +111,9 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
     t = style.tail_pad
     l_adj = length - style.head_pad - t
     if style.trail is None:
-        segment = arc_seg(tx.P2(l_adj, 0), style.arc_height)
+        segment = arc_seg(tx.V2(l_adj, 0), style.arc_height + 1e-3)
         shaft = segment.stroke()
-        if isinstance(segment.segments[-1], Segment):
+        if False: # isinstance(segment.segments[-1], Segment):
             seg = segment.segments[-1]
             tan = -(seg.q - seg.center.reflect_y()).perpendicular()  # type: ignore
             φ = tan.angle
@@ -124,7 +123,7 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
 
-        if isinstance(style.trail.segments[-1], Segment):
+        if False: #isinstance(style.trail.segments[-1], Segment):
             arrow = arrow.rotate(-style.trail.segments[-1].angle)
 
     return shaft._style(style.shaft_style).translate_by(
@@ -133,6 +132,7 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
 
 
 def arrow_v(vec: V2_t, style: ArrowOpts = ArrowOpts()) -> Diagram:
+    print("VEC", vec)
     arr = arrow(tx.length(vec), style)
     return arr.rotate(-tx.angle(vec))
 
