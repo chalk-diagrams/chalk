@@ -72,7 +72,7 @@ class Segment(TrailLike):
         return self.t @ tx.P2(0, 0)
 
 def seg(offset: V2_t) -> Trail:
-    return arc_seg(offset, 1e-4)
+    return arc_seg(offset, 1e-3)
 
 def is_in_mod_360(x: Degrees, a: Degrees, b: Degrees) -> tx.Mask:
     """Checks if x ∈ [a, b] mod 360. See the following link for an
@@ -134,31 +134,32 @@ def arc_envelope(angle_offset: Float[Array, "#B 2"]):
         )
     return wrapped
 
+OFFSET = 0
+def set_offset(v):
+    global OFFSET
+    OFFSET = v
 
 def arc_trace(angle_offset: Float[Array, "#B 2"]):
     "Trace is done as simple arc and transformed"
     angle0_deg = angle_offset[..., 0]
     angle1_deg = angle0_deg + angle_offset[..., 1]
 
-    is_circle = abs(angle0_deg - angle1_deg) >= 360
     low = tx.np.minimum(angle0_deg, angle1_deg)
     high = tx.np.maximum(angle0_deg, angle1_deg)
-    check = (low - high) % 360
+    check = (high - low) % 360
 
     def f(ray: Ray) -> Float[Array, "#A #B 2"]:
-        print(ray.pt)
-        print(ray.v)
-        d, mask = tx.ray_circle_intersection(ray.pt, ray.v, 1)
-        print("ray circle", d, mask)
-        print("l", tx.length(ray.v))
+        #print(ray.v, ray.pt)
+        l = tx.length(ray.v)
+        print(OFFSET)
+        d, mask = tx.ray_circle_intersection(ray.pt, ray.v, 1 + OFFSET * l)
         # 2 #A 1 
-        ang = tx.angle((d[..., None, None] * ray.v) + tx.polar(angle_offset[..., 0]))
+
+        ang = tx.angle((d[..., None, None] * ray.v + ray.pt)) #  + tx.polar(angle_offset[..., 0]))
         # 2 #A # B 
-        mask = mask & (((ang - high) % 360) > check)
+        mask = mask & ((((ang - low) % 360)) <= check)
         # #B
-    
         ret = d.transpose(1, 2, 0)
-        print(ret)
         return ret, mask.transpose(1, 2, 0)
         # 2 #A #B
     return f

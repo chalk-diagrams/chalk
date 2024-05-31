@@ -38,7 +38,12 @@ class Trace(Monoid, Transformable):
         self.f = f
 
     def __call__(self, point: P2_t, direction: V2_t) -> TraceDistances:
-        return self.f(Ray(point, direction))
+        d, m = self.f(Ray(point, direction))
+        ad = tx.np.argsort(d + (1-m) * 1e10, axis=1)
+        d = tx.np.take_along_axis(d, ad, axis=1) 
+        m = tx.np.take_along_axis(m, ad, axis=1) 
+
+        return d, m
 
 
 
@@ -66,7 +71,7 @@ class Trace(Monoid, Transformable):
     def trace_v(self, p: P2_t, v: V2_t) -> Optional[V2_t]:
         v = tx.norm(v)
         dists, m = self(p, v)
-        print("dists", dists, m)
+
         d = tx.np.sort(dists + (1-m) * 1e10, axis=1)
         ad = tx.np.argsort(dists + (1-m) * 1e10, axis=1)
         m = tx.np.take_along_axis(m, ad, axis=1) 

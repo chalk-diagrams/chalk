@@ -13,7 +13,7 @@ print("start")
 path = "examples/output/intro-01.png"
 d = circle(0.5).fill_color(papaya)
 
-d = regular_polygon(8, 1.5).rotate_by(1 / 16)
+#d = regular_polygon(8, 1.5).rotate_by(1 / 16)
 t = d.get_trace()
 print("trace", t(P2(0, 0.), V2(1., 0.)))
 #print("trace", t(P2(1, 1.), V2(0., 1.)))

@@ -48,7 +48,6 @@ def union_axis(x, axis):
     n = [np.squeeze(x, axis=axis) for x in np.split(x[0], x[0].shape[axis], axis=axis)]
     m = [np.squeeze(x, axis=axis) for x in np.split(x[1], x[1].shape[axis], axis=axis)]
     ret =  functools.reduce(union, zip(n, m))
-    print("o", ret[0].shape)
     return ret
 
 
@@ -327,19 +326,19 @@ def ray_circle_intersection(anchor: Float[Array, "... 3 1"],
     This is a quadratic equation, whose solutions are well known.
 
     """
-    print("dir", direction)
     a = length2(direction)
     b = 2 * dot(anchor, direction)
     c = length2(anchor) - circle_radius**2
-    print(a, b, c)
     Δ = b**2 - 4 * a * c
-    eps = 1e-6  # rounding error tolerance
+    eps = 1e-12  # rounding error tolerance
 
 
     ret = np.stack([(-b - np.sqrt(Δ)) / (2 * a),
                     (-b + np.sqrt(Δ)) / (2 * a)], -1)
-    print("ret", ret)
-    mask = (Δ < -eps)[..., None] | (((-eps <= Δ) & (Δ < eps))[..., None] * np.array([1, 0]))
+
+    mid = (((-eps <= Δ) & (Δ < eps)))[..., None]
+    mask = (Δ < -eps)[..., None] | (mid * np.array([1, 0]))
+    ret = np.where(mid, (-b  / (2 * a))[..., None], ret)
     return ret.transpose(2, 0, 1), 1- mask.transpose(2, 0, 1)
 
 

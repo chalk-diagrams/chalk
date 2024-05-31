@@ -77,7 +77,6 @@ class Located(Enveloped, Traceable, Transformable):
             # #A #B 2
             
             z = tx.union_axis((trac, mask), axis=1)
-            print(trac, mask, z)
             return z
 
         return Trace(wrapped)
