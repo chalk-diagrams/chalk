@@ -45,9 +45,8 @@ def union(x, y):
 
 
 def union_axis(x, axis):
-    print("s", x[0].shape)
-    n = np.squeeze(np.split(x[0], x[0].shape[axis], axis=axis), axis)
-    m = np.squeeze(np.split(x[1], x[1].shape[axis], axis=axis), axis)
+    n = [np.squeeze(x, axis=axis) for x in np.split(x[0], x[0].shape[axis], axis=axis)]
+    m = [np.squeeze(x, axis=axis) for x in np.split(x[1], x[1].shape[axis], axis=axis)]
     ret =  functools.reduce(union, zip(n, m))
     print("o", ret[0].shape)
     return ret

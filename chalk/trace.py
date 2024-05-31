@@ -67,23 +67,22 @@ class Trace(Monoid, Transformable):
         v = tx.norm(v)
         dists, m = self(p, v)
         print("dists", dists, m)
-        if dists.shape[1] > 0:
-            d = tx.np.sort(dists, axis=1)
-            s, *_ = d[:, 0]
-            return s * v
-        else:
-            return None
-        
+        d = tx.np.sort(dists + (1-m) * 1e10, axis=1)
+        ad = tx.np.argsort(dists + (1-m) * 1e10, axis=1)
+        m = tx.np.take_along_axis(m, ad, axis=1) 
+        s = d[:, 0:1]
+        return s[..., None] * v, m[:, 0]
+     
     def trace_p(self, p: P2_t, v: V2_t) -> Optional[P2_t]:
-        u = self.trace_v(p, v)
-        return p + u if u is not None else None
+        u, m = self.trace_v(p, v)
+        return p + u, m
 
     def max_trace_v(self, p: P2_t, v: V2_t) -> Optional[V2_t]:
         return self.trace_v(p, -v)
 
     def max_trace_p(self, p: P2_t, v: V2_t) -> Optional[P2_t]:
-        u = self.max_trace_v(p, v)
-        return p + u if u is not None else None
+        u, m = self.max_trace_v(p, v)
+        return p + u, m
 
 
 class GetTrace(DiagramVisitor[Trace, Affine]):
