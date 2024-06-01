@@ -43,6 +43,12 @@ class Path(Shape, Enveloped, Traceable, Transformable):
             for pt in loc_trails.points():
                 yield pt
 
+    def split(self):
+        return [loc.trail.segments.get(i).at(pt).stroke()
+                for loc in self.loc_trails
+                for i, pt in enumerate(loc.points()) ]
+
+
     def get_envelope(self) -> Envelope:
         return Envelope.concat((loc.get_envelope() for loc in self.loc_trails))
 

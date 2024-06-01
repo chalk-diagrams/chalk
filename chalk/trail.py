@@ -35,7 +35,7 @@ class Located(Enveloped, Traceable, Transformable):
         return self.trail.segments.apply_transform(tx.translation(pts))
     
     def points(self) -> Float[Array, "#B 3 1"]:
-        return self.trail.points() + self.location 
+        return self.trail.points() + self.location         
 
     def get_envelope(self) -> Envelope:
         s = self.located_segments()

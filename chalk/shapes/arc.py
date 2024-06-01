@@ -31,6 +31,9 @@ class Segment(TrailLike):
  
         return Trail(self)
     
+    def get(self, i):
+        return Segment(transform=self.transform[i:i+1], angles=self.angles[i:i+1])
+
     # Transformable
     def apply_transform(self, t: Affine) -> Segment:
         return Segment(t @ self.transform, self.angles)
@@ -141,8 +144,8 @@ def set_offset(v):
 
 def arc_trace(angle_offset: Float[Array, "#B 2"]):
     "Trace is done as simple arc and transformed"
-    angle0_deg = angle_offset[..., 0]
-    angle1_deg = angle0_deg + angle_offset[..., 1]
+    angle0_deg = angle_offset[..., 0] 
+    angle1_deg = angle_offset[..., 0] + angle_offset[..., 1] 
 
     low = tx.np.minimum(angle0_deg, angle1_deg)
     high = tx.np.maximum(angle0_deg, angle1_deg)
@@ -151,13 +154,13 @@ def arc_trace(angle_offset: Float[Array, "#B 2"]):
     def f(ray: Ray) -> Float[Array, "#A #B 2"]:
         #print(ray.v, ray.pt)
         l = tx.length(ray.v)
-        print(OFFSET)
         d, mask = tx.ray_circle_intersection(ray.pt, ray.v, 1 + OFFSET * l)
         # 2 #A 1 
 
-        ang = tx.angle((d[..., None, None] * ray.v + ray.pt)) #  + tx.polar(angle_offset[..., 0]))
+        ang = tx.angle(((d[..., None, None]) * ray.v + ray.pt)) #  + tx.polar(angle_offset[..., 0]))
         # 2 #A # B 
-        mask = mask & ((((ang - low) % 360)) <= check)
+
+        mask = mask & (((ang - low) % 360) <= check)
         # #B
         ret = d.transpose(1, 2, 0)
         return ret, mask.transpose(1, 2, 0)

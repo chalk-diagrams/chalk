@@ -98,13 +98,14 @@ def draw_state_sequence(seq: List[Hanoi]) -> Diagram:
     return concat(draw_hanoi(state).translate(0, 7.5 * i) for i, state in enumerate(seq))
 
 
-diagram = draw_state_sequence(state_sequence(5))
+diagram = draw_state_sequence(state_sequence(3))
 import chalk
 print(chalk.Envelope.total_env)
 
 path = "examples/output/hanoi.svg"
 diagram.render_svg(path, height=700)
-
+import render
+render.render(diagram.scale(8).align_tl(), "render.png", 600, 600)
 print(chalk.Envelope.total_env)
 try: 
     path = "examples/output/hanoi.png"

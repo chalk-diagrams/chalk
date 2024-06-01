@@ -18,7 +18,6 @@ t = d.get_trace()
 print("trace", t(P2(0, 0.), V2(1., 0.)))
 #print("trace", t(P2(1, 1.), V2(0., 1.)))
 d.render(path, height=64)
-exit()
 print("first")
 
 # # Alternative, render as svg
@@ -66,6 +65,8 @@ d.render(path, height=256)
 
 path = "examples/output/intro-04.svg"
 d.render_svg(path, height=256)
+import render
+render.render(d.align_tl().scale_uniform_to_x(400), "render.png", 400, 400)
 
 # path = "examples/output/intro-04.pdf"
 # d.render_pdf(path, height=256)
