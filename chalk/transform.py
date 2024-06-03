@@ -4,8 +4,8 @@ from typing import Any, Union, Tuple, Optional, List
 from typing_extensions import Self
 from dataclasses import dataclass
 import functools
-from jaxtyping import Float, Bool, Array
-if True:
+from jaxtyping import Float, Bool, Array, Int
+if False:
     ops = None
     import numpy as np 
 else:
@@ -36,12 +36,12 @@ def union(x, y):
         n1 = np.concatenate([x[0], y[0]], axis=1)
         m = np.concatenate([x[1], y[1]], axis=1)
         keep = np.any(m, axis=0)
-        return n1[:, keep], m[:, keep]
-
+        #return n1[:, keep], m[:, keep]
+        return n1, m
     else:
-        def un(x, y):
-            np.union1d(x, y, size=64, fill_value=-999)
-        return jax.vmap(un)(x, y)
+        n1 = np.concatenate([x[0], y[0]], axis=1)
+        m = np.concatenate([x[1], y[1]], axis=1)
+        return n1, m
 
 
 def union_axis(x, axis):
@@ -81,7 +81,7 @@ def P2(x: Floating, y: Floating) -> P2_t:
 def norm(v: V2_t) -> V2_t:
     return v / length(v)[..., None, None]
 
-def length(v: V2_t) -> Scalars:
+def length(v: PtB) -> ScalarsB:
     return np.sqrt(length2(v))
 
 # These are untyped variants that are needed for multibatch cases.
@@ -100,7 +100,7 @@ def polar_(v):
 def length2_(v):
     return length2(v.reshape(-1, 3, 1)).reshape(*v.shape[:2])
 
-def length2(v: V2_t) -> Scalars:
+def length2(v: PtB) -> ScalarsB:
     return (v * v)[..., :2, 0].sum(-1)
 
 def angle(v: PtB) -> ScalarsB:
@@ -164,7 +164,7 @@ def rotation(rad: Floating) -> Affine:
 
 def inv(aff: Affine) -> Affine:
     det = np.linalg.det(aff)
-    assert np.all(np.abs(det) > 1e-5), f"{det} {aff}"
+    #assert np.all(np.abs(det) > 1e-5), f"{det} {aff}"
     idet = 1.0 / det
     sa, sb, sc = aff[..., 0, 0], aff[..., 0, 1], aff[..., 0, 2]
     sd, se, sf = aff[..., 1, 0], aff[..., 1, 1], aff[..., 1, 2]
@@ -304,7 +304,8 @@ def ray_ray_intersection(
 
 def ray_circle_intersection(anchor: Float[Array, "... 3 1"], 
                             direction: Float[Array, "... 3 1"], 
-                            circle_radius: Floating) -> Float[Array, "..."]:
+                            circle_radius) -> Tuple[Float[Array, "..."],
+                                                    Int[Array, "..."]]:
     """Given a ray and a circle centered at the origin, return the parameter t
     where the ray meets the circle, that is:
 
@@ -332,12 +333,13 @@ def ray_circle_intersection(anchor: Float[Array, "... 3 1"],
     Δ = b**2 - 4 * a * c
     eps = 1e-12  # rounding error tolerance
 
-
-    ret = np.stack([(-b - np.sqrt(Δ)) / (2 * a),
-                    (-b + np.sqrt(Δ)) / (2 * a)], -1)
-
     mid = (((-eps <= Δ) & (Δ < eps)))[..., None]
     mask = (Δ < -eps)[..., None] | (mid * np.array([1, 0]))
+
+    # Bump NaNs since they are going to me masked out. 
+    ret = np.stack([(-b - np.sqrt(Δ + 1e5 * mask[..., 0])) / (2 * a),
+                    (-b + np.sqrt(Δ + 1e5 * mask[..., 1])) / (2 * a)], -1)
+
     ret = np.where(mid, (-b  / (2 * a))[..., None], ret)
     return ret.transpose(2, 0, 1), 1- mask.transpose(2, 0, 1)
 

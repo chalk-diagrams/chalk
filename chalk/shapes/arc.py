@@ -97,16 +97,11 @@ def arc_between(
     θ = tx.np.arccos((d**2 - 4.0 * h**2) / (d**2 + 4.0 * h**2))
     r = d / (2 * tx.np.sin(θ))
 
-    if height > 0:
-        # bend left
-        φ = +tx.np.pi / 2
-        dy = r - h
-        flip = 1
-    else:
-        # bend right
-        φ = -tx.np.pi / 2
-        dy = h - r
-        flip = -1
+    # bend left
+    bl = height > 0
+    φ = tx.np.where(bl, +tx.np.pi / 2, -tx.np.pi / 2)
+    dy = tx.np.where(bl, r - h, h-r)
+    flip = tx.np.where(bl, 1, -1)
 
     diff = q - p
     angles = tx.np.array([flip * -tx.from_radians(θ), 

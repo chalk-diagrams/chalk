@@ -4,14 +4,22 @@
 
 from colour import Color
 from chalk import *
-
+import render
+import jax
 # define some colors
 papaya = Color("#ff9700")
 blue = Color("#005FDB")
 
 print("start")
 path = "examples/output/intro-01.png"
-d = circle(0.5).fill_color(papaya)
+
+
+d = rectangle(3, 10).fill_color(papaya)
+d = d.align_tl().translate(10, 11)
+t = d.get_trace()
+
+#d.render(path, height=64)
+render.render(d, "render.png", 200, 200)
 
 #d = regular_polygon(8, 1.5).rotate_by(1 / 16)
 t = d.get_trace()
@@ -61,12 +69,13 @@ def sierpinski(n: int, size: int) -> Diagram:
         return smaller.above((smaller | smaller).center_xy())
 
 d = sierpinski(5, 4).fill_color(papaya)
-d.render(path, height=256)
+# d.render(path, height=256)
 
-path = "examples/output/intro-04.svg"
-d.render_svg(path, height=256)
+# path = "examples/output/intro-04.svg"
+# d.render_svg(path, height=256)
 import render
-render.render(d.align_tl().scale_uniform_to_x(400), "render.png", 400, 400)
+print("render")
+render.render(d.align_tl().scale_uniform_to_x(200), "render.png", 200, 200)
 
 # path = "examples/output/intro-04.pdf"
 # d.render_pdf(path, height=256)

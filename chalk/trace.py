@@ -42,10 +42,7 @@ class Trace(Monoid, Transformable):
         ad = tx.np.argsort(d + (1-m) * 1e10, axis=1)
         d = tx.np.take_along_axis(d, ad, axis=1) 
         m = tx.np.take_along_axis(m, ad, axis=1) 
-
         return d, m
-
-
 
     # Monoid
     @classmethod
@@ -68,7 +65,7 @@ class Trace(Monoid, Transformable):
 
         return Trace(wrapped)
 
-    def trace_v(self, p: P2_t, v: V2_t) -> Optional[V2_t]:
+    def trace_v(self, p: P2_t, v: V2_t) :
         v = tx.norm(v)
         dists, m = self(p, v)
 
@@ -78,17 +75,27 @@ class Trace(Monoid, Transformable):
         s = d[:, 0:1]
         return s[..., None] * v, m[:, 0]
      
-    def trace_p(self, p: P2_t, v: V2_t) -> Optional[P2_t]:
+    def trace_p(self, p: P2_t, v: V2_t) :
         u, m = self.trace_v(p, v)
         return p + u, m
 
-    def max_trace_v(self, p: P2_t, v: V2_t) -> Optional[V2_t]:
+    def max_trace_v(self, p: P2_t, v: V2_t):
         return self.trace_v(p, -v)
 
-    def max_trace_p(self, p: P2_t, v: V2_t) -> Optional[P2_t]:
+    def max_trace_p(self, p: P2_t, v: V2_t):
         u, m = self.max_trace_v(p, v)
         return p + u, m
 
+    @staticmethod
+    def combine(p1, p2):
+        ps, m = p1
+        ps2, m2 = p2
+        ps = tx.np.concatenate([ps, ps2], axis=1)
+        m = tx.np.concatenate([m, m2], axis=1)
+        ad = tx.np.argsort(ps + (1-m) * 1e10, axis=1)
+        ps = tx.np.take_along_axis(ps, ad, axis=1) 
+        m = tx.np.take_along_axis(m, ad, axis=1) 
+        return ps, m
 
 class GetTrace(DiagramVisitor[Trace, Affine]):
     A_type = Trace

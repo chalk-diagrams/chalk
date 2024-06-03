@@ -35,7 +35,9 @@ class Located(Enveloped, Traceable, Transformable):
         return self.trail.segments.apply_transform(tx.translation(pts))
     
     def points(self) -> Float[Array, "#B 3 1"]:
-        return self.trail.points() + self.location         
+        return self.trail.points() + self.location 
+
+        
 
     def get_envelope(self) -> Envelope:
         s = self.located_segments()
@@ -158,13 +160,10 @@ class Trail(Monoid, Transformable, TrailLike):
     def vrule(length: Floating) -> Trail:
         return arc.seg(length * tx.unit_y)
 
-    _rectangle = None
     @staticmethod
     def rectangle(width: Floating, height: Floating) -> Trail:
-        if Trail._rectangle is None:
-            t = arc.seg(tx.unit_x) + arc.seg(tx.unit_y)
-            Trail._rectangle = (t + t.rotate_by(0.5)).close()
-        return Trail._rectangle.scale_x(width).scale_y(height)
+        t = arc.seg(tx.unit_x) + arc.seg(tx.unit_y)
+        return (t + t.rotate_by(0.5)).close().scale_x(width).scale_y(height)
 
     @staticmethod
     def rounded_rectangle(width: Floating, height: Floating, radius: Floating) -> Trail:
@@ -178,35 +177,24 @@ class Trail(Monoid, Transformable, TrailLike):
         ) + arc.seg(0.01 * tx.unit_y)
         return trail.close()
 
-    _circle = {}
     @staticmethod
     def circle(radius: Floating = 1.0, clockwise: bool = True) -> Trail:
-        if clockwise in Trail._circle:
-            return Trail._circle[clockwise]
-        else:
-            sides = 4
-            dangle = -90
-            rotate_by = 1
-            if not clockwise:
-                dangle = 90
-                rotate_by *= -1
-            Trail._circle[clockwise] = Trail.concat(
-                [
-                    arc.arc_seg_angle(0, dangle).rotate_by(rotate_by * i / sides)
-                    for i in range(sides)
-                ]
-            ).close()
-        return (
-            Trail._circle[clockwise]
-            .scale(radius)
-        )
+        sides = 4
+        dangle = -90
+        rotate_by = 1
+        if not clockwise:
+            dangle = 90
+            rotate_by *= -1
+        return Trail.concat(
+            [
+                arc.arc_seg_angle(0, dangle).rotate_by(rotate_by * i / sides)
+                for i in range(sides)
+            ]
+        ).close()
 
-    _polygon = {}
     @staticmethod
     def regular_polygon(sides: int, side_length: Floating) -> Trail:
-        if sides not in Trail._polygon:
-            edge = Trail.hrule(1)
-            Trail._polygon[sides] = Trail.concat(
-                edge.rotate_by(i / sides) for i in range(sides)
-            ).close()
-        return Trail._polygon[sides].scale(side_length)
+        edge = Trail.hrule(1)
+        return Trail.concat(
+            edge.rotate_by(i / sides) for i in range(sides)
+        ).close().scale(side_length)
