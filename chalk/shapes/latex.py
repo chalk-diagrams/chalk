@@ -45,7 +45,7 @@ class Latex(Shape):
 
     def get_bounding_box(self) -> BoundingBox:
         eps = 1e-4
-        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
+        self.bb = BoundingBox(origin, origin + P2(eps, eps))
         return self.bb
 
     def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:

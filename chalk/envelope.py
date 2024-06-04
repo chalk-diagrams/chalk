@@ -6,16 +6,14 @@ from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
+    V2_t,
+    P2_t,
     Affine,
     BoundingBox,
     Transformable,
-    apply_affine,
-    origin,
-    remove_translation,
-    transpose_translation,
-    unit_x,
-    unit_y,
+    Scalars
 )
+import chalk.transform as tx
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
@@ -23,25 +21,33 @@ if TYPE_CHECKING:
     from chalk.types import Diagram
 
 
-SignedDistance = float
-Ident = Affine.identity()
+# quantize = tx.np.linspace(-100, 100, 1000)
+# mult = tx.np.array([1000, 1, 0])[None]
 
 
 class Envelope(Transformable, Monoid):
+    total_env = 0
     def __init__(
-        self, f: Callable[[V2], SignedDistance], is_empty: bool = False
+        self, f: Callable[[V2_t], Scalars], is_empty: bool = False
     ):
         self.f = f
         self.is_empty = is_empty
+        self.cache = {}
 
-    def __call__(self, direction: V2) -> SignedDistance:
+    def __call__(self, direction: V2_t) -> Scalars:
+        Envelope.total_env += 1
         assert not self.is_empty
         return self.f(direction)
+        # v = (mult @ tx.np.digitize(direction, quantize)).reshape(1)[0]
+        # if v not in self.cache:
+        #     self.cache[v] = self.f(direction)
+        # return self.cache[v]
+
 
     # Monoid
     @staticmethod
     def empty() -> Envelope:
-        return Envelope(lambda v: 0, is_empty=True)
+        return Envelope(lambda v: tx.np.array(0.0), is_empty=True)
 
     def __add__(self, other: Envelope) -> Envelope:
         if self.is_empty:
@@ -49,110 +55,114 @@ class Envelope(Transformable, Monoid):
         if other.is_empty:
             return self
         return Envelope(
-            lambda direction: max(self(direction), other(direction))
+            lambda direction: tx.np.maximum(self(direction), other(direction))
         )
 
+    all_dir = tx.np.concatenate([tx.unit_x, -tx.unit_x, tx.unit_y, -tx.unit_y], axis=0)
     @property
-    def center(self) -> P2:
+    def center(self) -> P2_t:
         if self.is_empty:
-            return origin
+            return tx.origin
+        # Get all the directions 
+        d = self(Envelope.all_dir)
         return P2(
-            (-self(-unit_x) + self(unit_x)) / 2,
-            (-self(-unit_y) + self(unit_y)) / 2,
+            (-d[1] + d[0]) / 2,
+            (-d[3] + d[2]) / 2,
         )
 
     @property
-    def width(self) -> float:
+    def width(self) -> Scalar:
         assert not self.is_empty
-        return self(unit_x) + self(-unit_x)
+        d = self(Envelope.all_dir[:2])
+        return d.sum()
 
     @property
-    def height(self) -> float:
+    def height(self) -> Scalar:
         assert not self.is_empty
-        return self(unit_y) + self(-unit_y)
+        d = self(Envelope.all_dir[2:])
+        return d.sum()
 
     def apply_transform(self, t: Affine) -> Envelope:
         if self.is_empty:
             return self
-        rt = remove_translation(t)
-        inv_t = ~rt
-        trans_t = transpose_translation(rt)
-        _, _, c, _, _, f = t[:6]
-        u: V2 = -V2(c, f)
-
-        def wrapped(v: V2) -> SignedDistance:
+        rt = tx.remove_translation(t)
+        inv_t = tx.inv(rt)
+        trans_t = tx.transpose_translation(rt)
+        u: V2_t = -tx.get_translation(t)
+        def wrapped(v: V2_t) -> Scalars:
             # Linear
-            vi = apply_affine(inv_t, v)
-            v_prim = apply_affine(trans_t, v).normalized()
-            inner: float = self(v_prim)
-            d: float = v_prim.dot(vi)
+            vi = inv_t @ v
+            v_prim = tx.norm(trans_t @ v)
+            inner = self(v_prim)
+            d = tx.dot(v_prim, vi)
             after_linear = inner / d
 
             # Translation
-            diff: float = (u / (v.dot(v))).dot(v)
+            diff = tx.dot((u / tx.dot(v, v)[..., None, None]), v)
             return after_linear - diff
 
         return Envelope(wrapped)
 
-    def envelope_v(self, v: V2) -> V2:
+    def envelope_v(self, v: V2_t) -> V2_t:
         if self.is_empty:
             return V2(0, 0)
-        v = v.scaled_to(1)
-        d: float = self(v)
+        v = tx.norm(v)
+        d = self(v)
         return v * d
 
     @staticmethod
     def from_bounding_box(box: BoundingBox) -> Envelope:
-        def wrapped(d: V2) -> SignedDistance:
-            v: float = apply_affine(
-                Affine.rotation(d.angle), box
-            ).bounding_box.max_point.x
-            return v / d.length
-
+        def wrapped(d: tx.V2_t) -> Scalars:
+            v = box.rotate_rad(tx.rad(d)).br[:, 0, 0]
+            r = v / tx.length(d)
+            return r
+        
         return Envelope(wrapped)
 
-    @staticmethod
-    def from_circle(radius: float) -> Envelope:
-        def wrapped(d: V2) -> SignedDistance:
-            return radius / d.length
+    def to_bounding_box(self: Envelope) -> BoundingBox:
+        d = self(Envelope.all_dir)
+        return tx.BoundingBox(V2(-d[1], -d[3]), V2(d[0], d[2]))
+        
 
-        return Envelope(wrapped)
+    # @staticmethod
+    # def from_circle(radius: tx.Floating) -> Envelope:
+    #     def wrapped(d: V2_t) -> SignedDistance:
+    #         return radius / tx.length(d)
 
-    def to_path(self, angle: int = 45) -> Iterable[P2]:
+    #     return Envelope(wrapped)
+
+    def to_path(self, angle: int = 45) -> Iterable[P2_t]:
         "Draws an envelope by sampling every 10 degrees."
         pts = []
         for i in range(0, 361, angle):
-            v = V2.polar(i)
+            v = tx.polar(i)
             pts.append(self(v) * v)
         return pts
 
-    def to_segments(self, angle: int = 45) -> Iterable[Tuple[P2, P2]]:
+    def to_segments(self, angle: int = 45):
         "Draws an envelope by sampling every 10 degrees."
-        segments = []
-        for i in range(0, 361, angle):
-            v = V2.polar(i)
-            segments.append((origin, self(v) * v))
-        return segments
+        v = tx.polar(tx.np.arange(0, 361, angle) * 1.)
+        return v * self(v)[:, None, None]
 
 
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):
     A_type = Envelope
 
     def visit_primitive(
-        self, diagram: Primitive, t: Affine = Ident
+        self, diagram: Primitive, t: Affine = tx.ident
     ) -> Envelope:
-        new_transform = t * diagram.transform
+        new_transform = t @ diagram.transform
         return diagram.shape.get_envelope().apply_transform(new_transform)
 
-    def visit_compose(self, diagram: Compose, t: Affine = Ident) -> Envelope:
+    def visit_compose(self, diagram: Compose, t: Affine = tx.ident) -> Envelope:
         return diagram.envelope.apply_transform(t)
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = Ident
+        self, diagram: ApplyTransform, t: Affine = tx.ident
     ) -> Envelope:
-        n = t * diagram.transform
+        n = t @ diagram.transform
         return diagram.diagram.accept(self, n)
 
 
-def get_envelope(self: Diagram, t: Affine = Ident) -> Envelope:
+def get_envelope(self: Diagram, t: Affine = tx.ident) -> Envelope:
     return self.accept(GetEnvelope(), t)

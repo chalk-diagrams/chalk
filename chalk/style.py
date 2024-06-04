@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, fields
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple
-
+import chalk.transform as tx
 from colour import Color
 from typing_extensions import Self
 
@@ -65,7 +65,7 @@ class Style(Stylable):
         return cls()
 
     @classmethod
-    def root(cls, output_size: float) -> Style:
+    def root(cls, output_size: tx.Floating) -> Style:
         return cls(output_size=output_size)
 
     def apply_style(self, other: Style) -> Style:

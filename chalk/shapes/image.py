@@ -47,11 +47,11 @@ class Image(Shape):
         self.width = self.im.width
 
     def get_bounding_box(self) -> BoundingBox:
-        left = origin.x - self.width / 2
-        top = origin.y - self.height / 2
+        left = - self.width / 2
+        top = - self.height / 2
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
-        return BoundingBox([tl, br])
+        return BoundingBox(tl, br)
 
 
 def image(local_path: str, url_path: Optional[str]) -> Diagram:

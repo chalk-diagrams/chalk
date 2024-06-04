@@ -20,12 +20,13 @@ from chalk.envelope import Envelope
 from chalk.style import Style
 from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
+import chalk.transform as tx
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
 
 Trail = Any
-Ident = Affine.identity()
+Ident = tx.ident
 A = TypeVar("A", bound=chalk.monoid.Monoid)
 
 SVG_HEIGHT = 200
@@ -69,10 +70,19 @@ class BaseDiagram(chalk.types.Diagram):
     def compose(
         self, envelope: Envelope, other: Optional[Diagram] = None
     ) -> Diagram:
-        other = other if other is not None else Empty()
+        if other is None and isinstance(self, Compose):
+            return Compose(envelope, self.diagrams)
+        if other is None and isinstance(self, Compose):
+            return Compose(envelope, [self])
+        
+        other = other if other is not None else Empty() 
+        if isinstance(self, Empty):
+            return other
+        if isinstance(other, Empty):
+            return self
         if isinstance(self, Compose) and isinstance(other, Compose):
             return Compose(envelope, self.diagrams + other.diagrams)
-        elif isinstance(self, Compose):
+        if isinstance(self, Compose) and isinstance(other, Compose):
             return Compose(envelope, self.diagrams + [other])
         elif isinstance(other, Compose):
             return Compose(envelope, [self] + other.diagrams)
@@ -85,6 +95,7 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Combinators
     with_envelope = chalk.combinators.with_envelope
+    close_envelope = chalk.combinators.close_envelope
     juxtapose = chalk.combinators.juxtapose
     juxtapose_snug = chalk.combinators.juxtapose_snug
     beside_snug = chalk.combinators.beside_snug
@@ -210,15 +221,7 @@ class Primitive(BaseDiagram):
         return cls(shape, Style.empty(), Ident)
 
     def apply_transform(self, t: Affine) -> Primitive:
-        """Applies a transform and returns a primitive.
-
-        Args:
-            t (Transform): A transform object.
-
-        Returns:
-            Primitive
-        """
-        new_transform = t * self.transform
+        new_transform = t @ self.transform
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> Primitive:
@@ -245,6 +248,11 @@ class Empty(BaseDiagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         return visitor.visit_empty(self, args)
 
+    def apply_transform(self, t: Affine) -> Empty:
+        return Empty()
+
+    def apply_style(self, t: Affine) -> Empty:
+        return Empty()
 
 @dataclass
 class Compose(BaseDiagram):
@@ -267,7 +275,10 @@ class ApplyTransform(BaseDiagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         return visitor.visit_apply_transform(self, args)
 
-
+    def apply_transform(self, t: Affine) -> ApplyTransform:
+        new_transform = t @ self.transform
+        return ApplyTransform(new_transform, self.diagram)
+    
 @dataclass
 class ApplyStyle(BaseDiagram):
     """ApplyStyle class."""
@@ -278,6 +289,9 @@ class ApplyStyle(BaseDiagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         return visitor.visit_apply_style(self, args)
 
+    def apply_style(self, style: Style) -> ApplyStyle:
+        new_style = style.merge(self.style)
+        return ApplyStyle(new_style, self.diagram)
 
 @dataclass
 class ApplyName(BaseDiagram):

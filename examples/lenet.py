@@ -23,11 +23,12 @@ def cover(d, a, b, n):
     e2 = d.get_subdiagram(b).get_envelope()
     envelope = e1 + e2
     bbox = rectangle(envelope.width, envelope.height)
-    return bbox.named(n).translate(envelope.center.x, envelope.center.y)
+    return bbox.named(n).translate(envelope.center[0, 0], envelope.center[0, 1])
 
 def tile(d, m, n, name=""):
     "Tile a digram with names"
-    return hcat(vcat(d.named((name, j, i)) for j in range(n)) for i in range(m)).center_xy()
+    return concat(d.translate_by(V2(i, j)).named((name, j, i)) 
+                  for j in range(n) for i in range(m)).with_envelope(rectangle(m, n).align_tl()).center_xy().line_width(0.01)
 
 def connect_all(d, a, b):
     "Connect all corners of two diagrams"
@@ -39,10 +40,10 @@ def connect_all(d, a, b):
 
 # NN drawing
 def cell():
-    return rectangle(1, 1).line_width(0.01)
+    return rectangle(1, 1)
 
 def matrix(n, r, c):
-    return tile(cell(), c, r, n)
+    return tile(cell().align_tl(), c, r, n)
 
 def back(r, n):
     "Backing stack"
@@ -56,7 +57,7 @@ def stack(n, size, l, top, bot):
     r = rectangle(size, size).fill_color(grey).line_width(lw)
     return (label(top) / (back(r, l) + m) / label(bot)).center_xy()
 
-stack("a", 32, 0, "", "")
+# stack("a", 32, 0, "", "")
 
 def network(n, size, top, bot):
     "Draw a network layer"
@@ -78,26 +79,28 @@ d = ((stack("a", 32, 0, "", "") + draw) | (label("conv") / h) |
      
 d = d.scale_uniform_to_x(5)
 
+# d =  stack("e", 5, 16, "", "S4")
+
 # Draw the orange boxes
-boxes = [(("a", 2, 2), ("a", 6, 6)),
-         (("b", 2, 2), ("b", 2, 2)),
-         (("b", 20, 2), ("b", 23, 5)),
-         (("c", 10, 2), ("c", 11, 3)),
-         (("c", 4, 6), ("c", 8, 10)),
-         (("d", 4, 6), ("d", 4, 6)),
-         (("d", 6, 4), ("d", 9, 7)),
-         (("e", 3, 2), ("e", 4, 3))]
+# boxes = [(("a", 2, 2), ("a", 6, 6)),
+#          (("b", 2, 2), ("b", 2, 2)),
+#          (("b", 20, 2), ("b", 23, 5)),
+#          (("c", 10, 2), ("c", 11, 3)),
+#          (("c", 4, 6), ("c", 8, 10)),
+#          (("d", 4, 6), ("d", 4, 6)),
+#          (("d", 6, 4), ("d", 9, 7)),
+#          (("e", 3, 2), ("e", 4, 3))]
 
-d += concat([cover(d, *b, ("box", i)).fill_color(papaya).fill_opacity(0.3) for i, b in enumerate(boxes)])
+# d += concat([cover(d, *b, ("box", i)).fill_color(papaya).fill_opacity(0.3) for i, b in enumerate(boxes)])
 
-connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)]
-
-
-for b in connect:
-    d = connect_all(d, *b)
-d
+# connect = [(("box", i), ("box", i + 1)) for i in range(0, 6, 2)]
 
 
+# for b in connect:
+#     d = connect_all(d, *b)
+# d
+# m = matrix("x", 100, 100).fill_color(Color("#dddddd"))
+print(Envelope.total_env)
 d.render_svg("examples/output/lenet.svg", 400)
 
 try:

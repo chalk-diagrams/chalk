@@ -1,21 +1,22 @@
-from chalk.transform import V2, Affine, origin, unit_x, unit_y
+from chalk.transform import V2_t, Affine, origin, unit_x, unit_y
+import chalk.transform as tx
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Align and Diagrams.2d.Align
 
 
-def align_to(self: Diagram, v: V2) -> Diagram:
+def align_to(self: Diagram, v: V2_t) -> Diagram:
     envelope = self.get_envelope()
-    t = Affine.translation(-envelope.envelope_v(v))
+    t = tx.translation(-envelope.envelope_v(v))
     return self.apply_transform(t)
 
 
-def snug(self: Diagram, v: V2) -> Diagram:
+def snug(self: Diagram, v: V2_t) -> Diagram:
     "Align based on the trace."
     trace = self.get_trace()
     d = trace.trace_v(origin, v)
     assert d is not None
-    t = Affine.translation(-d)
+    t = tx.translation(-d)
     return self.apply_transform(t)
 
 
@@ -62,11 +63,11 @@ def center_xy(self: Diagram) -> Diagram:
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
-    t = Affine.translation(-envelope.center)
+    t = tx.translation(-envelope.center)
     return self.apply_transform(t)
 
 
-def scale_uniform_to_x(self: Diagram, x: float) -> Diagram:
+def scale_uniform_to_x(self: Diagram, x: tx.Floating) -> Diagram:
     """Apply uniform scaling along the x-axis.
 
     Args:
@@ -83,7 +84,7 @@ def scale_uniform_to_x(self: Diagram, x: float) -> Diagram:
     return self.scale(α)
 
 
-def scale_uniform_to_y(self: Diagram, y: float) -> Diagram:
+def scale_uniform_to_y(self: Diagram, y: tx.Floating) -> Diagram:
     """Apply uniform scaling along the y-axis.
 
     Args:

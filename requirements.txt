@@ -3,7 +3,9 @@ colour
 svgwrite
 cairosvg
 Pillow
-git+https://github.com/chalk-diagrams/planar
+jaxtyping
+numpy
+jax
 latextools
 loguru
 typing-extensions

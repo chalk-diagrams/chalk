@@ -4,19 +4,18 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from chalk.monoid import MList
 from chalk.shapes import (
-    ArcSegment,
     ArrowHead,
     Image,
     Latex,
     Path,
     Segment,
-    SegmentLike,
     Spacer,
     Text,
     from_pil,
 )
 from chalk.style import Style
-from chalk.transform import P2, Affine, to_radians, unit_x, unit_y
+from chalk.transform import P2_t, Affine
+import chalk.transform as tx
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
 
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
     from chalk.core import ApplyName, ApplyStyle, ApplyTransform, Primitive
 
 
-Ident = Affine.identity()
+Ident = tx.ident
 PyCairoContext = Any
 EMPTY_STYLE = Style.empty()
 
@@ -35,7 +34,7 @@ def tx_to_cairo(affine: Affine) -> Any:
     def convert(a, b, c, d, e, f):  # type: ignore
         return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
 
-    return convert(*affine[:6])  # type: ignore
+    return convert(*affine[0, 0], *affine[0, 1])  # type: ignore
 
 
 class ToList(DiagramVisitor[MList[Any], Affine]):
@@ -53,7 +52,7 @@ class ToList(DiagramVisitor[MList[Any], Affine]):
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine = Ident
     ) -> MList[Primitive]:
-        t_new = t * diagram.transform
+        t_new = t @ diagram.transform
         return MList(
             [
                 prim.apply_transform(t_new)
@@ -80,24 +79,23 @@ class ToList(DiagramVisitor[MList[Any], Affine]):
 class ToCairoShape(ShapeVisitor[None]):
 
     def render_segment(
-        self, seg: SegmentLike, ctx: PyCairoContext, p: P2
+        self, seg: Segment, ctx: PyCairoContext
     ) -> None:
-        q = seg.q + p
-        if isinstance(seg, Segment):
-            ctx.line_to(q.x, q.y)
-        elif isinstance(seg, ArcSegment):
-            end = seg.angle + seg.dangle
-            ctx.save()
-            matrix = tx_to_cairo(Affine.translation(p) * seg.t)
-            ctx.transform(matrix)
-            if seg.dangle < 0:
-                ctx.arc_negative(
-                    0.0, 0.0, 1.0, to_radians(seg.angle), to_radians(end)
-                )
-            else:
-                ctx.arc(0.0, 0.0, 1.0, to_radians(seg.angle), to_radians(end))
-            ctx.restore()
+        q, angle, dangle = seg.q, tx.to_radians(seg.angle), tx.to_radians(seg.dangle)
+        end = seg.angle + seg.dangle
 
+        for i in range(q.shape[0]):
+            if tx.np.abs(dangle[i]) < 0.1:
+                ctx.line_to(q[i, 0, 0], q[i, 1, 0])
+            else:
+                ctx.save()
+                matrix = tx_to_cairo(seg.t[i:i+1])
+                ctx.transform(matrix)
+                if dangle[i] < 0:
+                    ctx.arc_negative(0.0, 0.0, 1.0, angle[i], end[i])
+                else:
+                    ctx.arc(0.0, 0.0, 1.0, angle[i], end[i])
+                ctx.restore()
     def visit_path(
         self,
         path: Path,
@@ -107,10 +105,10 @@ class ToCairoShape(ShapeVisitor[None]):
         if not path.loc_trails[0].trail.closed:
             style.fill_opacity_ = 0
         for loc_trail in path.loc_trails:
-            for i, (seg, p) in enumerate(loc_trail.located_segments()):
-                if i == 0:
-                    ctx.move_to(p.x, p.y)
-                self.render_segment(seg, ctx, p)
+            p = loc_trail.location
+            ctx.move_to(p[0, 0, 0], p[0, 1,0])
+            segments = loc_trail.located_segments()
+            self.render_segment(segments, ctx)
             if loc_trail.trail.closed:
                 ctx.close_path()
 
@@ -174,15 +172,17 @@ def render_cairo_prims(
     shape_renderer = ToCairoShape()
     for prim in base.accept(ToList(), Ident):
         # apply transformation
-        matrix = tx_to_cairo(prim.transform)
-        ctx.transform(matrix)
-        prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
+        for i in range(prim.transform.shape[0]):
+            matrix = tx_to_cairo(prim.transform[i:i+1])
+            ctx.transform(matrix)
+            prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
 
-        # undo transformation
-        matrix.invert()
-        ctx.transform(matrix)
-        prim.style.render(ctx)
-        ctx.stroke()
+            # undo transformation
+            matrix.invert()
+            ctx.transform(matrix)
+
+            prim.style.render(ctx)
+            ctx.stroke()
 
 
 def render(
@@ -220,6 +220,7 @@ def render(
     s = self.scale(α).center_xy().pad(1 + pad)
     e = s.get_envelope()
     assert e is not None
-    s = s.translate(e(-unit_x), e(-unit_y))
+    s = s.translate(e(-tx.unit_x), e(-tx.unit_y))
+    ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     render_cairo_prims(s, ctx, Style.root(max(width, height)))
     surface.write_to_png(path)

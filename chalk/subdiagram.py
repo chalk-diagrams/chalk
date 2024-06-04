@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from chalk.envelope import Envelope
 from chalk.monoid import Maybe, Monoid
 from chalk.trace import Trace
-from chalk.transform import P2, V2, Affine, apply_p2_affine, origin
+from chalk.transform import P2_t, V2_t, Affine
+import chalk.transform as tr
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor
 
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from chalk.core import ApplyName, ApplyTransform, Compose
 
 
-Ident = Affine.identity()
+Ident = tr.ident
 AtomicName = Any
 
 
@@ -46,8 +47,8 @@ class Subdiagram(Monoid):
     transform: Affine
     # style: Style
 
-    def get_location(self) -> P2:
-        return apply_p2_affine(self.transform, origin)
+    def get_location(self) -> P2_t:
+        return self.transform @ tr.origin
 
     def get_envelope(self) -> Envelope:
         return self.diagram.get_envelope().apply_transform(self.transform)
@@ -55,7 +56,7 @@ class Subdiagram(Monoid):
     def get_trace(self) -> Trace:
         return self.diagram.get_trace().apply_transform(self.transform)
 
-    def boundary_from(self, v: V2) -> P2:
+    def boundary_from(self, v: V2_t) -> P2_t:
         """Returns the furthest point on the boundary of the subdiagram,
         starting from the local origin of the subdiagram and going in the
         direction of the given vector `v`.
@@ -63,7 +64,7 @@ class Subdiagram(Monoid):
         o = self.get_location()
         p = self.get_trace().trace_p(o, -v)
         if not p:
-            return origin
+            return tr.origin
         else:
             return p
 
@@ -90,7 +91,7 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
         diagram: ApplyTransform,
         t: Affine = Ident,
     ) -> Maybe[Subdiagram]:
-        return diagram.diagram.accept(self, t * diagram.transform)
+        return diagram.diagram.accept(self, t @ diagram.transform)
 
     def visit_apply_name(
         self,

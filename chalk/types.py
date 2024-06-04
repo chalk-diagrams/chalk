@@ -7,7 +7,7 @@ from chalk.envelope import Envelope
 from chalk.monoid import Monoid
 from chalk.style import Stylable, Style
 from chalk.trace import Trace
-from chalk.transform import P2, V2
+from chalk.transform import P2_t, V2_t
 
 if TYPE_CHECKING:
     from chalk.path import Path
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
-Ident = tx.Affine.identity()
+Ident = tx.ident
 
 
 class Enveloped(Protocol):
@@ -33,14 +33,14 @@ class Shape(Enveloped, Traceable, Protocol):
 class TrailLike(Protocol):
     def to_trail(self) -> Trail: ...
 
-    def to_path(self, location: P2 = P2(0, 0)) -> Path:
+    def to_path(self, location: P2_t = tx.P2(0, 0)) -> Path:
         return self.at(location).to_path()
 
-    def at(self, location: P2) -> Located:
+    def at(self, location: P2_t) -> Located:
         return self.to_trail().at(location)
 
     def stroke(self) -> Diagram:
-        return self.at(P2(0, 0)).stroke()
+        return self.at(tx.P2(0, 0)).stroke()
 
 
 class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
@@ -60,15 +60,15 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
         ...
 
     def juxtapose_snug(  # type: ignore[empty-body]
-        self: Diagram, other: Diagram, direction: V2
+        self: Diagram, other: Diagram, direction: V2_t
     ) -> Diagram: ...
 
     def beside_snug(  # type: ignore[empty-body]
-        self: Diagram, other: Diagram, direction: V2
+        self: Diagram, other: Diagram, direction: V2_t
     ) -> Diagram: ...
 
     def juxtapose(  # type: ignore[empty-body]
-        self: Diagram, other: Diagram, direction: V2
+        self: Diagram, other: Diagram, direction: V2_t
     ) -> Diagram: ...
 
     def atop(self: Diagram, other: Diagram) -> Diagram:  # type: ignore[empty-body]
@@ -78,22 +78,22 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
         ...
 
     def beside(  # type: ignore[empty-body]
-        self: Diagram, other: Diagram, direction: V2
+        self: Diagram, other: Diagram, direction: V2_t
     ) -> Diagram: ...
 
-    def frame(self, extra: float) -> Diagram:  # type: ignore[empty-body]
+    def frame(self, extra: tx.Floating) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def pad(self, extra: float) -> Diagram:  # type: ignore[empty-body]
+    def pad(self, extra: tx.Floating) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def scale_uniform_to_x(self, x: float) -> Diagram:  # type: ignore[empty-body]
+    def scale_uniform_to_x(self, x: tx.Floating) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def scale_uniform_to_y(self, y: float) -> Diagram:  # type: ignore[empty-body]
+    def scale_uniform_to_y(self, y: tx.Floating) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def align(self: Diagram, v: V2) -> Diagram:  # type: ignore[empty-body]
+    def align(self: Diagram, v: V2_t) -> Diagram:  # type: ignore[empty-body]
         ...
 
     def align_t(self: Diagram) -> Diagram:  # type: ignore[empty-body]
@@ -120,7 +120,7 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     def align_br(self: Diagram) -> Diagram:  # type: ignore[empty-body]
         ...
 
-    def snug(self: Diagram, v: V2) -> Diagram:  # type: ignore[empty-body]
+    def snug(self: Diagram, v: V2_t) -> Diagram:  # type: ignore[empty-body]
         ...
 
     def center_xy(self: Diagram) -> Diagram:  # type: ignore[empty-body]

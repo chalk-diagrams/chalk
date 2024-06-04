@@ -99,7 +99,7 @@ def make_tile(name):
 
 def quartet(tl, tr, bl, br):
     diagram = (tl | tr) / (bl | br)
-    return diagram.center_xy().scale(0.5)
+    return diagram.center_xy().close_envelope().scale(0.5)
 
 
 def cycle(diagram):
@@ -132,5 +132,5 @@ output_path = "examples/output/escher-square-limit.svg"
 pseudolimit.render_svg(output_path, height=512)
 
 
-output_path = "examples/output/escher-square-limit.pdf"
-pseudolimit.render_pdf(output_path, height=512)
+# output_path = "examples/output/escher-square-limit.pdf"
+# pseudolimit.render_pdf(output_path, height=512)

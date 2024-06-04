@@ -18,7 +18,7 @@ class Text(Shape):
         # Text doesn't have a bounding box since we can't accurately know
         # its size for all backends.
         eps = 1e-4
-        self.bb = BoundingBox([origin, origin + P2(eps, eps)])
+        self.bb = BoundingBox(origin, origin + P2(eps, eps))
         return self.bb
 
     def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
