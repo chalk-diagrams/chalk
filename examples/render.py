@@ -10,7 +10,7 @@ import jax
 from chalk.backend.cairo import ToList
 from chalk.trace import Trace
 import jax
-jax.config.update("jax_debug_nans", True)
+#jax.config.update("jax_debug_nans", True)
 # blue = Color("#005FDB")
 # d =  rectangle(10, 10).rotate(30) #| rectangle(10, 10).align_t()  | circle(50).align_t()
 
@@ -22,12 +22,12 @@ jax.config.update("jax_debug_nans", True)
 def make_scene(splits, mask, scene):
     split_int = np.floor(splits).astype(int)
     loc = np.arange(splits.shape[0]) % 2
-    scene = scene.at[split_int * mask].set(2 * (1 - loc)  - 1)
+    scene = scene.at[split_int * mask].add(2 * (1 - loc)  - 1)
     scene = scene.at[0].set(0)
     scene = np.cumsum(scene)
     scene = scene.at[split_int * mask].set(1.0 * (1-loc) + (2 * loc - 1) * ((splits) - split_int))
     scene = scene.at[0].set(0)
-    out = jax.vmap(lambda s: scene[s + samples] @ gaussian_kernel)(np.arange(scene.shape[0]))
+    out = jax.vmap(lambda s: scene[s + samples] @ kernel(0))(np.arange(scene.shape[0]))
     return scene, out
 
 def f_fwd(x, mask, scene):
@@ -38,18 +38,21 @@ def f_bwd(res, g):
     _, g = g
     splits, mask, scene = res
     split_int = np.floor(splits).astype(int) 
-    def grad_p(s):
+    def grad_p(s, s_off):
+        off = s_off - s
         v = g[s + samples]
-        return (v @ gaussian_kernel) * (scene[s-1] - scene[s+1])
-    r = jax.vmap(grad_p)(split_int) * mask
+        return (v @ kernel(off)) * (scene[s-1] - scene[s+1])
+    r = jax.vmap(grad_p, in_axes=(0, 0))(split_int, splits) * mask
     return r, None, None
 
 make_scene.defvjp(f_fwd, f_bwd)
 
 kern = 11
 samples = np.arange(kern) - (kern//2)
-gaussian_kernel = np.exp(-((samples/2) **2))
-gaussian_kernel = gaussian_kernel / gaussian_kernel.sum()
+def kernel(offset):
+    off_samples = samples - offset
+    gaussian_kernel = kern - np.abs(off_samples)
+    return np.maximum(0, gaussian_kernel / (kern - np.abs(samples)).sum())
 
 def render_out(d, x=200, y=200):
     t = 4 * x
@@ -59,7 +62,7 @@ def render_out(d, x=200, y=200):
             idx = i  // (t // y)
             return make_scene(ps[i], m[i], counter)
         i = np.arange(1, ps.shape[0], 4)
-        scene, out1 = jax.vmap(color_row, in_axes=(0, 0))(i, counter[i])
+        scene, out1 = jax.vmap(color_row, in_axes=(0, 0))(i, counter[i // 4])
         # out1 = jax.vmap(lambda c: 
         #                jax.vmap(lambda s: c[s + samples] @ gaussian_kernel)(np.arange(x)))(counter)
         #out = out1[..., None] * np.array(color)

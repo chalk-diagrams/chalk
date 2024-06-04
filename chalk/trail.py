@@ -190,7 +190,7 @@ class Trail(Monoid, Transformable, TrailLike):
                 arc.arc_seg_angle(0, dangle).rotate_by(rotate_by * i / sides)
                 for i in range(sides)
             ]
-        ).close()
+        ).close().scale(radius)
 
     @staticmethod
     def regular_polygon(sides: int, side_length: Floating) -> Trail:

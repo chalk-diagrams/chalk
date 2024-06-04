@@ -85,7 +85,7 @@ class ToCairoShape(ShapeVisitor[None]):
         end = seg.angle + seg.dangle
 
         for i in range(q.shape[0]):
-            if tx.np.abs(dangle[i]) < 1:
+            if tx.np.abs(dangle[i]) < 0.1:
                 ctx.line_to(q[i, 0, 0], q[i, 1, 0])
             else:
                 ctx.save()
@@ -221,5 +221,6 @@ def render(
     e = s.get_envelope()
     assert e is not None
     s = s.translate(e(-tx.unit_x), e(-tx.unit_y))
+    ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     render_cairo_prims(s, ctx, Style.root(max(width, height)))
     surface.write_to_png(path)
