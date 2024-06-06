@@ -6,20 +6,106 @@ from colour import Color
 from chalk import *
 import render
 import jax
+import chalk
+import jax.numpy as np
 # define some colors
 papaya = Color("#ff9700")
 blue = Color("#005FDB")
+from jax.tree_util import tree_structure
+
+import render
+
+#render.render(d, "out.png", 100, 100)
+def r(x):
+    d = rectangle(x, 10).fill_color(papaya) | circle(20).fill_color(blue)
+    d = d.align_tl().translate(10, 10)
+    return d
+#jax.grad(r)(np.array(10.))
+r(5).render("out1.png")
+exit()
 
 print("start")
 path = "examples/output/intro-01.png"
+import chex
+chex.register_dataclass_type_with_jax_tree_util(chalk.core.FlatPrimitive)
+chex.register_dataclass_type_with_jax_tree_util(chalk.style.StyleHolder)
+chex.register_dataclass_type_with_jax_tree_util(chalk.trail.Trail)
+chex.register_dataclass_type_with_jax_tree_util(chalk.shapes.Path)
+chex.register_dataclass_type_with_jax_tree_util(chalk.shapes.Segment)
+chex.register_dataclass_type_with_jax_tree_util(chalk.trail.Located)
+
+def x(t):
+    d = rectangle(3, 10).fill_color(papaya)
+    d = d.translate_by(V2(np.array([10, 11]), np.array([11, t])))
+    return d
+
+def x(i):
+    return circle(0.1 * (i+1))
+# out = jax.vmap(x)(np.arange(1, 6))
+# print(out)
+
+
+path = "examples/output/intro-01.png"
+
+def animate(fn, t, path, **kwargs):
+    import imageio
+    frames = jax.vmap(lambda t: chalk.core.flatten(fn(t)))(np.arange(t))
+    frames = chalk.core.unflatten(frames)
+    path_frame = "/tmp/{:d}-out.png"
+    with imageio.get_writer(path, fps=1, **kwargs) as writer:
+        z = concat(frames)
+        for i, frame in enumerate(frames):
+            path = path_frame.format(i)
+            frame.with_envelope(z).render(path)
+            image = imageio.imread(path)
+            writer.append_data(image)
+
+import os
+def animate_svg(fn, t, path, **kwargs):
+    import imageio
+    frames = jax.vmap(lambda t: chalk.core.flatten(fn(t)))(np.arange(t))
+    frames = chalk.core.unflatten(frames)
+    path_frame = "/tmp/{:d}-out.svg"
+
+    z = concat(frames)
+    for i, frame in enumerate(frames):
+        p = path_frame.format(i)
+        frame.with_envelope(z).render_svg(p)
+
+    os.system(f"svgasm /tmp/*-out.svg -o {path}")
+
+#animate(x, 6, "out.gif")
+animate_svg(x, 6, "out.svg")
+exit()
+hcat(chalk.core.unflatten(out)).render(path, height=64)
+
+
+exit()
+# chalk.core.unf(x(0)).render(path, height=64)
+
+#chalk.core.unflatten(out)[0].render(path, height=64)
+
+path = "examples/output/intro-01.png"
+out = jax.vmap(x)(np.array([1,2,3]))
+
+
+concat(chalk.core.unflatten(out)).render(path, height=64)
+
+for i, d in enumerate(chalk.core.unflatten(out)):
+    path = f"examples/output/intro-01-{i}.png"
+    d.render(path, height=64)
+exit()
+
 
 
 d = rectangle(3, 10).fill_color(papaya)
-d = d.align_tl().translate(10, 11)
-t = d.get_trace()
+d = d.translate_by(V2(np.array([10, 11]), np.array([11, 12])))
+#t = d.get_trace()
+print(d)
+
 
 #d.render(path, height=64)
-render.render(d, "render.png", 200, 200)
+#render.render(d, "render.png", 200, 200)
 
 #d = regular_polygon(8, 1.5).rotate_by(1 / 16)
 t = d.get_trace()

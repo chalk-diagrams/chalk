@@ -18,7 +18,7 @@ from chalk.shapes import (
     Spacer,
     Text,
 )
-from chalk.style import Style
+from chalk.style import Style, StyleHolder
 from chalk.transform import P2_t, unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     )
 
 
-EMPTY_STYLE = Style.empty()
+EMPTY_STYLE = StyleHolder.empty()
 
 
 def tx_to_svg(affine: tx.Affine) -> str:
@@ -252,6 +252,6 @@ def render(
     s = s.translate(e(-unit_x), e(-unit_y))
     if draw_height is None:
         draw_height = max(height, width)
-    style = Style.root(output_size=draw_height)
+    style = StyleHolder.root(output_size=draw_height)
     outer.add(to_svg(s, dwg, style))
     dwg.save()

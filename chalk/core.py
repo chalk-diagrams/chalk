@@ -17,13 +17,14 @@ import chalk.trace
 import chalk.types
 from chalk import backend
 from chalk.envelope import Envelope
-from chalk.style import Style
+from chalk.style import Style, StyleHolder
 from chalk.subdiagram import Name
 from chalk.transform import Affine, unit_x
 import chalk.transform as tx
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
+from chalk.monoid import MList
 
 Trail = Any
 Ident = tx.ident
@@ -52,14 +53,21 @@ class BaseDiagram(chalk.types.Diagram):
     # Monoid
     __add__ = chalk.combinators.atop
 
+    def __rmatmul__(self, t: Affine) -> Diagram:
+        return self.apply_transform(t)
+
     @classmethod
     def empty(cls) -> Diagram:  # type: ignore
         return Empty()
 
     # Tranformable
     def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
-        return ApplyTransform(t, self)
-
+        if t.shape[0] == 1:
+           return ApplyTransform(t, self)
+        else:
+            return chalk.combinators.concat(
+                [ApplyTransform(t[i][None], self)
+                for i in range(t.shape[0])])
     # Stylable
     def apply_style(self, style: Style) -> Diagram:  # type: ignore
         return ApplyStyle(style, self)
@@ -78,12 +86,11 @@ class BaseDiagram(chalk.types.Diagram):
         other = other if other is not None else Empty() 
         if isinstance(self, Empty):
             return other
-        if isinstance(other, Empty):
-            return self
-        if isinstance(self, Compose) and isinstance(other, Compose):
+        elif isinstance(self, Compose) and isinstance(other, Compose):
             return Compose(envelope, self.diagrams + other.diagrams)
-        if isinstance(self, Compose) and isinstance(other, Compose):
-            return Compose(envelope, self.diagrams + [other])
+        elif isinstance(other, Empty) and not isinstance(self, Compose):
+            return Compose(envelope, [self])
+
         elif isinstance(other, Compose):
             return Compose(envelope, [self] + other.diagrams)
         else:
@@ -204,7 +211,7 @@ class Primitive(BaseDiagram):
     """
 
     shape: Shape
-    style: Style
+    style: StyleHolder
     transform: Affine
 
     @classmethod
@@ -218,10 +225,16 @@ class Primitive(BaseDiagram):
         Returns:
             Primitive: A diagram object.
         """
-        return cls(shape, Style.empty(), Ident)
+        return cls(shape, StyleHolder.empty(), Ident)
 
     def apply_transform(self, t: Affine) -> Primitive:
-        new_transform = t @ self.transform
+        if t.shape[0] != 1:
+            return super().apply_transform(t)
+
+        if hasattr(self.transform, "shape"):
+            new_transform = t @ self.transform
+        else:
+            new_transform = t
         return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: Style) -> Primitive:
@@ -264,6 +277,16 @@ class Compose(BaseDiagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         return visitor.visit_compose(self, args)
 
+@dataclass
+class MultiDiagram(BaseDiagram):
+    diagrams: List[Diagram]
+
+    def __iter__(self):
+        return self.diagrams.__iter__()
+
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_apply_multi(self, args)
+
 
 @dataclass
 class ApplyTransform(BaseDiagram):
@@ -276,6 +299,9 @@ class ApplyTransform(BaseDiagram):
         return visitor.visit_apply_transform(self, args)
 
     def apply_transform(self, t: Affine) -> ApplyTransform:
+        if t.shape[0] != 1:
+            return super().apply_transform(t)
+
         new_transform = t @ self.transform
         return ApplyTransform(new_transform, self.diagram)
     
@@ -336,3 +362,100 @@ class Qualify(DiagramVisitor[Diagram, None]):
         return ApplyName(
             self.name + diagram.dname, diagram.diagram.accept(self, None)
         )
+
+
+@dataclass
+class FlatPrimitive:
+    "A version of primitive that may be batched"
+    shape: Path
+    style: StyleHolder
+    transform: Affine
+
+    @staticmethod
+    def from_primitive(self):
+        return FlatPrimitive(self.shape, self.style, self.transform)
+
+
+def flatten(diagram: Diagram):
+    children = [FlatPrimitive(d.shape, d.style, d.transform) 
+                for d in diagram.accept(ToList(), Ident)]
+    return children
+    
+def unf(diagram):
+    from chalk.combinators import concat
+    return concat([Primitive(d.shape, 
+                             d.style,
+                             d.transform) 
+                    for d in diagram]), None
+def unflatten(diagrams):
+    from chalk.combinators import concat
+    return [concat([Primitive(d.shape.split(i), 
+                             d.style.split(i), 
+                             d.transform[i]) 
+                        for d in diagrams])
+            for i in range(diagrams[0].transform.shape[0])]
+
+# def unflatten(aux_data, diagrams):
+#     from chalk.combinators import concat
+#     return concat([Primitive(d.shape.split(i), 
+#                               d.style.split(i), 
+#                               d.transform[i]) 
+#                     for d in diagrams])
+#             for i in range(diagrams[0].transform.shape[0])]
+
+#import jax
+# from jax.tree_util import register_pytree_node
+
+# for x in [MultiDiagram, Primitive, Compose, ApplyName, ApplyStyle, ApplyTransform]:
+#     register_pytree_node(
+#         x,
+#         flatten,    # tell JAX what are the children nodes
+#         unflatten   # tell JAX how to pack back into a RegisteredSpecial
+#     )
+
+class ToList(DiagramVisitor[MList[FlatPrimitive], Affine]):
+    """Compiles a `Diagram` to a list of `FlatPrimitive`s. The transformation `t`
+    is accumulated upwards, from the tree's leaves.
+    """
+
+    A_type = MList[Primitive]
+
+    def visit_primitive(
+        self, diagram: Primitive, t: Affine = Ident
+    ) -> MList[Primitive]:
+        return MList([(diagram.apply_transform(t))])
+
+    def visit_apply_multi(
+        self, diagram, t: Affine = Ident
+    ) -> MList[Primitive]:
+        return MList(diagram.diagrams)
+
+
+    def visit_apply_transform(
+        self, diagram: ApplyTransform, t: Affine = Ident
+    ) -> MList[Primitive]:
+        if hasattr(diagram.transform, "shape"):
+            t_new = t @ diagram.transform
+        else: 
+            t_new = t
+        return MList(
+            [
+                prim.apply_transform(t_new)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
+
+    def visit_apply_style(
+        self, diagram: ApplyStyle, t: Affine = Ident
+    ) -> MList[Primitive]:
+        return MList(
+            [
+                prim.apply_style(diagram.style)
+                for prim in diagram.diagram.accept(self, t).data
+            ]
+        )
+
+    def visit_apply_name(
+        self, diagram: ApplyName, t: Affine = Ident
+    ) -> MList[Primitive]:
+        return MList([prim for prim in diagram.diagram.accept(self, t).data])

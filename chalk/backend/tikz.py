@@ -13,7 +13,7 @@ from chalk.shapes import (
     Spacer,
     Text,
 )
-from chalk.style import Style
+from chalk.style import Style, StyleHolder
 from chalk.transform import P2_t, Affine, Floating
 import chalk.transform as tx
 from chalk.types import Diagram
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 PyLatex = Any
 PyLatexElement = Any
 
-EMPTY_STYLE = Style.empty()
+EMPTY_STYLE = StyleHolder.empty()
 
 
 def tx_to_tikz(affine: Affine) -> str:

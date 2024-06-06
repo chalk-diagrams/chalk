@@ -5,7 +5,7 @@ from colour import Color
 
 from chalk.shapes import ArrowHead, arc_seg, dart
 from chalk.shapes.arc import Segment
-from chalk.style import Style
+from chalk.style import Style, StyleHolder
 from chalk.subdiagram import Name, Subdiagram
 from chalk.trail import Trail
 from chalk.transform import P2_t, V2_t
@@ -18,11 +18,11 @@ black = Color("black")
 
 @dataclass
 class ArrowOpts:
-    head_style: Style = field(default_factory=Style)
+    head_style: StyleHolder = field(default_factory=StyleHolder.empty)
     head_pad: float = 0.0
     tail_pad: float = 0.0
     head_arrow: Optional[Diagram] = None
-    shaft_style: Style = field(default_factory=Style)
+    shaft_style: StyleHolder = field(default_factory=StyleHolder.empty)
     trail: Optional[Trail] = None
     arc_height: float = 0.0
 

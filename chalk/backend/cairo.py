@@ -13,7 +13,7 @@ from chalk.shapes import (
     Text,
     from_pil,
 )
-from chalk.style import Style
+from chalk.style import Style, StyleHolder
 from chalk.transform import P2_t, Affine
 import chalk.transform as tx
 from chalk.types import Diagram
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 Ident = tx.ident
 PyCairoContext = Any
-EMPTY_STYLE = Style.empty()
+EMPTY_STYLE = StyleHolder.empty()
 
 
 def tx_to_cairo(affine: Affine) -> Any:
@@ -35,45 +35,6 @@ def tx_to_cairo(affine: Affine) -> Any:
         return cairo.Matrix(a, d, b, e, c, f)  # type: ignore
 
     return convert(*affine[0, 0], *affine[0, 1])  # type: ignore
-
-
-class ToList(DiagramVisitor[MList[Any], Affine]):
-    """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
-    is accumulated upwards, from the tree's leaves.
-    """
-
-    A_type = MList[Any]
-
-    def visit_primitive(
-        self, diagram: Primitive, t: Affine = Ident
-    ) -> MList[Primitive]:
-        return MList([diagram.apply_transform(t)])
-
-    def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = Ident
-    ) -> MList[Primitive]:
-        t_new = t @ diagram.transform
-        return MList(
-            [
-                prim.apply_transform(t_new)
-                for prim in diagram.diagram.accept(self, t).data
-            ]
-        )
-
-    def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident
-    ) -> MList[Primitive]:
-        return MList(
-            [
-                prim.apply_style(diagram.style)
-                for prim in diagram.diagram.accept(self, t).data
-            ]
-        )
-
-    def visit_apply_name(
-        self, diagram: ApplyName, t: Affine = Ident
-    ) -> MList[Primitive]:
-        return MList([prim for prim in diagram.diagram.accept(self, t).data])
 
 
 class ToCairoShape(ShapeVisitor[None]):
@@ -166,8 +127,10 @@ class ToCairoShape(ShapeVisitor[None]):
 
 
 def render_cairo_prims(
-    base: Diagram, ctx: PyCairoContext, style: Style
+    base: Diagram, ctx: PyCairoContext, style: StyleHolder
 ) -> None:
+    from chalk.core import ToList
+
     base = base._style(style)
     shape_renderer = ToCairoShape()
     for prim in base.accept(ToList(), Ident):
@@ -222,5 +185,5 @@ def render(
     assert e is not None
     s = s.translate(e(-tx.unit_x), e(-tx.unit_y))
     ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
-    render_cairo_prims(s, ctx, Style.root(max(width, height)))
+    render_cairo_prims(s, ctx, StyleHolder.root(max(width, height)))
     surface.write_to_png(path)

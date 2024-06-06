@@ -12,7 +12,8 @@ else:
     from jax import ops
     import jax.numpy as np
     import jax
-
+    from jax import config
+    config.update("jax_enable_x64", True)
 import jax
 Affine = Float[Array, "#B 3 3"]
 V2_t = Float[Array, "#B 3 1"]
@@ -69,12 +70,21 @@ def index_update(arr, index, values):
 
 def V2(x: Floating, y: Floating) -> V2_t:
     x, y, o = ftos(x), ftos(y), ftos(0.)
+    x, y = match(x, y)
     res= np.stack([x, y, o.repeat(x.size)], 
                     axis=-1)[...,None]
     return res
 
+def match(x, y):
+    if x.shape[0] > y.shape[0] and y.shape[0] == 1:
+        return x, y.repeat(x.shape[0])
+    if y.shape[0] > x.shape[0] and x.shape[0] == 1:
+        return x.repeat(y.shape[0]), y
+    return x, y
+
 def P2(x: Floating, y: Floating) -> P2_t:
     x, y, o = ftos(x), ftos(y), ftos(1.)
+    x, y = match(x, y)
     return np.stack([x, y, o.repeat(x.size)], 
                     axis=-1)[..., None]
 
@@ -132,6 +142,9 @@ def cross(v1: V2_t, v2: V2_t) -> Scalars:
 def to_point(v: Float[Array, "... 1"]) -> P2_t:
     index = (Ellipsis, 2, 0)
     return index_update(v, index, 1)
+def to_vec(v: Float[Array, "... 1"]) -> V2_t:
+    index = (Ellipsis, 2, 0)
+    return index_update(v, index, 0)
 
 def polar(angle: FloatingB, 
           length: Floating = 1.0) -> PtB:
@@ -202,8 +215,12 @@ class Transformable:
     def apply_transform(self, t: Affine) -> Self:  # type: ignore[empty-body]
         pass
 
+    def __rmatmul__(self, t: Affine) -> Self:
+        return self._app(t)
+
     def __rmul__(self, t: Affine) -> Self:
         return self._app(t)
+
 
     def _app(self, t: Affine) -> Self:
         return self.apply_transform(t)

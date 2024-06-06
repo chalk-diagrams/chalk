@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 from chalk.envelope import Envelope
@@ -30,14 +30,15 @@ class Located(Enveloped, Traceable, Transformable):
     trail: Trail
     location: P2_t
 
+    def split(self, i):
+        return Located(self.trail.split(i), self.location[i])
+
     def located_segments(self) -> Segment:
         pts = self.points()
         return self.trail.segments.apply_transform(tx.translation(pts))
     
     def points(self) -> Float[Array, "#B 3 1"]:
         return self.trail.points() + self.location 
-
-        
 
     def get_envelope(self) -> Envelope:
         s = self.located_segments()
@@ -101,7 +102,11 @@ class Located(Enveloped, Traceable, Transformable):
 class Trail(Monoid, Transformable, TrailLike):
     segments: Segment
     
-    closed: bool = False
+    closed: bool = field(default_factory= lambda: tx.np.array(False))
+
+    def split(self, i):
+        return Trail(self.segments.split(i), 
+                     self.closed[i])
 
     # Monoid
     @staticmethod
@@ -109,7 +114,7 @@ class Trail(Monoid, Transformable, TrailLike):
         return Trail(Segment(tx.np.array([]), tx.np.array([])), False)
 
     def __add__(self, other: Trail) -> Trail:
-        assert not (self.closed or other.closed), "Cannot add closed trails"
+        #assert not (self.closed or other.closed), "Cannot add closed trails"
         return Trail(self.segments + other.segments, False)
 
     # Transformable

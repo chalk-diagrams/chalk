@@ -26,13 +26,16 @@ class Segment(TrailLike):
     transform: Affine
     angles: Float[Array, "#B 2"]
 
+    def split(self, i):
+        return Segment(self.transform[i], self.angles[i])
+
     def to_trail(self) -> Trail:
         from chalk.trail import Trail
  
         return Trail(self)
     
     def get(self, i):
-        return Segment(transform=self.transform[i:i+1], angles=self.angles[i:i+1])
+        return Segment(transform=self.transform[i], angles=self.angles[i])
 
     # Transformable
     def apply_transform(self, t: Affine) -> Segment:
