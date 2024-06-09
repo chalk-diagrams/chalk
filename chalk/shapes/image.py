@@ -6,7 +6,7 @@ import PIL
 from PIL import Image as Im
 
 from chalk.shapes.shape import Shape
-from chalk.transform import P2, BoundingBox, origin
+from chalk.transform import P2, BoundingBox
 from chalk.types import Diagram
 
 
@@ -47,8 +47,8 @@ class Image(Shape):
         self.width = self.im.width
 
     def get_bounding_box(self) -> BoundingBox:
-        left = - self.width / 2
-        top = - self.height / 2
+        left = -self.width / 2
+        top = -self.height / 2
         tl = P2(left, top)
         br = P2(left + self.width, top + self.height)
         return BoundingBox(tl, br)

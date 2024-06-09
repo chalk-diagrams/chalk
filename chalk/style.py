@@ -1,37 +1,31 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple, Union
-import chalk.transform as tx
+from typing import Any, List, Optional, Union
+
 from colour import Color
+from jaxtyping import Array, Bool, Float
 from typing_extensions import Self
-from jaxtyping import Float, Array
+
+import chalk.transform as tx
 
 PyCairoContext = Any
 PyLatex = Any
 
-COLOR = Union[str, Color, Float[Array, "#B 3"]]
+ColorVec = Float[Array, "#*B 3"]
+Property = Float[Array, "#*B"]
+PropLike = Union[Property, float]
+ColorLike = Union[str, Color, ColorVec]
 
-def to_color(c):
+
+def to_color(c: ColorLike) -> ColorVec:
     if isinstance(c, str):
         return tx.np.array(Color(c).rgb)
     elif isinstance(c, Color):
         return tx.np.array(c.rgb)
     return c
-import jax
-@jax.custom_vjp
-def test(x):
-    return x
 
-def f_fwd(x):
-    return test(x), ()
-
-def f_bwd(res, g):
-    print(g)
-    return g,
-
-test.defvjp(f_fwd, f_bwd)
 
 FC = Color("white")
 LC = Color("black")
@@ -44,30 +38,27 @@ STYLE_LOCATIONS = {
     "line_opacity": (7, 8),
     "line_width": (8, 9),
     "output_size": (9, 10),
-    "dashing": (10, 12)
+    "dashing": (10, 12),
 }
 
 DEFAULTS = {
     "fill_color": to_color(LC),
-    "fill_opacity": tx.np.array(1.),
+    "fill_opacity": tx.np.array(1.0),
     "line_color": to_color(LC),
-    "line_opacity": tx.np.array(1.),
+    "line_opacity": tx.np.array(1.0),
     "line_width": tx.np.array(LW),
     "output_size": tx.np.array(200.0),
-    "dashing": (10, 12)
+    "dashing": tx.np.array(0),
 }
 STYLE_SIZE = 12
 
 
-
 class Stylable:
     def line_width(self, width: float) -> Self:
-        return self.apply_style(
-            Style(line_width_=(WidthType.NORMALIZED, width))
-        )
+        return self.apply_style(Style(line_width_=width))
 
-    def line_width_local(self, width: float) -> Self:
-        return self.apply_style(Style(line_width_=(WidthType.LOCAL, width)))
+    # def line_width_local(self, width: float) -> Self:
+    #     return self.apply_style(Style(line_width_=(WidthType.LOCAL, width)))
 
     def line_color(self, color: Color) -> Self:
         return self.apply_style(Style(line_color_=to_color(color)))
@@ -79,9 +70,10 @@ class Stylable:
         return self.apply_style(Style(fill_opacity_=opacity))
 
     def dashing(self, dashing_strokes: List[float], offset: float) -> Self:
-        return self.apply_style(Style(dashing_=(dashing_strokes, offset)))
+        "TODO: implement this function."
+        return self.apply_style(Style())
 
-    def apply_style(self: Self, style: Style) -> Self:
+    def apply_style(self: Self, style: StyleHolder) -> Self:
         raise NotImplementedError("Abstract")
 
 
@@ -94,23 +86,28 @@ class WidthType(Enum):
     NORMALIZED = auto()
 
 
+def Style(
+    line_width_: Optional[PropLike] = None,
+    line_color_: Optional[ColorLike] = None,
+    line_opacity_: Optional[PropLike] = None,
+    fill_color_: Optional[ColorLike] = None,
+    fill_opacity_: Optional[PropLike] = None,
+    dashing_: Optional[PropLike] = None,
+    output_size: Optional[PropLike] = None,
+) -> StyleHolder:
+    b = (
+        tx.np.zeros((1, STYLE_SIZE)),
+        tx.np.zeros((1, STYLE_SIZE), dtype=bool),
+    )
 
-def Style(line_width_=None, 
-        line_color_=None, 
-        line_opacity_=None,
-        fill_color_=None, 
-        fill_opacity_=None, 
-        dashing_=None, 
-        output_size=None):
-    b = ((tx.np.zeros((1, STYLE_SIZE)), 
-        tx.np.zeros((1, STYLE_SIZE), dtype=bool)))
-    def update(b, key, value):
+    def update(b, key: str, value):  # type: ignore
         base, mask = b
-        key = (slice(*STYLE_LOCATIONS[key]),)
+        index = (Ellipsis, slice(*STYLE_LOCATIONS[key]))
         if value is not None:
-            base = tx.index_update(base, (Ellipsis,) + key, value)
-            mask = tx.index_update(mask, (Ellipsis,) + key, True)
+            base = tx.index_update(base, index, value)  # type: ignore
+            mask = tx.index_update(mask, index, True)  # type: ignore
         return base, mask
+
     b = update(b, "line_width", line_width_)
     b = update(b, "line_color", line_color_)
     b = update(b, "line_opacity", line_opacity_)
@@ -119,9 +116,11 @@ def Style(line_width_=None,
     b = update(b, "output_size", output_size)
     return StyleHolder(*b)
 
+
 @dataclass
 class StyleHolder(Stylable):
     """Style class."""
+
     base: Float[Array, f"#B 1 {STYLE_SIZE}"]
     mask: Bool[Array, f"#B 1 {STYLE_SIZE}"]
 
@@ -132,67 +131,68 @@ class StyleHolder(Stylable):
     # dashing_: Optional[Tuple[List[float], float]] = None
     # output_size: Optional[float] = None
 
-    def split(self, i):
-        return StyleHolder(base=self.base[i], 
-                           mask=self.mask[i])
+    def split(self, i: int) -> StyleHolder:
+        return StyleHolder(base=self.base[i], mask=self.mask[i])
 
-    def get(self, key):
-        self.base = test(self.base)
+    def get(self, key: str) -> Float[Array, "..."]:
+        self.base = self.base
         v = self.base[0, slice(*STYLE_LOCATIONS[key])]
-        return tx.np.where(self.mask[0, slice(*STYLE_LOCATIONS[key])],
-                           v, DEFAULTS[key])
-        
+        return tx.np.where(
+            self.mask[0, slice(*STYLE_LOCATIONS[key])], v, DEFAULTS[key]
+        )
+
         # if self.mask[(1,) + key].all():
         #     return v
         # else:
         #     return None
 
     @property
-    def line_width_(self):
+    def line_width_(self) -> Property:
         return self.get("line_width")
 
     @property
-    def line_color_(self):
+    def line_color_(self) -> ColorVec:
         return self.get("line_color")
 
     @property
-    def line_opacity_(self):
+    def line_opacity_(self) -> Property:
         return self.get("line_opacity")
-    
-    @property
-    def fill_color_(self):
-        return test(self.get("fill_color"))
 
     @property
-    def fill_opacity_(self):
-        return self.get("fill_opacity")
-    
+    def fill_color_(self) -> ColorVec:
+        return self.get("fill_color")
+
     @property
-    def output_size(self):
+    def fill_opacity_(self) -> Property:
+        return self.get("fill_opacity")
+
+    @property
+    def output_size(self) -> Property:
         return self.get("output_size")
 
     @property
-    def dashing_(self):
+    def dashing_(self) -> None:
         return None
 
+    @classmethod
+    def empty(cls) -> StyleHolder:
+        return cls(
+            tx.np.zeros((1, STYLE_SIZE)),
+            tx.np.zeros((1, STYLE_SIZE), dtype=bool),
+        )
 
     @classmethod
-    def empty(cls) -> Style:
-        return cls(tx.np.zeros((1, STYLE_SIZE)), 
-                   tx.np.zeros((1, STYLE_SIZE), dtype=bool))
-
-    @classmethod
-    def root(cls, output_size: tx.Floating) -> Style:
+    def root(cls, output_size: tx.Floating) -> StyleHolder:
         return Style(output_size=output_size)
 
-    def apply_style(self, other: Style) -> Style:
+    def apply_style(self, other: StyleHolder) -> StyleHolder:
         return self.merge(other)
 
-    def merge(self, other: Style) -> Style:
-        mask = self.mask | other.mask 
+    def merge(self, other: StyleHolder) -> StyleHolder:
+        mask = self.mask | other.mask
         base = tx.np.where(other.mask, other.base, self.base)
         return StyleHolder(base, mask)
-    
+
     # Style(
     #         *(
     #             m(getattr(other, dim.name), getattr(self, dim.name))
@@ -212,7 +212,6 @@ class StyleHolder(Stylable):
             else:
                 op = self.fill_opacity_[0]
             f = self.fill_color_
-            print(f)
             ctx.set_source_rgba(f[0], f[1], f[2], op)
             ctx.fill_preserve()
 
@@ -251,8 +250,8 @@ class StyleHolder(Stylable):
             f = self.fill_color_ * 256
             style += f"fill: rgb({f[0]} {f[1]} {f[2]});"
         if self.line_color_ is not None:
-            l = self.line_color_ * 256
-            style += f"stroke: rgb({l[0]} {l[1]} {l[2]});"
+            lc = self.line_color_ * 256
+            style += f"stroke: rgb({lc[0]} {lc[1]} {lc[2]});"
         else:
             style += "stroke: black;"
 

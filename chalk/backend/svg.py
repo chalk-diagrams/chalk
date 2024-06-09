@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import TYPE_CHECKING, Iterator, Optional, Sequence
+from typing import TYPE_CHECKING, Iterator, List, Optional
 
 import svgwrite
 from svgwrite import Drawing
@@ -9,20 +9,13 @@ from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
 
 from chalk import transform as tx
-from chalk.shapes import (
-    ArrowHead,
-    Image,
-    Latex,
-    Path,
-    Segment,
-    Spacer,
-    Text,
-)
-from chalk.style import Style, StyleHolder
-from chalk.transform import P2_t, unit_x, unit_y
+from chalk.monoid import Maybe
+from chalk.shapes import ArrowHead, Image, Latex, Path, Segment, Spacer, Text
+from chalk.style import StyleHolder
+from chalk.transform import unit_x, unit_y
 from chalk.types import Diagram
 from chalk.visitor import DiagramVisitor, ShapeVisitor
-from chalk.monoid import Monoid, Maybe
+
 if TYPE_CHECKING:
     from chalk.core import (
         ApplyName,
@@ -39,10 +32,15 @@ EMPTY_STYLE = StyleHolder.empty()
 
 def tx_to_svg(affine: tx.Affine) -> str:
     def convert(
-        a: tx.Floating, b: tx.Floating, c: tx.Floating, d: tx.Floating, 
-        e: tx.Floating, f: tx.Floating
+        a: tx.Floating,
+        b: tx.Floating,
+        c: tx.Floating,
+        d: tx.Floating,
+        e: tx.Floating,
+        f: tx.Floating,
     ) -> str:
         return f"matrix({a}, {d}, {b}, {e}, {c}, {f})"
+
     return convert(*affine[0, 0], *affine[0, 1])
 
 
@@ -60,61 +58,61 @@ class Raw(Rect):  # type: ignore
         return self.xml
 
 
-class ToSVG(DiagramVisitor[Maybe[BaseElement], Style]):
-    A_type = Maybe[BaseElement]
+# class ToSVG(DiagramVisitor[Maybe[BaseElement], StyleHolder]):
+#     A_type = Maybe[BaseElement]
 
-    def __init__(self, dwg: Drawing):
-        self.dwg = dwg
-        self.shape_renderer = ToSVGShape(dwg)
+#     def __init__(self, dwg: Drawing):
+#         self.dwg = dwg
+#         self.shape_renderer = ToSVGShape(dwg)
 
-    def visit_primitive(
-        self, diagram: Primitive, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        style_new = diagram.style.merge(style)
-        style_svg = style_new.to_svg()
-        transform = tx_to_svg(diagram.transform)
-        inner = diagram.shape.accept(self.shape_renderer, style=style_new)
-        if not style_svg and not transform:
-            return Maybe(inner)
-        else:
-            if not style_svg:
-                style_svg = ";"
-            g = self.dwg.g(transform=transform, style=style_svg)
-            g.add(inner)
-            return Maybe(g)
+#     def visit_primitive(
+#         self, diagram: Primitive, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         style_new = diagram.style.merge(style)
+#         style_svg = style_new.to_svg()
+#         transform = tx_to_svg(diagram.transform)
+#         inner = diagram.shape.accept(self.shape_renderer, style=style_new)
+#         if not style_svg and not transform:
+#             return Maybe(inner)
+#         else:
+#             if not style_svg:
+#                 style_svg = ";"
+#             g = self.dwg.g(transform=transform, style=style_svg)
+#             g.add(inner)
+#             return Maybe(g)
 
-    def visit_empty(
-        self, diagram: Empty, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        return Maybe(self.dwg.g())
+#     def visit_empty(
+#         self, diagram: Empty, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         return Maybe(self.dwg.g())
 
-    def visit_compose(
-        self, diagram: Compose, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        g = self.dwg.g()
+#     def visit_compose(
+#         self, diagram: Compose, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         g = self.dwg.g()
 
-        for d in diagram.diagrams:
-            g.add(d.accept(self, style).data)
-        return Maybe(g)
+#         for d in diagram.diagrams:
+#             g.add(d.accept(self, style).data)
+#         return Maybe(g)
 
-    def visit_apply_transform(
-        self, diagram: ApplyTransform, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        g = self.dwg.g(transform=tx_to_svg(diagram.transform))
-        g.add(diagram.diagram.accept(self, style).data)
-        return Maybe(g)
+#     def visit_apply_transform(
+#         self, diagram: ApplyTransform, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         g = self.dwg.g(transform=tx_to_svg(diagram.transform))
+#         g.add(diagram.diagram.accept(self, style).data)
+#         return Maybe(g)
 
-    def visit_apply_style(
-        self, diagram: ApplyStyle, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        return diagram.diagram.accept(self, diagram.style.merge(style))
+#     def visit_apply_style(
+#         self, diagram: ApplyStyle, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         return diagram.diagram.accept(self, diagram.style.merge(style))
 
-    def visit_apply_name(
-        self, diagram: ApplyName, style: Style = EMPTY_STYLE
-    ) -> BaseElement:
-        g = self.dwg.g()
-        g.add(diagram.diagram.accept(self, style).data)
-        return Maybe(g)
+#     def visit_apply_name(
+#         self, diagram: ApplyName, style: StyleHolder = EMPTY_STYLE
+#     ) -> BaseElement:
+#         g = self.dwg.g()
+#         g.add(diagram.diagram.accept(self, style).data)
+#         return Maybe(g)
 
 
 class ToSVGShape(ShapeVisitor[BaseElement]):
@@ -124,19 +122,19 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
     def render_segment(self, seg: Segment) -> Iterator[str]:
         # https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
         dangle = seg.dangle
-        f_A = (abs(dangle) > 180)
+        f_A = abs(dangle) > 180
         det: float = tx.np.linalg.det(seg.t)  # type: ignore
-        f_S = (det * dangle > 0)
+        f_S = det * dangle > 0
         r_x, r_y, rot, q = seg.r_x, seg.r_y, seg.rot, seg.q
-        
+
         for i in range(q.shape[0]):
-            if tx.np.abs(dangle[i]) > 1:            
-                yield f"A {r_x[i]} {seg.r_y[i]} {seg.rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
+            if tx.np.abs(dangle[i]) > 1:
+                yield f"A {r_x[i]} {r_y[i]} {rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
             else:
                 yield f"L {q[i, 0, 0]} {q[i, 1, 0]}"
-    
+
     def visit_path(
-        self, path: Path, style: Style = EMPTY_STYLE
+        self, path: Path, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         extra_style = ""
         if not path.loc_trails[0].trail.closed:
@@ -155,7 +153,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         return line
 
     def visit_latex(
-        self, shape: Latex, style: Style = EMPTY_STYLE
+        self, shape: Latex, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         dx, dy = -shape.width / 2, -shape.height / 2
         g = self.dwg.g(transform=f"scale(0.05) translate({dx} {dy})")
@@ -163,7 +161,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         return g
 
     def visit_text(
-        self, shape: Text, style: Style = EMPTY_STYLE
+        self, shape: Text, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         dx = -(shape.get_bounding_box().width / 2)
         return self.dwg.text(
@@ -178,19 +176,19 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         raise NotImplementedError("Text is not implemented")
 
     def visit_spacer(
-        self, shape: Spacer, style: Style = EMPTY_STYLE
+        self, shape: Spacer, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         return self.dwg.g()
 
     def visit_arrowhead(
-        self, shape: ArrowHead, style: Style = EMPTY_STYLE
+        self, shape: ArrowHead, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
         return to_svg(shape.arrow_shape.scale(scale), self.dwg, style)
 
     def visit_image(
-        self, shape: Image, style: Style = EMPTY_STYLE
+        self, shape: Image, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         dx = -shape.width / 2
         dy = -shape.height / 2
@@ -199,9 +197,43 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         )
 
 
-def to_svg(self: Diagram, dwg: Drawing, style: Style) -> BaseElement:
-    return self.accept(ToSVG(dwg), style).data
+def render_svg_prims(prims: List[Primitive], dwg: Drawing) -> None:
+    outer = dwg.g(style="fill:white;")
+    # Arrow marker
+    marker = dwg.marker(
+        id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
+    )
+    marker.add(dwg.polygon([(0, 0), (5, 1.75), (0, 3.5)]))
+    dwg.defs.add(marker)
 
+    dwg.add(outer)
+    shape_renderer = ToSVGShape(dwg)
+    for prim in prims:
+        # apply transformation
+        for i in range(prim.transform.shape[0]):
+            # apply transformation
+            g = dwg.g(transform=tx_to_svg(prim.transform))
+            g.add(prim.shape.accept(prim, prim.style).data)
+
+
+
+def prims_to_file(
+    prims: List[Primitive], path: str, height: float, width: float
+) -> None:
+    
+
+    dwg = svgwrite.Drawing(path, size=(width, height))
+    render_svg_prims(prims, dwg)
+
+    #outer.add(to_svg(s, dwg, style))
+    dwg.save()
+
+    # import cairo
+
+    # surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(width), int(height))
+    # ctx = cairo.Context(surface)
+    # render_cairo_prims(prims, ctx)
+    # surface.write_to_png(path)
 
 def render(
     self: Diagram,
@@ -223,35 +255,27 @@ def render(
                                                line width.
 
     """
-    pad = 0.05
-    envelope = self.get_envelope()
+    from chalk.core import layout_primitives
+    prims, height, width = layout_primitives(self, height, width)
+    prims_to_file(prims, path, height, width)
 
-    # infer width to preserve aspect ratio
-    assert envelope is not None
-    width = width or int(height * envelope.width / envelope.height)
-    # determine scale to fit the largest axis in the target frame size
-    if envelope.width - width <= envelope.height - height:
-        α = height / ((1 + pad) * envelope.height)
-    else:
-        α = width / ((1 + pad) * envelope.width)
+    # pad = 0.05
+    # envelope = self.get_envelope()
 
-    dwg = svgwrite.Drawing(path, size=(width, height))
-
-    outer = dwg.g(style="fill:white;")
-    # Arrow marker
-    marker = dwg.marker(
-        id="arrow", refX=5.0, refY=1.7, size=(5, 3.5), orient="auto"
-    )
-    marker.add(dwg.polygon([(0, 0), (5, 1.75), (0, 3.5)]))
-    dwg.defs.add(marker)
-
-    dwg.add(outer)
-    s = self.center_xy().pad(1 + pad).scale(α)
-    e = s.get_envelope()
-    assert e is not None
-    s = s.translate(e(-unit_x), e(-unit_y))
-    if draw_height is None:
-        draw_height = max(height, width)
-    style = StyleHolder.root(output_size=draw_height)
-    outer.add(to_svg(s, dwg, style))
-    dwg.save()
+    # # infer width to preserve aspect ratio
+    # assert envelope is not None
+    # width = width or int(height * envelope.width / envelope.height)
+    # # determine scale to fit the largest axis in the target frame size
+    # if envelope.width - width <= envelope.height - height:
+    #     α = height / ((1 + pad) * envelope.height)
+    # else:
+    #     α = width / ((1 + pad) * envelope.width)
+    # s = self.center_xy().pad(1 + pad).scale(α)
+    # e = s.get_envelope()
+    # assert e is not None
+    # s = s.translate(e(-unit_x), e(-unit_y))
+    # if draw_height is None:
+    #     draw_height = max(height, width)
+    # style = StyleHolder.root(output_size=draw_height)
+    # outer.add(to_svg(s, dwg, style))
+    # dwg.save()

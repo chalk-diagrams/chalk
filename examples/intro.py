@@ -1,6 +1,6 @@
-# from jaxtyping import install_import_hook
-# with install_import_hook("chalk", "typeguard.typechecked"):
-#     import chalk          # Any module imported inside this `with` block, whose
+from jaxtyping import install_import_hook
+with install_import_hook("chalk", "typeguard.typechecked"):
+    import chalk          # Any module imported inside this `with` block, whose
 
 from colour import Color
 from chalk import *
@@ -11,38 +11,7 @@ import jax.numpy as np
 # define some colors
 papaya = Color("#ff9700")
 blue = Color("#005FDB")
-from jax.tree_util import tree_structure
 
-import render
-
-#render.render(d, "out.png", 100, 100)
-def r(x):
-    d = rectangle(x, 10).fill_color(papaya) | circle(20).fill_color(blue)
-    d = d.align_tl().translate(10, 10)
-    return d
-#jax.grad(r)(np.array(10.))
-r(5).render("out1.png")
-exit()
-
-print("start")
-path = "examples/output/intro-01.png"
-import chex
-chex.register_dataclass_type_with_jax_tree_util(chalk.core.FlatPrimitive)
-chex.register_dataclass_type_with_jax_tree_util(chalk.style.StyleHolder)
-chex.register_dataclass_type_with_jax_tree_util(chalk.trail.Trail)
-chex.register_dataclass_type_with_jax_tree_util(chalk.shapes.Path)
-chex.register_dataclass_type_with_jax_tree_util(chalk.shapes.Segment)
-chex.register_dataclass_type_with_jax_tree_util(chalk.trail.Located)
-
-def x(t):
-    d = rectangle(3, 10).fill_color(papaya)
-    d = d.translate_by(V2(np.array([10, 11]), np.array([11, t])))
-    return d
-
-def x(i):
-    return circle(0.1 * (i+1))
-# out = jax.vmap(x)(np.arange(1, 6))
-# print(out)
 
 
 path = "examples/output/intro-01.png"

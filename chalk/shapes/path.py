@@ -25,7 +25,7 @@ class Path(Shape, Enveloped, Traceable, Transformable):
 
     loc_trails: List[Located]
 
-    def split(self, i):
+    def split(self, i: int) -> Path:
         return Path([loc.split(i) for loc in self.loc_trails])
 
     # Monoid - compose
@@ -50,7 +50,6 @@ class Path(Shape, Enveloped, Traceable, Transformable):
     #     return [loc.trail.segments.get(i).at(pt).stroke()
     #             for loc in self.loc_trails
     #             for i, pt in enumerate(loc.points()) ]
-
 
     def get_envelope(self) -> Envelope:
         return Envelope.concat((loc.get_envelope() for loc in self.loc_trails))
@@ -77,7 +76,9 @@ class Path(Shape, Enveloped, Traceable, Transformable):
         return Path.from_points([point])
 
     @staticmethod
-    def from_pairs(segs: List[Tuple[P2_t, P2_t]], closed: bool = False) -> Path:
+    def from_pairs(
+        segs: List[Tuple[P2_t, P2_t]], closed: bool = False
+    ) -> Path:
         if not segs:
             return Path.empty()
         ls = [segs[0][0]]

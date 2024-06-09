@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol
 import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.monoid import Monoid
-from chalk.style import Stylable, Style
+from chalk.style import Stylable, StyleHolder
 from chalk.trace import Trace
 from chalk.transform import P2_t, V2_t
 
@@ -138,7 +138,7 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
         f: Callable[[List[Subdiagram], Diagram], Diagram],
     ) -> Diagram: ...
 
-    def _style(self, style: Style) -> Diagram:  # type: ignore[empty-body]
+    def _style(self, style: StyleHolder) -> Diagram:  # type: ignore[empty-body]
         ...
 
     def with_envelope(self, other: Diagram) -> Diagram:  # type: ignore[empty-body]

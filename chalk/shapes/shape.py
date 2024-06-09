@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.trail import Trail
-from chalk.transform import P2, BoundingBox
-import chalk.transform as tx
+from chalk.transform import BoundingBox
 from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
@@ -49,8 +49,8 @@ class Shape:
 class Spacer(Shape):
     """Spacer class."""
 
-    width: tx.Scalar
-    height: tx.Scalar
+    width: tx.Scalars
+    height: tx.Scalars
 
     def get_bounding_box(self) -> BoundingBox:
         left = -self.width / 2

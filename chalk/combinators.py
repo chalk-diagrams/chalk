@@ -1,10 +1,10 @@
 from typing import Iterable, List, Optional, Tuple
 
+import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.monoid import associative_reduce
-from chalk.shapes import Path, Spacer   
-from chalk.transform import V2_t, Affine, origin, unit_x, unit_y, Scalar, Floating
-import chalk.transform as tx
+from chalk.shapes import Path, Spacer
+from chalk.transform import Floating, Scalars, V2_t, origin, unit_x, unit_y
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
@@ -13,9 +13,8 @@ from chalk.types import Diagram
 def with_envelope(self: Diagram, other: Diagram) -> Diagram:
     return self.compose(other.get_envelope())
 
-def close_envelope(self: Diagram) -> Diagram:
-    from chalk.core import Primitive
 
+def close_envelope(self: Diagram) -> Diagram:
     env = self.get_envelope()
     return self.compose(Envelope.from_bounding_box(env.to_bounding_box()))
 
@@ -26,8 +25,7 @@ def close_envelope(self: Diagram) -> Diagram:
 def strut(width: Floating, height: Floating) -> Diagram:
     from chalk.core import Primitive
 
-    return Primitive.from_shape(Spacer(tx.ftos(width), 
-                                       tx.ftos(height)))
+    return Primitive.from_shape(Spacer(tx.ftos(width), tx.ftos(height)))
 
 
 def pad(self: Diagram, extra: Floating) -> Diagram:
@@ -44,7 +42,7 @@ def pad(self: Diagram, extra: Floating) -> Diagram:
     """
     envelope = self.get_envelope()
 
-    def f(d: V2_t) -> Scalar:
+    def f(d: V2_t) -> Scalars:
         assert envelope is not None
         return envelope(d) * extra
 
@@ -65,7 +63,7 @@ def frame(self: Diagram, extra: Floating) -> Diagram:
     """
     envelope = self.get_envelope()
 
-    def f(d: V2_t) -> Scalar:
+    def f(d: V2_t) -> Scalars:
         assert envelope is not None
         return envelope(d) + extra
 
@@ -104,9 +102,7 @@ def place_at(
 
 
 def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
-    return concat(
-        d.translate_by(p) for d, p in zip(diagrams, path.points())
-    )
+    return concat(d.translate_by(p) for d, p in zip(diagrams, path.points()))
 
 
 # position, atPoints
@@ -170,7 +166,9 @@ def vstrut(height: Optional[Floating]) -> Diagram:
     return Primitive.from_shape(Spacer(tx.ftos(0), tx.ftos(height)))
 
 
-def hcat(diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram:
+def hcat(
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None
+) -> Diagram:
     """
     Stack diagrams next to each other with `besides`.
 
@@ -185,7 +183,9 @@ def hcat(diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram
     return cat(diagrams, unit_x, sep)
 
 
-def vcat(diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram:
+def vcat(
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None
+) -> Diagram:
     """
     Stack diagrams above each other with `above`.
 
@@ -223,9 +223,10 @@ def above2(self: Diagram, other: Diagram) -> Diagram:
 def juxtapose_snug(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     trace1 = self.get_trace()
     trace2 = other.get_trace()
-    d1 = trace1.trace_v(origin, direction)
-    d2 = trace2.trace_v(origin, -direction)
-    assert d1 is not None and d2 is not None
+    d1, m1 = trace1.trace_v(origin, direction)
+    d2, m2 = trace2.trace_v(origin, -direction)
+    assert m1.all()
+    assert m2.all()
     d = d1 - d2
     t = tx.translation(d)
     return other.apply_transform(t)

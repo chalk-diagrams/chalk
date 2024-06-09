@@ -1,6 +1,5 @@
-import math
 import sys
-from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 if sys.version_info >= (3, 8):
     from importlib import metadata
@@ -30,6 +29,7 @@ from chalk.transform import (
     unit_y,
 )
 from chalk.types import Diagram
+
 if not TYPE_CHECKING:
 
     # Set library name the same as on PyPI

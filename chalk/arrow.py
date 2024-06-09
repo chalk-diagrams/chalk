@@ -3,13 +3,12 @@ from typing import List, Optional
 
 from colour import Color
 
+import chalk.transform as tx
 from chalk.shapes import ArrowHead, arc_seg, dart
-from chalk.shapes.arc import Segment
-from chalk.style import Style, StyleHolder
+from chalk.style import StyleHolder
 from chalk.subdiagram import Name, Subdiagram
 from chalk.trail import Trail
 from chalk.transform import P2_t, V2_t
-import chalk.transform as tx
 from chalk.types import Diagram
 
 black = Color("black")
@@ -58,11 +57,11 @@ def connect_outside(
         v = loc2 - loc1
         midpoint = loc1 + v / 2
 
-        ps = tr1.trace_p(midpoint, -v)
-        pe = tr2.trace_p(midpoint, v)
+        ps, m1 = tr1.trace_p(midpoint, -v)
+        pe, m2 = tr2.trace_p(midpoint, v)
 
-        assert ps is not None, "Cannot connect"
-        assert pe is not None, "Cannot connect"
+        assert m1.all(), "Cannot connect"
+        assert m2.all(), "Cannot connect"
 
         return dia + arrow_between(ps, pe, style)
 
@@ -86,11 +85,11 @@ def connect_perim(
         tr1 = sub1.get_trace()
         tr2 = sub2.get_trace()
 
-        ps = tr1.max_trace_p(loc1, v1)
-        pe = tr2.max_trace_p(loc2, v2)
-        print("CP", ps, pe, v1, v2)
-        assert ps is not None, "Cannot connect"
-        assert pe is not None, "Cannot connect"
+        ps, m1 = tr1.max_trace_p(loc1, v1)
+        pe, m2 = tr2.max_trace_p(loc2, v2)
+
+        assert m1.all(), "Cannot connect"
+        assert m2.all(), "Cannot connect"
 
         return dia + arrow_between(ps, pe, style)
 
@@ -113,7 +112,7 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
     if style.trail is None:
         segment = arc_seg(tx.V2(l_adj, 0), style.arc_height + 1e-3)
         shaft = segment.stroke()
-        if False: # isinstance(segment.segments[-1], Segment):
+        if False:  # isinstance(segment.segments[-1], Segment):
             seg = segment.segments[-1]
             tan = -(seg.q - seg.center.reflect_y()).perpendicular()  # type: ignore
             φ = tan.angle
@@ -123,7 +122,7 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
     else:
         shaft = style.trail.stroke().scale_uniform_to_x(l_adj).fill_opacity(0)
 
-        if False: #isinstance(style.trail.segments[-1], Segment):
+        if False:  # isinstance(style.trail.segments[-1], Segment):
             arrow = arrow.rotate(-style.trail.segments[-1].angle)
 
     return shaft._style(style.shaft_style).translate_by(

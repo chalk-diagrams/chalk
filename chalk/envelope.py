@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable, Tuple
+from typing import TYPE_CHECKING, Callable, Iterable
 
+import chalk.transform as tx
 from chalk.monoid import Monoid
 from chalk.transform import (
     P2,
     V2,
-    V2_t,
-    P2_t,
     Affine,
     BoundingBox,
+    P2_t,
+    Scalars,
     Transformable,
-    Scalars
+    V2_t,
 )
-import chalk.transform as tx
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
@@ -27,12 +27,10 @@ if TYPE_CHECKING:
 
 class Envelope(Transformable, Monoid):
     total_env = 0
-    def __init__(
-        self, f: Callable[[V2_t], Scalars], is_empty: bool = False
-    ):
+
+    def __init__(self, f: Callable[[V2_t], Scalars], is_empty: bool = False):
         self.f = f
         self.is_empty = is_empty
-        self.cache = {}
 
     def __call__(self, direction: V2_t) -> Scalars:
         Envelope.total_env += 1
@@ -42,7 +40,6 @@ class Envelope(Transformable, Monoid):
         # if v not in self.cache:
         #     self.cache[v] = self.f(direction)
         # return self.cache[v]
-
 
     # Monoid
     @staticmethod
@@ -58,12 +55,15 @@ class Envelope(Transformable, Monoid):
             lambda direction: tx.np.maximum(self(direction), other(direction))
         )
 
-    all_dir = tx.np.concatenate([tx.unit_x, -tx.unit_x, tx.unit_y, -tx.unit_y], axis=0)
+    all_dir = tx.np.concatenate(
+        [tx.unit_x, -tx.unit_x, tx.unit_y, -tx.unit_y], axis=0
+    )
+
     @property
     def center(self) -> P2_t:
         if self.is_empty:
             return tx.origin
-        # Get all the directions 
+        # Get all the directions
         d = self(Envelope.all_dir)
         return P2(
             (-d[1] + d[0]) / 2,
@@ -71,13 +71,13 @@ class Envelope(Transformable, Monoid):
         )
 
     @property
-    def width(self) -> Scalar:
+    def width(self) -> Scalars:
         assert not self.is_empty
         d = self(Envelope.all_dir[:2])
         return d.sum()
 
     @property
-    def height(self) -> Scalar:
+    def height(self) -> Scalars:
         assert not self.is_empty
         d = self(Envelope.all_dir[2:])
         return d.sum()
@@ -89,6 +89,7 @@ class Envelope(Transformable, Monoid):
         inv_t = tx.inv(rt)
         trans_t = tx.transpose_translation(rt)
         u: V2_t = -tx.get_translation(t)
+
         def wrapped(v: V2_t) -> Scalars:
             # Linear
             vi = inv_t @ v
@@ -116,13 +117,12 @@ class Envelope(Transformable, Monoid):
             v = box.rotate_rad(tx.rad(d)).br[:, 0, 0]
             r = v / tx.length(d)
             return r
-        
+
         return Envelope(wrapped)
 
     def to_bounding_box(self: Envelope) -> BoundingBox:
         d = self(Envelope.all_dir)
         return tx.BoundingBox(V2(-d[1], -d[3]), V2(d[0], d[2]))
-        
 
     # @staticmethod
     # def from_circle(radius: tx.Floating) -> Envelope:
@@ -139,9 +139,9 @@ class Envelope(Transformable, Monoid):
             pts.append(self(v) * v)
         return pts
 
-    def to_segments(self, angle: int = 45):
+    def to_segments(self, angle: int = 45) -> V2_t:
         "Draws an envelope by sampling every 10 degrees."
-        v = tx.polar(tx.np.arange(0, 361, angle) * 1.)
+        v = tx.polar(tx.np.arange(0, 361, angle) * 1.0)
         return v * self(v)[:, None, None]
 
 
@@ -154,7 +154,9 @@ class GetEnvelope(DiagramVisitor[Envelope, Affine]):
         new_transform = t @ diagram.transform
         return diagram.shape.get_envelope().apply_transform(new_transform)
 
-    def visit_compose(self, diagram: Compose, t: Affine = tx.ident) -> Envelope:
+    def visit_compose(
+        self, diagram: Compose, t: Affine = tx.ident
+    ) -> Envelope:
         return diagram.envelope.apply_transform(t)
 
     def visit_apply_transform(

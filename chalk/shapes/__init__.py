@@ -1,6 +1,13 @@
 from typing import Optional, Tuple, Union
 
-from chalk.shapes.arc import Segment, seg, arc_seg, arc_seg_angle, set_offset # noqa: F401
+import chalk.transform as tx
+from chalk.shapes.arc import (  # noqa: F401
+    Segment,
+    arc_seg,
+    arc_seg_angle,
+    seg,
+    set_offset,
+)
 from chalk.shapes.arrowheads import ArrowHead, dart  # noqa: F401
 from chalk.shapes.image import Image, from_pil, image  # noqa: F401
 from chalk.shapes.latex import Latex, latex  # noqa: F401
@@ -8,8 +15,7 @@ from chalk.shapes.path import Path, make_path  # noqa: F401
 from chalk.shapes.shape import Shape, Spacer  # noqa: F401
 from chalk.shapes.text import Text, text  # noqa: F401
 from chalk.trail import Trail  # noqa: F401
-from chalk.transform import P2_t, V2_t, P2, V2
-import chalk.transform as tx
+from chalk.transform import P2, V2, P2_t
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.2d.Shapes
@@ -83,7 +89,9 @@ def circle(radius: tx.Floating) -> Diagram:
     return Trail.circle().stroke().center_xy().scale(radius)
 
 
-def arc(radius: tx.Floating, angle0: tx.Floating, angle1: tx.Floating) -> Diagram:
+def arc(
+    radius: tx.Floating, angle0: tx.Floating, angle1: tx.Floating
+) -> Diagram:
     """
     Draws an arc.
 
@@ -153,5 +161,5 @@ __all__ = [
     "from_pil",
     "make_path",
     "arc_seg_angle",
-    "seg"
+    "seg",
 ]

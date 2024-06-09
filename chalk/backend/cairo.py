@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
-from chalk.monoid import MList
+import chalk.transform as tx
 from chalk.shapes import (
     ArrowHead,
     Image,
@@ -14,13 +14,12 @@ from chalk.shapes import (
     from_pil,
 )
 from chalk.style import Style, StyleHolder
-from chalk.transform import P2_t, Affine
-import chalk.transform as tx
+from chalk.transform import Affine
 from chalk.types import Diagram
-from chalk.visitor import DiagramVisitor, ShapeVisitor
+from chalk.visitor import ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import ApplyName, ApplyStyle, ApplyTransform, Primitive
+    from chalk.core import Primitive
 
 
 Ident = tx.ident
@@ -39,10 +38,12 @@ def tx_to_cairo(affine: Affine) -> Any:
 
 class ToCairoShape(ShapeVisitor[None]):
 
-    def render_segment(
-        self, seg: Segment, ctx: PyCairoContext
-    ) -> None:
-        q, angle, dangle = seg.q, tx.to_radians(seg.angle), tx.to_radians(seg.dangle)
+    def render_segment(self, seg: Segment, ctx: PyCairoContext) -> None:
+        q, angle, dangle = (
+            seg.q,
+            tx.to_radians(seg.angle),
+            tx.to_radians(seg.dangle),
+        )
         end = seg.angle + seg.dangle
 
         for i in range(q.shape[0]):
@@ -50,24 +51,25 @@ class ToCairoShape(ShapeVisitor[None]):
                 ctx.line_to(q[i, 0, 0], q[i, 1, 0])
             else:
                 ctx.save()
-                matrix = tx_to_cairo(seg.t[i:i+1])
+                matrix = tx_to_cairo(seg.t[i : i + 1])
                 ctx.transform(matrix)
                 if dangle[i] < 0:
                     ctx.arc_negative(0.0, 0.0, 1.0, angle[i], end[i])
                 else:
                     ctx.arc(0.0, 0.0, 1.0, angle[i], end[i])
                 ctx.restore()
+
     def visit_path(
         self,
         path: Path,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         if not path.loc_trails[0].trail.closed:
-            style.fill_opacity_ = 0
+            style = style.merge(Style(fill_opacity_=0))
         for loc_trail in path.loc_trails:
             p = loc_trail.location
-            ctx.move_to(p[0, 0, 0], p[0, 1,0])
+            ctx.move_to(p[0, 0, 0], p[0, 1, 0])
             segments = loc_trail.located_segments()
             self.render_segment(segments, ctx)
             if loc_trail.trail.closed:
@@ -77,7 +79,7 @@ class ToCairoShape(ShapeVisitor[None]):
         self,
         shape: Latex,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         raise NotImplementedError("Latex is not implemented")
 
@@ -85,7 +87,7 @@ class ToCairoShape(ShapeVisitor[None]):
         self,
         shape: Text,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         ctx.select_font_face("sans-serif")
         if shape.font_size is not None:
@@ -99,7 +101,7 @@ class ToCairoShape(ShapeVisitor[None]):
         self,
         shape: Spacer,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         return
 
@@ -107,17 +109,18 @@ class ToCairoShape(ShapeVisitor[None]):
         self,
         shape: ArrowHead,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
+        from chalk.core import get_primitives
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
-        render_cairo_prims(shape.arrow_shape.scale(scale), ctx, style)
+        render_cairo_prims(get_primitives(shape.arrow_shape.scale(scale)), ctx)
 
     def visit_image(
         self,
         shape: Image,
         ctx: PyCairoContext = None,
-        style: Style = EMPTY_STYLE,
+        style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         surface = from_pil(shape.im)
         ctx.set_source_surface(
@@ -126,17 +129,15 @@ class ToCairoShape(ShapeVisitor[None]):
         ctx.paint()
 
 
-def render_cairo_prims(
-    base: Diagram, ctx: PyCairoContext, style: StyleHolder
-) -> None:
-    from chalk.core import ToList
+def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
+    import cairo
 
-    base = base._style(style)
+    ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
-    for prim in base.accept(ToList(), Ident):
-        # apply transformation
+    for prim in prims:
         for i in range(prim.transform.shape[0]):
-            matrix = tx_to_cairo(prim.transform[i:i+1])
+            # apply transformation
+            matrix = tx_to_cairo(prim.transform[i : i + 1])
             ctx.transform(matrix)
             prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
 
@@ -146,6 +147,17 @@ def render_cairo_prims(
 
             prim.style.render(ctx)
             ctx.stroke()
+
+
+def prims_to_file(
+    prims: List[Primitive], path: str, height: float, width: float
+) -> None:
+    import cairo
+
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(width), int(height))
+    ctx = cairo.Context(surface)
+    render_cairo_prims(prims, ctx)
+    surface.write_to_png(path)
 
 
 def render(
@@ -161,29 +173,8 @@ def render(
         width (Optional[int], optional): Width of the rendered image.
                                          Defaults to None.
     """
-    import cairo
 
-    envelope = self.get_envelope()
-    assert envelope is not None
+    from chalk.core import layout_primitives
 
-    pad = 0.05
-
-    # infer width to preserve aspect ratio
-    width = width or int(height * envelope.width / envelope.height)
-
-    # determine scale to fit the largest axis in the target frame size
-    if envelope.width - width <= envelope.height - height:
-        α = height / ((1 + pad) * envelope.height)
-    else:
-        α = width / ((1 + pad) * envelope.width)
-
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-    ctx = cairo.Context(surface)
-
-    s = self.scale(α).center_xy().pad(1 + pad)
-    e = s.get_envelope()
-    assert e is not None
-    s = s.translate(e(-tx.unit_x), e(-tx.unit_y))
-    ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
-    render_cairo_prims(s, ctx, StyleHolder.root(max(width, height)))
-    surface.write_to_png(path)
+    prims, height, width = layout_primitives(self, height, width)
+    prims_to_file(prims, path, height, width)
