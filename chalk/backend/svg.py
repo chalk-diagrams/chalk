@@ -9,22 +9,13 @@ from svgwrite.base import BaseElement
 from svgwrite.shapes import Rect
 
 from chalk import transform as tx
-from chalk.monoid import Maybe
 from chalk.shapes import ArrowHead, Image, Latex, Path, Segment, Spacer, Text
 from chalk.style import StyleHolder
-from chalk.transform import unit_x, unit_y
 from chalk.types import Diagram
-from chalk.visitor import DiagramVisitor, ShapeVisitor
+from chalk.visitor import ShapeVisitor
 
 if TYPE_CHECKING:
-    from chalk.core import (
-        ApplyName,
-        ApplyStyle,
-        ApplyTransform,
-        Compose,
-        Empty,
-        Primitive,
-    )
+    from chalk.core import Primitive
 
 
 EMPTY_STYLE = StyleHolder.empty()
@@ -56,63 +47,6 @@ class Raw(Rect):  # type: ignore
 
     def get_xml(self) -> ET.Element:
         return self.xml
-
-
-# class ToSVG(DiagramVisitor[Maybe[BaseElement], StyleHolder]):
-#     A_type = Maybe[BaseElement]
-
-#     def __init__(self, dwg: Drawing):
-#         self.dwg = dwg
-#         self.shape_renderer = ToSVGShape(dwg)
-
-#     def visit_primitive(
-#         self, diagram: Primitive, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         style_new = diagram.style.merge(style)
-#         style_svg = style_new.to_svg()
-#         transform = tx_to_svg(diagram.transform)
-#         inner = diagram.shape.accept(self.shape_renderer, style=style_new)
-#         if not style_svg and not transform:
-#             return Maybe(inner)
-#         else:
-#             if not style_svg:
-#                 style_svg = ";"
-#             g = self.dwg.g(transform=transform, style=style_svg)
-#             g.add(inner)
-#             return Maybe(g)
-
-#     def visit_empty(
-#         self, diagram: Empty, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         return Maybe(self.dwg.g())
-
-#     def visit_compose(
-#         self, diagram: Compose, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         g = self.dwg.g()
-
-#         for d in diagram.diagrams:
-#             g.add(d.accept(self, style).data)
-#         return Maybe(g)
-
-#     def visit_apply_transform(
-#         self, diagram: ApplyTransform, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         g = self.dwg.g(transform=tx_to_svg(diagram.transform))
-#         g.add(diagram.diagram.accept(self, style).data)
-#         return Maybe(g)
-
-#     def visit_apply_style(
-#         self, diagram: ApplyStyle, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         return diagram.diagram.accept(self, diagram.style.merge(style))
-
-#     def visit_apply_name(
-#         self, diagram: ApplyName, style: StyleHolder = EMPTY_STYLE
-#     ) -> BaseElement:
-#         g = self.dwg.g()
-#         g.add(diagram.diagram.accept(self, style).data)
-#         return Maybe(g)
 
 
 class ToSVGShape(ShapeVisitor[BaseElement]):
@@ -166,7 +100,7 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         dx = -(shape.get_bounding_box().width / 2)
         return self.dwg.text(
             shape.text,
-            transform=f"translate({dx}, 0)",
+            transform=f"translate({dx[0]}, 0)",
             style=f"""text-align:center; text-anchor:middle; dominant-baseline:middle;
                       font-family:sans-serif; font-weight: bold;
                       font-size:{shape.font_size}px;
@@ -197,7 +131,9 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         )
 
 
-def render_svg_prims(prims: List[Primitive], dwg: Drawing) -> None:
+def render_svg_prims(
+    prims: List[Primitive], dwg: Drawing, style: StyleHolder
+) -> None:
     outer = dwg.g(style="fill:white;")
     # Arrow marker
     marker = dwg.marker(
@@ -208,32 +144,34 @@ def render_svg_prims(prims: List[Primitive], dwg: Drawing) -> None:
 
     dwg.add(outer)
     shape_renderer = ToSVGShape(dwg)
-    for prim in prims:
+    for diagram in prims:
         # apply transformation
-        for i in range(prim.transform.shape[0]):
-            # apply transformation
-            g = dwg.g(transform=tx_to_svg(prim.transform))
-            g.add(prim.shape.accept(prim, prim.style).data)
-
+        for i in range(diagram.transform.shape[0]):
+            style_new = diagram.style.merge(style)
+            style_svg = style_new.to_svg()
+            transform = tx_to_svg(diagram.transform)
+            inner = diagram.shape.accept(shape_renderer, style=style_new)
+            if not style_svg and not transform:
+                dwg.add(inner)
+            else:
+                if not style_svg:
+                    style_svg = ";"
+                g = dwg.g(transform=transform, style=style_svg)
+                g.add(inner)
+                dwg.add(g)
 
 
 def prims_to_file(
     prims: List[Primitive], path: str, height: float, width: float
 ) -> None:
-    
 
-    dwg = svgwrite.Drawing(path, size=(width, height))
-    render_svg_prims(prims, dwg)
+    dwg = svgwrite.Drawing(path, size=(int(width), int(height)))
+    style = StyleHolder.root(output_size=height)
+    render_svg_prims(prims, dwg, style)
 
-    #outer.add(to_svg(s, dwg, style))
+    # outer.add(to_svg(s, dwg, style))
     dwg.save()
 
-    # import cairo
-
-    # surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(width), int(height))
-    # ctx = cairo.Context(surface)
-    # render_cairo_prims(prims, ctx)
-    # surface.write_to_png(path)
 
 def render(
     self: Diagram,
@@ -256,6 +194,7 @@ def render(
 
     """
     from chalk.core import layout_primitives
+
     prims, height, width = layout_primitives(self, height, width)
     prims_to_file(prims, path, height, width)
 

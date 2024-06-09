@@ -112,6 +112,7 @@ class ToCairoShape(ShapeVisitor[None]):
         style: StyleHolder = EMPTY_STYLE,
     ) -> None:
         from chalk.core import get_primitives
+
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
         render_cairo_prims(get_primitives(shape.arrow_shape.scale(scale)), ctx)

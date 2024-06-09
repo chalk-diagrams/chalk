@@ -8,11 +8,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Tuple
 
 import chalk.transform as tx
-from chalk.transform import Affine, P2_t, Scalars, V2_t
+from chalk.transform import Affine, Angles, P2_t, Scalars, V2_t
 from chalk.types import TrailLike
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Bool, Float
 
     from chalk.trail import Trail
 
@@ -23,9 +22,9 @@ Degrees = tx.Scalars
 class Segment(TrailLike):
     "A batch of ellipse arcs with starting angle and the delta."
     transform: Affine
-    angles: Float[Array, "*#B 2"]
+    angles: Angles
 
-    def __init__(self, transform: Affine, angles: Float[Array, "*#B 2"]):
+    def __init__(self, transform: Affine, angles: Angles):
         self.transform = transform.reshape(-1, 3, 3)
         self.angles = angles.reshape(-1, 2)
 
@@ -175,8 +174,9 @@ def arc_trace(
     high = tx.np.maximum(angle0_deg, angle1_deg)
     check = (high - low) % 360
 
-    def f(ray: tx.Ray) -> Tuple[Float[Array, "#A #B 2"], 
-                                Bool[Array, "#A #B 2"]]:
+    def f(
+        ray: tx.Ray,
+    ) -> Tuple[Float[Array, "#A #B 2"], Bool[Array, "#A #B 2"]]:
         # print(ray.v, ray.pt)
         length = tx.length(ray.v)
         d, mask = tx.ray_circle_intersection(
@@ -203,7 +203,7 @@ def arc_seg(q: V2_t, height: tx.Floating) -> Trail:
 def arc_seg_angle(angle: tx.Floating, dangle: tx.Floating) -> Trail:
     arc_p = tx.to_point(tx.polar(angle))
     return Segment(
-        tx.translation(-arc_p), tx.np.array([angle, dangle], float)[None]
+        tx.translation(-arc_p), tx.np.array([angle, dangle], float)
     ).to_trail()
 
 

@@ -1,15 +1,18 @@
 import functools
 import math
+
+# TODO: This is a bit hacky, but not sure
+# how to make things work with both numpy and jax
+import os
 from dataclasses import dataclass
 from typing import Tuple, Union
 
 from jaxtyping import Array, Bool, Float, Int
 from typing_extensions import Self
 
-if False:
-    # ops = None
-    # import numpy as np
-    pass
+if not os.environ.get("CHALK_JAX", False):
+    ops = None
+    import numpy as np
 else:
     import jax.numpy as np
     from jax import config, ops
@@ -18,12 +21,17 @@ else:
     config.update("jax_debug_nans", True)  # type: ignore
 
 Affine = Float[Array, "*#B 3 3"]
+Angles = Float[Array, "*#B 2"]
 V2_t = Float[Array, "*#B 3 1"]
 P2_t = Float[Array, "*#B 3 1"]
 Scalars = Float[Array, "*#B"]
 IntLike = Union[Int[Array, "*#B"], int]
 Floating = Union[Scalars, float, int]
 Mask = Bool[Array, "*#B"]
+ColorVec = Float[Array, "#*B 3"]
+Property = Float[Array, "#*B"]
+
+TraceDistances = Tuple[Float[Array, f"#B S"], Bool[Array, f"#B S"]]
 
 
 def ftos(f: Floating) -> Scalars:
@@ -165,7 +173,7 @@ def get_translation(aff: Affine) -> V2_t:
 
 
 def rotation(rad: Floating) -> Affine:
-    rad = ftos(rad)
+    rad = ftos(-rad)
     ca, sa = np.cos(rad), np.sin(rad)
     return make_affine(ca, -sa, 0.0, sa, ca, 0.0)
 
@@ -283,7 +291,7 @@ class BoundingBox(Transformable):
         br = t @ self.br
         tl2 = np.minimum(tl, br)
         br2 = np.maximum(tl, br)
-        return BoundingBox(tl2, br2) # type: ignore
+        return BoundingBox(tl2, br2)  # type: ignore
 
     @property
     def width(self) -> Scalars:
@@ -372,12 +380,12 @@ def ray_circle_intersection(
     ret = np.where(mid, (-b / (2 * a))[..., None], ret)
     return ret.transpose(2, 0, 1), 1 - mask.transpose(2, 0, 1)
 
-    v = -b / (2 * a)
-    print(v.shape)
-    ret2 = np.stack([v, np.zeros(v.shape) + 10000], -1)
-    where2 = np.where(((-eps <= Δ) & (Δ < eps))[..., None], ret2, ret)
+    # v = -b / (2 * a)
+    # print(v.shape)
+    # ret2 = np.stack([v, np.zeros(v.shape) + 10000], -1)
+    # where2 = np.where(((-eps <= Δ) & (Δ < eps))[..., None], ret2, ret)
 
-    return np.where((Δ < -eps)[..., None], 10000, where2).transpose(2, 0, 1)
+    # return np.where((Δ < -eps)[..., None], 10000, where2).transpose(2, 0, 1)
     # if
     #     # no intersection
     #     return []

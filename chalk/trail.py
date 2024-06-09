@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List
 
 import chalk.shapes.arc as arc
 import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.monoid import Monoid
 from chalk.shapes.arc import Segment
-from chalk.trace import Trace
+from chalk.trace import Trace, TraceDistances
 from chalk.transform import Affine, Floating, P2_t, Ray, Transformable, V2_t
 from chalk.types import Diagram, Enveloped, Traceable, TrailLike
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Bool, Float
 
     from chalk.shapes.path import Path
 
@@ -31,7 +30,7 @@ class Located(Enveloped, Traceable, Transformable):
         pts = self.points()
         return self.trail.segments.apply_transform(tx.translation(pts))
 
-    def points(self) -> Float[Array, "#B 3 1"]:
+    def points(self) -> P2_t:
         return self.trail.points() + self.location
 
     def get_envelope(self) -> Envelope:
@@ -69,7 +68,7 @@ class Located(Enveloped, Traceable, Transformable):
 
         def wrapped(
             ray: Ray,
-        ) -> Tuple[Float[Array, "#B 1"], Bool[Array, "#B 1"]]:
+        ) -> TraceDistances:
             trac, mask = trace(
                 Ray(
                     t1 @ ray.pt[:, None, :, :],
@@ -97,7 +96,7 @@ class Located(Enveloped, Traceable, Transformable):
 class Trail(Monoid, Transformable, TrailLike):
     segments: Segment
 
-    closed: Bool[Array, ""] = field(default_factory=lambda: tx.np.array(False))
+    closed: tx.Mask = field(default_factory=lambda: tx.np.array(False))
 
     def split(self, i: int) -> Trail:
         return Trail(self.segments.split(i), self.closed[i])
@@ -125,9 +124,9 @@ class Trail(Monoid, Transformable, TrailLike):
     def close(self) -> Trail:
         return Trail(self.segments, tx.np.array(True))
 
-    def points(self) -> Float[Array, "B 3"]:
+    def points(self) -> P2_t:
         q = self.segments.q
-        return tx.to_point(tx.np.cumsum(q, axis=0) - q)
+        return tx.to_point(tx.np.cumsum(q, axis=-3) - q)
 
     def at(self, p: P2_t) -> Located:
         return Located(self, p)

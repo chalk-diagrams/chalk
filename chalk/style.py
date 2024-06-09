@@ -5,16 +5,14 @@ from enum import Enum, auto
 from typing import Any, List, Optional, Union
 
 from colour import Color
-from jaxtyping import Array, Bool, Float
 from typing_extensions import Self
 
 import chalk.transform as tx
+from chalk.transform import ColorVec, Property, Scalars, Mask
 
 PyCairoContext = Any
 PyLatex = Any
 
-ColorVec = Float[Array, "#*B 3"]
-Property = Float[Array, "#*B"]
 PropLike = Union[Property, float]
 ColorLike = Union[str, Color, ColorVec]
 
@@ -96,8 +94,8 @@ def Style(
     output_size: Optional[PropLike] = None,
 ) -> StyleHolder:
     b = (
-        tx.np.zeros((1, STYLE_SIZE)),
-        tx.np.zeros((1, STYLE_SIZE), dtype=bool),
+        tx.np.zeros(STYLE_SIZE),
+        tx.np.zeros(STYLE_SIZE, dtype=bool),
     )
 
     def update(b, key: str, value):  # type: ignore
@@ -121,24 +119,17 @@ def Style(
 class StyleHolder(Stylable):
     """Style class."""
 
-    base: Float[Array, f"#B 1 {STYLE_SIZE}"]
-    mask: Bool[Array, f"#B 1 {STYLE_SIZE}"]
-
-    # line_width_: Optional[Tuple[WidthType, float]] = None
-    # line_color_: Optional[Color] = None
-    # fill_color_: Optional[Color] = None
-    # fill_opacity_: Optional[float] = None
-    # dashing_: Optional[Tuple[List[float], float]] = None
-    # output_size: Optional[float] = None
+    base: Scalars
+    mask: Mask
 
     def split(self, i: int) -> StyleHolder:
         return StyleHolder(base=self.base[i], mask=self.mask[i])
 
-    def get(self, key: str) -> Float[Array, "..."]:
+    def get(self, key: str) -> tx.Scalars:
         self.base = self.base
-        v = self.base[0, slice(*STYLE_LOCATIONS[key])]
+        v = self.base[slice(*STYLE_LOCATIONS[key])]
         return tx.np.where(
-            self.mask[0, slice(*STYLE_LOCATIONS[key])], v, DEFAULTS[key]
+            self.mask[slice(*STYLE_LOCATIONS[key])], v, DEFAULTS[key]
         )
 
         # if self.mask[(1,) + key].all():
@@ -177,8 +168,8 @@ class StyleHolder(Stylable):
     @classmethod
     def empty(cls) -> StyleHolder:
         return cls(
-            tx.np.zeros((1, STYLE_SIZE)),
-            tx.np.zeros((1, STYLE_SIZE), dtype=bool),
+            tx.np.zeros((STYLE_SIZE)),
+            tx.np.zeros((STYLE_SIZE), dtype=bool),
         )
 
     @classmethod
@@ -192,13 +183,6 @@ class StyleHolder(Stylable):
         mask = self.mask | other.mask
         base = tx.np.where(other.mask, other.base, self.base)
         return StyleHolder(base, mask)
-
-    # Style(
-    #         *(
-    #             m(getattr(other, dim.name), getattr(self, dim.name))
-    #             for dim in fields(self)
-    #         )
-    #     )
 
     def render(self, ctx: PyCairoContext) -> None:
         """Renders the style object.
@@ -234,7 +218,7 @@ class StyleHolder(Stylable):
             # elif lwt == WidthType.LOCAL:
             #     lw = lw
         ctx.set_source_rgb(*lc)
-        ctx.set_line_width(lw.reshape())
+        ctx.set_line_width(lw.reshape(-1)[0])
 
         if self.dashing_ is not None:
             ctx.set_dash(self.dashing_[0], self.dashing_[1])
@@ -259,15 +243,15 @@ class StyleHolder(Stylable):
         assert self.output_size is not None
         normalizer = self.output_size[0] * (15 / 500)
         if self.line_width_ is not None:
-            lwt, lw = self.line_width_
-            if lwt == WidthType.NORMALIZED:
-                lw = lw * normalizer
-            elif lwt == WidthType.LOCAL:
-                lw = lw
+            lw = self.line_width_
+            # if lwt == WidthType.NORMALIZED:
+            #     lw = lw * normalizer
+            # elif lwt == WidthType.LOCAL:
+            #     lw = lw
         else:
             lw = LW * normalizer
 
-        style += f" stroke-width: {lw};"
+        style += f" stroke-width: {lw.reshape(-1)[0]};"
 
         if self.fill_opacity_ is not None:
             style += f"fill-opacity: {self.fill_opacity_[0]};"

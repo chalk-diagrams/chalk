@@ -4,19 +4,20 @@ from typing import TYPE_CHECKING, Callable, Tuple
 
 import chalk.transform as tx
 from chalk.monoid import Monoid
-from chalk.transform import Affine, P2_t, Ray, Transformable, V2_t
+from chalk.transform import (
+    Affine,
+    P2_t,
+    Ray,
+    TraceDistances,
+    Transformable,
+    V2_t,
+)
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
-    from jaxtyping import Array, Bool, Float
 
     from chalk.core import ApplyTransform, Primitive
     from chalk.types import Diagram
-
-    SIZE = 64
-    TraceDistances = Tuple[
-        Float[Array, f"#B {SIZE}"], Bool[Array, f"#B {SIZE}"]
-    ]
 
 
 class Trace(Monoid, Transformable):

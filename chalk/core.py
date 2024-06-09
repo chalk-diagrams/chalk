@@ -16,7 +16,6 @@ import chalk.subdiagram
 import chalk.trace
 import chalk.transform as tx
 import chalk.types
-from chalk import backend
 from chalk.envelope import Envelope
 from chalk.monoid import MList
 from chalk.shapes.path import Path
@@ -170,7 +169,6 @@ class BaseDiagram(chalk.types.Diagram):
     render_png = chalk.backend.cairo.render
     render_svg = chalk.backend.svg.render
     # render_pdf = chalk.backend.tikz.render
-
 
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
