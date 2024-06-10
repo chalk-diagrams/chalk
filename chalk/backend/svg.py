@@ -63,7 +63,9 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
 
         for i in range(q.shape[0]):
             if tx.np.abs(dangle[i]) > 1:
-                yield f"A {r_x[i]} {r_y[i]} {rot[i]} {int(f_A[i])} {int(f_S[i])} {q[i, 0, 0]} {q[i, 1, 0]}"
+                yield f"""
+                A {r_x[i]} {r_y[i]} {rot[i]} {int(f_A[i])} {int(f_S[i])}
+                  {q[i, 0, 0]} {q[i, 1, 0]}"""
             else:
                 yield f"L {q[i, 0, 0]} {q[i, 1, 0]}"
 
@@ -118,8 +120,12 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         self, shape: ArrowHead, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         assert style.output_size
+        from chalk.core import get_primitives
+
         scale = 0.01 * (15 / 500) * style.output_size
-        return to_svg(shape.arrow_shape.scale(scale), self.dwg, style)
+        return render_svg_prims(
+            get_primitives(shape.arrow_shape.scale(scale)), self.dwg, style
+        )
 
     def visit_image(
         self, shape: Image, style: StyleHolder = EMPTY_STYLE
@@ -195,8 +201,8 @@ def render(
     """
     from chalk.core import layout_primitives
 
-    prims, height, width = layout_primitives(self, height, width)
-    prims_to_file(prims, path, height, width)
+    prims, h, w = layout_primitives(self, height, width)
+    prims_to_file(prims, path, h, w) # type: ignore
 
     # pad = 0.05
     # envelope = self.get_envelope()

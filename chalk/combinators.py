@@ -4,7 +4,7 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.monoid import associative_reduce
 from chalk.shapes import Path, Spacer
-from chalk.transform import Floating, Scalars, V2_t, origin, unit_x, unit_y
+from chalk.transform import Floating, Scalars, V2_t
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Combinators and Diagrams.2d.Combinators
@@ -85,7 +85,7 @@ def atop(self: Diagram, other: Diagram) -> Diagram:
 
 
 def above(self: Diagram, other: Diagram) -> Diagram:
-    return beside(self, other, unit_y)
+    return beside(self, other, tx.X.unit_y)
 
 
 # appends
@@ -180,7 +180,7 @@ def hcat(
         Diagram: New diagram
 
     """
-    return cat(diagrams, unit_x, sep)
+    return cat(diagrams, tx.X.unit_x, sep)
 
 
 def vcat(
@@ -197,7 +197,7 @@ def vcat(
         Diagrams
 
     """
-    return cat(diagrams, unit_y, sep)
+    return cat(diagrams, tx.X.unit_y, sep)
 
 
 # Extra
@@ -217,14 +217,14 @@ def above2(self: Diagram, other: Diagram) -> Diagram:
     Returns:
         Diagram: A diagram object.
     """
-    return beside(other, self, -unit_y)
+    return beside(other, self, -tx.X.unit_y)
 
 
 def juxtapose_snug(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     trace1 = self.get_trace()
     trace2 = other.get_trace()
-    d1, m1 = trace1.trace_v(origin, direction)
-    d2, m2 = trace2.trace_v(origin, -direction)
+    d1, m1 = trace1.trace_v(tx.X.origin, direction)
+    d2, m2 = trace2.trace_v(tx.X.origin, -direction)
     assert m1.all()
     assert m2.all()
     d = d1 - d2

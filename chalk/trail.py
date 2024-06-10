@@ -9,8 +9,8 @@ import chalk.transform as tx
 from chalk.envelope import Envelope
 from chalk.monoid import Monoid
 from chalk.shapes.arc import Segment
-from chalk.trace import Trace, TraceDistances
-from chalk.transform import Affine, Floating, P2_t, Ray, Transformable, V2_t
+from chalk.trace import Trace
+from chalk.transform import Affine, Floating, P2_t, Transformable, V2_t
 from chalk.types import Diagram, Enveloped, Traceable, TrailLike
 
 if TYPE_CHECKING:
@@ -35,50 +35,13 @@ class Located(Enveloped, Traceable, Transformable):
 
     def get_envelope(self) -> Envelope:
         s = self.located_segments()
-        env = arc.arc_envelope(s.angles)
         t = s.transform
-        rt = tx.remove_translation(t)
-        inv_t = tx.inv(rt)
-        trans_t = tx.transpose_translation(rt)
-        u: V2_t = -tx.get_translation(t)
-
-        def wrapped(v: V2_t) -> tx.Scalars:
-            # Linear
-            v = v[:, None, :, :]
-
-            vi = inv_t @ v
-            inp = trans_t @ v
-            v_prim = tx.norm(inp)
-            inner = env(v_prim)
-            d = tx.dot(v_prim, vi)
-            after_linear = inner / d
-
-            # Translation
-            diff = tx.dot((u / tx.dot(v, v)[..., None, None]), v)
-            out = after_linear - diff
-            return tx.np.max(out, axis=1)
-
-        return Envelope(wrapped)
+        return Envelope.general_transform(t, lambda x: arc.arc_envelope(s, x))
 
     def get_trace(self) -> Trace:
         s = self.located_segments()
-        trace = arc.arc_trace(s.angles)
         t = s.transform
-        t1 = tx.inv(t)
-
-        def wrapped(
-            ray: Ray,
-        ) -> TraceDistances:
-            trac, mask = trace(
-                Ray(
-                    t1 @ ray.pt[:, None, :, :],
-                    tx.remove_translation(t1) @ ray.v[:, None, :, :],
-                )
-            )
-            z = tx.union_axis((trac, mask), axis=1)
-            return z
-
-        return Trace(wrapped)
+        return Trace.general_transform(t, lambda x: arc.arc_trace(s, x))
 
     def stroke(self) -> Diagram:
         return self.to_path().stroke()
@@ -96,7 +59,7 @@ class Located(Enveloped, Traceable, Transformable):
 class Trail(Monoid, Transformable, TrailLike):
     segments: Segment
 
-    closed: tx.Mask = field(default_factory=lambda: tx.np.array(False))
+    closed: tx.Mask = field(default_factory=lambda: tx.X.np.array(False))
 
     def split(self, i: int) -> Trail:
         return Trail(self.segments.split(i), self.closed[i])
@@ -105,12 +68,12 @@ class Trail(Monoid, Transformable, TrailLike):
     @staticmethod
     def empty() -> Trail:
         return Trail(
-            Segment(tx.np.array([]), tx.np.array([])), tx.np.array(False)
+            Segment(tx.X.np.zeros((0, 3, 3)), tx.X.np.zeros((0, 2))), tx.X.np.array(False)
         )
 
     def __add__(self, other: Trail) -> Trail:
         # assert not (self.closed or other.closed), "Cannot add closed trails"
-        return Trail(self.segments + other.segments, tx.np.array(False))
+        return Trail(self.segments + other.segments, tx.X.np.array(False))
 
     # Transformable
     def apply_transform(self, t: Affine) -> Trail:
@@ -122,11 +85,11 @@ class Trail(Monoid, Transformable, TrailLike):
         return self
 
     def close(self) -> Trail:
-        return Trail(self.segments, tx.np.array(True))
+        return Trail(self.segments, tx.X.np.array(True))
 
     def points(self) -> P2_t:
         q = self.segments.q
-        return tx.to_point(tx.np.cumsum(q, axis=-3) - q)
+        return tx.to_point(tx.X.np.cumsum(q, axis=-3) - q)
 
     def at(self, p: P2_t) -> Located:
         return Located(self, p)
@@ -153,15 +116,15 @@ class Trail(Monoid, Transformable, TrailLike):
 
     @staticmethod
     def hrule(length: Floating) -> Trail:
-        return arc.seg(length * tx.unit_x)
+        return arc.seg(length * tx.X.unit_x)
 
     @staticmethod
     def vrule(length: Floating) -> Trail:
-        return arc.seg(length * tx.unit_y)
+        return arc.seg(length * tx.X.unit_y)
 
     @staticmethod
     def rectangle(width: Floating, height: Floating) -> Trail:
-        t = arc.seg(tx.unit_x) + arc.seg(tx.unit_y)
+        t = arc.seg(tx.X.unit_x) + arc.seg(tx.X.unit_y)
         return (t + t.rotate_by(0.5)).close().scale_x(width).scale_y(height)
 
     @staticmethod
@@ -174,9 +137,9 @@ class Trail(Monoid, Transformable, TrailLike):
         corner = arc.arc_seg(tx.V2(r, r), -(r - edge3))
         b = [height - r, width - r, height - r, width - r]
         trail = Trail.concat(
-            (arc.seg(b[i] * tx.unit_y) + corner).rotate_by(i / 4)
+            (arc.seg(b[i] * tx.X.unit_y) + corner).rotate_by(i / 4)
             for i in range(4)
-        ) + arc.seg(0.01 * tx.unit_y)
+        ) + arc.seg(0.01 * tx.X.unit_y)
         return trail.close()
 
     @staticmethod

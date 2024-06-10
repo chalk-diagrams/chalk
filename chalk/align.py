@@ -1,5 +1,5 @@
 import chalk.transform as tx
-from chalk.transform import V2_t, origin, unit_x, unit_y
+from chalk.transform import V2_t
 from chalk.types import Diagram
 
 # Functions mirroring Diagrams.Align and Diagrams.2d.Align
@@ -14,7 +14,7 @@ def align_to(self: Diagram, v: V2_t) -> Diagram:
 def snug(self: Diagram, v: V2_t) -> Diagram:
     "Align based on the trace."
     trace = self.get_trace()
-    d, _ = trace.trace_v(origin, v)
+    d, _ = trace.trace_v(tx.X.origin, v)
     assert d is not None
     t = tx.translation(-d)
     return self.apply_transform(t)

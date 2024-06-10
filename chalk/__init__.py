@@ -6,7 +6,10 @@ if sys.version_info >= (3, 8):
 else:
     import importlib_metadata as metadata
 
+import os
+
 import chalk.align as align
+import chalk.core
 from chalk.align import *  # noqa: F403
 from chalk.arrow import ArrowOpts, arrow_at, arrow_between, arrow_v
 from chalk.combinators import *  # noqa: F403
@@ -23,12 +26,18 @@ from chalk.transform import (
     Affine,
     BoundingBox,
     from_radians,
-    origin,
     to_radians,
-    unit_x,
-    unit_y,
+    X
 )
 from chalk.types import Diagram
+unit_x = X.unit_x
+unit_y = X.unit_y
+
+if eval(os.environ.get("CHALK_JAX", '0')):
+    import chex
+    jax_type = [chalk.core.MultiPrimitive, chalk.core.FlatPrimitive, chalk.core.Primitive, chalk.style.StyleHolder, Trail, Path, Segment, chalk.trail.Located]
+    for t in jax_type:
+        chex.register_dataclass_type_with_jax_tree_util(t)
 
 if not TYPE_CHECKING:
 

@@ -21,13 +21,12 @@ from chalk.monoid import MList
 from chalk.shapes.path import Path
 from chalk.style import StyleHolder
 from chalk.subdiagram import Name
-from chalk.transform import Affine, unit_x
+from chalk.transform import Affine
 from chalk.types import Diagram, Shape
 from chalk.utils import imgen
 from chalk.visitor import DiagramVisitor
 
 Trail = Any
-Ident = tx.ident
 A = TypeVar("A", bound=chalk.monoid.Monoid)
 
 SVG_HEIGHT = 200
@@ -44,7 +43,31 @@ def set_svg_draw_height(height: int) -> None:
     "Globally set the svg preview height for notebooks."
     global SVG_DRAW_HEIGHT
     SVG_DRAW_HEIGHT = height
+@dataclass
+class MultiPrimitive:
+    data: List[FlatPrimitive]
 
+    def __iter__(self):
+        return iter(self.unflatten())
+
+    def diagram(self):
+        return Compose(Envelope.empty(), 
+                       self.data)
+
+    def unflatten(self, no_map=False) -> List[Diagram]:
+        from chalk.combinators import concat
+
+        return [
+            concat(
+                [
+                    Primitive(d.shape.split(i) if not no_map else d.shape, 
+                              (d.style.split(i) if not no_map else d.style) if d.style is not None else None, 
+                              d.transform[i] if not no_map else d.transform)
+                    for d in self.data
+                ]
+            )
+            for i in range(self.data[0].transform.shape[0])
+        ]
 
 @dataclass
 class BaseDiagram(chalk.types.Diagram):
@@ -127,6 +150,14 @@ class BaseDiagram(chalk.types.Diagram):
     scale_uniform_to_y = chalk.align.scale_uniform_to_y
     scale_uniform_to_x = chalk.align.scale_uniform_to_x
 
+    # Flatter
+    def flatten(self) -> MultiPrimitive:
+        children = [
+            FlatPrimitive.from_primitive(d) for d in get_primitives(self)
+        ]
+        return MultiPrimitive(children)
+
+
     # Arrows
     connect = chalk.arrow.connect
     connect_outside = chalk.arrow.connect_outside
@@ -144,7 +175,7 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Infix
     def __or__(self, d: Diagram) -> Diagram:
-        return chalk.combinators.beside(self, d, unit_x)
+        return chalk.combinators.beside(self, d, tx.X.unit_x)
 
     __truediv__ = chalk.combinators.above
     __floordiv__ = chalk.combinators.above2
@@ -168,7 +199,9 @@ class BaseDiagram(chalk.types.Diagram):
     render = chalk.backend.cairo.render
     render_png = chalk.backend.cairo.render
     render_svg = chalk.backend.svg.render
-    # render_pdf = chalk.backend.tikz.render
+    def render_pdf(self, *args, **kwargs):
+        print("Currently PDF rendering is disabled")
+        
 
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
@@ -209,7 +242,7 @@ class Primitive(BaseDiagram):
     """
 
     shape: Shape
-    style: StyleHolder
+    style: Optional[StyleHolder]
     transform: Affine
 
     @classmethod
@@ -223,7 +256,7 @@ class Primitive(BaseDiagram):
         Returns:
             Primitive: A diagram object.
         """
-        return cls(shape, StyleHolder.empty(), Ident)
+        return cls(shape, None, tx.X.ident)
 
     def apply_transform(self, t: Affine) -> Primitive:
         if t.shape[0] != 1:
@@ -245,7 +278,7 @@ class Primitive(BaseDiagram):
             Primitive
         """
         return Primitive(
-            self.shape, self.style.merge(other_style), self.transform
+            self.shape, self.style.merge(other_style) if self.style is not None else other_style, self.transform
         )
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
@@ -362,38 +395,57 @@ class FlatPrimitive:
     style: StyleHolder
     transform: Affine
 
+    def __iter__(self):
+        d = self
+        return (
+            Primitive(d.shape.split(i), 
+                        d.style.split(i) if d.style is not None else None, 
+                        d.transform[i])
+            for i in range(self.transform.shape[0])
+        )
+
+    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+        return visitor.visit_flat_primitive(self, args)
+
     @staticmethod
     def from_primitive(prim: Primitive) -> FlatPrimitive:
         return FlatPrimitive(prim.shape, prim.style, prim.transform)
 
+    def apply_transform(self, t: Affine) -> FlatPrimitive:
+        if t.shape[0] != 1:
+            return super().apply_transform(t)  # type: ignore
+
+        if hasattr(self.transform, "shape"):
+            new_transform = t @ self.transform
+        else:
+            new_transform = t
+        return FlatPrimitive(self.shape, self.style, new_transform)
+
+    def apply_style(self, other_style: StyleHolder) -> Primitive:
+        """Applies a style and returns a primitive.
+
+        Args:
+            other_style (Style): A style object.
+
+        Returns:
+            Primitive
+        """
+        return FlatPrimitive(
+            self.shape, self.style.merge(other_style) if self.style is not None else other_style, self.transform
+        )
+
+
 
 def get_primitives(diagram: Diagram) -> List[Primitive]:
-    return diagram.accept(ToList(), Ident).data
+    return diagram.accept(ToList(), tx.X.ident).data
 
 
-def flatten(diagram: Diagram) -> List[FlatPrimitive]:
-    children = [
-        FlatPrimitive.from_primitive(d) for d in get_primitives(diagram)
-    ]
-    return children
 
 
-def unflatten(diagrams: List[FlatPrimitive]) -> List[Diagram]:
-    from chalk.combinators import concat
-
-    return [
-        concat(
-            [
-                Primitive(d.shape.split(i), d.style.split(i), d.transform[i])
-                for d in diagrams
-            ]
-        )
-        for i in range(diagrams[0].transform.shape[0])
-    ]
 
 
 def layout_primitives(
-    self, height: tx.IntLike = 128, width: Optional[tx.IntLike] = None
+    self: Diagram, height: tx.IntLike = 128, width: Optional[tx.IntLike] = None
 ) -> Tuple[List[Primitive], tx.IntLike, tx.IntLike]:
     envelope = self.get_envelope()
     assert envelope is not None
@@ -402,14 +454,14 @@ def layout_primitives(
 
     # infer width to preserve aspect ratio
     if width is None:
-        width = tx.np.round(height * envelope.width / envelope.height).astype(
+        width = tx.X.np.round(height * envelope.width / envelope.height).astype(
             int
         )
     else:
         width = width
     assert width is not None
     # determine scale to fit the largest axis in the target frame size
-    α = tx.np.where(
+    α = tx.X.np.where(
         envelope.width - width <= envelope.height - height,
         height / ((1 + pad) * envelope.height),
         width / ((1 + pad) * envelope.width),
@@ -418,8 +470,8 @@ def layout_primitives(
     s = self.scale(α).center_xy().pad(1 + pad)
     e = s.get_envelope()
     assert e is not None
-    s = s.translate(e(-tx.unit_x), e(-tx.unit_y))
-    style = StyleHolder.root(tx.np.maximum(width, height))
+    s = s.translate(e(-tx.X.unit_x), e(-tx.X.unit_y))
+    style = StyleHolder.root(tx.X.np.maximum(width, height))
     s = s._style(style)
     return get_primitives(s), height, width
 
@@ -432,12 +484,12 @@ class ToList(DiagramVisitor[MList[Primitive], Affine]):
     A_type = MList[Primitive]
 
     def visit_primitive(
-        self, diagram: Primitive, t: Affine = Ident
+        self, diagram: Primitive, t: Affine
     ) -> MList[Primitive]:
         return MList([(diagram.apply_transform(t))])
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = Ident
+        self, diagram: ApplyTransform, t: Affine
     ) -> MList[Primitive]:
         if hasattr(diagram.transform, "shape"):
             t_new = t @ diagram.transform
@@ -451,7 +503,7 @@ class ToList(DiagramVisitor[MList[Primitive], Affine]):
         )
 
     def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine = Ident
+        self, diagram: ApplyStyle, t: Affine
     ) -> MList[Primitive]:
         return MList(
             [
@@ -461,6 +513,6 @@ class ToList(DiagramVisitor[MList[Primitive], Affine]):
         )
 
     def visit_apply_name(
-        self, diagram: ApplyName, t: Affine = Ident
+        self, diagram: ApplyName, t: Affine
     ) -> MList[Primitive]:
         return MList([prim for prim in diagram.diagram.accept(self, t).data])

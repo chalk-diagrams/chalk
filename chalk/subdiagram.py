@@ -68,13 +68,13 @@ class Subdiagram(Monoid):
 class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
     A_type = Maybe[Subdiagram]
 
-    def __init__(self, name: Name, t: Affine = tx.ident):
+    def __init__(self, name: Name, t: Affine):
         self.name = name
 
     def visit_compose(
         self,
         diagram: Compose,
-        t: Affine = tx.ident,
+        t: Affine
     ) -> Maybe[Subdiagram]:
         for d in diagram.diagrams:
             bb = d.accept(self, t)
@@ -85,14 +85,14 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
     def visit_apply_transform(
         self,
         diagram: ApplyTransform,
-        t: Affine = tx.ident,
+        t: Affine
     ) -> Maybe[Subdiagram]:
         return diagram.diagram.accept(self, t @ diagram.transform)
 
     def visit_apply_name(
         self,
         diagram: ApplyName,
-        t: Affine = tx.ident,
+        t: Affine
     ) -> Maybe[Subdiagram]:
         if self.name == diagram.dname:
             return Maybe(Subdiagram(diagram.diagram, t))
@@ -147,14 +147,14 @@ class GetSubMap(DiagramVisitor[SubMap, Affine]):
     def visit_apply_transform(
         self,
         diagram: ApplyTransform,
-        t: Affine = tx.ident,
+        t: Affine
     ) -> SubMap:
         return diagram.diagram.accept(self, t * diagram.transform)
 
     def visit_apply_name(
         self,
         diagram: ApplyName,
-        t: Affine = tx.ident,
+        t: Affine
     ) -> SubMap:
         d1 = SubMap({diagram.dname: [Subdiagram(diagram.diagram, t)]})
         d2 = diagram.diagram.accept(self, t)
@@ -162,7 +162,7 @@ class GetSubMap(DiagramVisitor[SubMap, Affine]):
 
 
 def get_sub_map(
-    self: Diagram, t: Affine = tx.ident
+    self: Diagram, t: Affine
 ) -> Dict[Name, List[Subdiagram]]:
     """Retrieves all named subdiagrams in the given diagram and accumulates
     them in a dictionary (map) indexed by their name.

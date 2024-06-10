@@ -3,7 +3,7 @@ from colour import Color
 import chalk.transform as tx
 from chalk.combinators import concat
 from chalk.shapes import Path, circle, seg, text
-from chalk.transform import V2_t, origin
+from chalk.transform import V2_t
 from chalk.types import Diagram
 
 RED = Color("red")
@@ -16,8 +16,8 @@ def show_origin(self: Diagram) -> Diagram:
     envelope = self.get_envelope()
     if envelope.is_empty:
         return self
-    origin_size = tx.np.maximum(
-        0.1, tx.np.minimum(envelope.height, envelope.width) / 50
+    origin_size = tx.X.np.maximum(
+        0.1, tx.X.np.minimum(envelope.height, envelope.width) / 50
     )
     origin = circle(origin_size).line_color(RED)
     return self + origin

@@ -7,8 +7,8 @@ from typing import Any, List, Optional, Union
 from colour import Color
 from typing_extensions import Self
 
-import chalk.transform as tx
-from chalk.transform import ColorVec, Property, Scalars, Mask
+from chalk.transform import tx
+from chalk.transform import ColorVec, Mask, Property, Scalars
 
 PyCairoContext = Any
 PyLatex = Any
@@ -123,6 +123,8 @@ class StyleHolder(Stylable):
     mask: Mask
 
     def split(self, i: int) -> StyleHolder:
+        if len(self.base.shape) == 1:
+            return self
         return StyleHolder(base=self.base[i], mask=self.mask[i])
 
     def get(self, key: str) -> tx.Scalars:
@@ -131,11 +133,6 @@ class StyleHolder(Stylable):
         return tx.np.where(
             self.mask[slice(*STYLE_LOCATIONS[key])], v, DEFAULTS[key]
         )
-
-        # if self.mask[(1,) + key].all():
-        #     return v
-        # else:
-        #     return None
 
     @property
     def line_width_(self) -> Property:

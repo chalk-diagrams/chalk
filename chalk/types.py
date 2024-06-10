@@ -15,8 +15,6 @@ if TYPE_CHECKING:
     from chalk.trail import Located, Trail
     from chalk.visitor import A, DiagramVisitor, ShapeVisitor
 
-Ident = tx.ident
-
 
 class Enveloped(Protocol):
     def get_envelope(self) -> Envelope: ...
@@ -129,7 +127,7 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     def get_subdiagram(self, name: Name) -> Optional[Subdiagram]: ...
 
     def get_sub_map(  # type: ignore[empty-body]
-        self, t: tx.Affine = Ident
+        self, t: tx.Affine
     ) -> Dict[Name, List[Subdiagram]]: ...
 
     def with_names(  # type: ignore[empty-body]
@@ -156,7 +154,7 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     ) -> Diagram: ...
 
     def to_list(  # type: ignore[empty-body]
-        self, t: tx.Affine = Ident
+        self, t: tx.Affine
     ) -> List[Diagram]: ...
 
     def accept(  # type: ignore[empty-body]

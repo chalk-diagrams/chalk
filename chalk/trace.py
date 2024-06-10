@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Tuple
+from typing import TYPE_CHECKING, Callable
 
 import chalk.transform as tx
 from chalk.monoid import Monoid
@@ -39,14 +39,30 @@ class Trace(Monoid, Transformable):
     def __add__(self, other: Trace) -> Trace:
         return Trace(lambda ray: tx.union(self.f(ray), other.f(ray)))
 
-    # Transformable
-    def apply_transform(self, t: Affine) -> Trace:
+    @staticmethod
+    def general_transform(t: Affine, fn) -> Trace:  # type: ignore
         t1 = tx.inv(t)
 
-        def wrapped(ray: Ray) -> TraceDistances:
-            return self.f(Ray(t1 @ ray.pt, tx.remove_translation(t1) @ ray.v))
+        def wrapped(
+            ray: Ray,
+        ) -> TraceDistances:
+            trac, mask = fn(
+                Ray(
+                    t1 @ ray.pt[:, None, :, :],
+                    t1 @ ray.v[:, None, :, :],
+                )
+            )
+            return tx.union_axis((trac, mask), axis=-1)
 
         return Trace(wrapped)
+
+    # Transformable
+    def apply_transform(self, t: Affine) -> Trace:
+        def apply(ray: Ray): # type: ignore
+            t, m = self.f(Ray(ray.pt[..., 0, :, :], ray.v[..., 0, :, :]))
+            return t[..., None], m[..., None]
+
+        return Trace.general_transform(t, apply)
 
     def trace_v(self, p: P2_t, v: V2_t) -> TraceDistances:
         v = tx.norm(v)
@@ -85,16 +101,16 @@ class GetTrace(DiagramVisitor[Trace, Affine]):
     A_type = Trace
 
     def visit_primitive(
-        self, diagram: Primitive, t: Affine = tx.ident
+        self, diagram: Primitive, t: Affine
     ) -> Trace:
         new_transform = t @ diagram.transform
         return diagram.shape.get_trace().apply_transform(new_transform)
 
     def visit_apply_transform(
-        self, diagram: ApplyTransform, t: Affine = tx.ident
+        self, diagram: ApplyTransform, t: Affine
     ) -> Trace:
         return diagram.diagram.accept(self, t @ diagram.transform)
 
 
-def get_trace(self: Diagram, t: Affine = tx.ident) -> Trace:
+def get_trace(self: Diagram, t: Affine) -> Trace:
     return self.accept(GetTrace(), t)

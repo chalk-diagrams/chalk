@@ -7,8 +7,6 @@ blue = Color("#005FDB")
 
 
 path = "examples/output/intro-01.png"
-ang = arc_seg_angle(0, -90)
-#d = ang.stroke()
 d =  circle(1).fill_color(papaya)
 d.render(path, height=64)
 
@@ -17,8 +15,8 @@ path = "examples/output/intro-01.svg"
 d.render_svg(path, height=64)
 
 # Alternative, render as pdf
-# path = "examples/output/intro-01.pdf"
-# d.render_pdf(path, height=64)
+path = "examples/output/intro-01.pdf"
+d.render_pdf(path, height=64)
 
 
 path = "examples/output/intro-02.png"
@@ -40,8 +38,8 @@ path = "examples/output/intro-03.svg"
 d.render_svg(path, height=64)
 
 # # Alternative, render as pdf
-# path = "examples/output/intro-03.pdf"
-# d.render_pdf(path)
+path = "examples/output/intro-03.pdf"
+d.render_pdf(path)
 
 path = "examples/output/intro-04.png"
 
@@ -58,5 +56,5 @@ d.render(path, height=256)
 path = "examples/output/intro-04.svg"
 d.render_svg(path, height=256)
 
-# path = "examples/output/intro-04.pdf"
-# d.render_pdf(path, height=256)
+path = "examples/output/intro-04.pdf"
+d.render_pdf(path, height=256)

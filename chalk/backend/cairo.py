@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     from chalk.core import Primitive
 
 
-Ident = tx.ident
 PyCairoContext = Any
 EMPTY_STYLE = StyleHolder.empty()
 
@@ -47,7 +46,7 @@ class ToCairoShape(ShapeVisitor[None]):
         end = seg.angle + seg.dangle
 
         for i in range(q.shape[0]):
-            if tx.np.abs(dangle[i]) < 0.1:
+            if tx.X.np.abs(dangle[i]) < 1:
                 ctx.line_to(q[i, 0, 0], q[i, 1, 0])
             else:
                 ctx.save()
@@ -132,22 +131,24 @@ class ToCairoShape(ShapeVisitor[None]):
 
 def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
     import cairo
+    import chalk.core
 
-    ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    #ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
-    for prim in prims:
-        for i in range(prim.transform.shape[0]):
-            # apply transformation
-            matrix = tx_to_cairo(prim.transform[i : i + 1])
-            ctx.transform(matrix)
-            prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
+    for p in prims:
+        for prim in (p if isinstance(p, chalk.core.FlatPrimitive) else [p]):
+            for i in range(prim.transform.shape[0]):
+                # apply transformation
+                matrix = tx_to_cairo(prim.transform[i : i + 1])
+                ctx.transform(matrix)
+                prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
 
-            # undo transformation
-            matrix.invert()
-            ctx.transform(matrix)
+                # undo transformation
+                matrix.invert()
+                ctx.transform(matrix)
 
-            prim.style.render(ctx)
-            ctx.stroke()
+                prim.style.render(ctx)
+                ctx.stroke()
 
 
 def prims_to_file(
@@ -177,5 +178,5 @@ def render(
 
     from chalk.core import layout_primitives
 
-    prims, height, width = layout_primitives(self, height, width)
-    prims_to_file(prims, path, height, width)
+    prims, h, w = layout_primitives(self, height, width)
+    prims_to_file(prims, path, h, w) # type: ignore

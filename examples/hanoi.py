@@ -99,14 +99,11 @@ def draw_state_sequence(seq: List[Hanoi]) -> Diagram:
 
 
 diagram = draw_state_sequence(state_sequence(3))
-import chalk
-print(chalk.Envelope.total_env)
 
 path = "examples/output/hanoi.svg"
 diagram.render_svg(path, height=700)
-import render
-render.render(diagram.scale(8).align_tl(), "render.png", 600, 600)
-print(chalk.Envelope.total_env)
+# import render
+# render.render(diagram.scale(8).align_tl(), "render.png", 600, 600)
 try: 
     path = "examples/output/hanoi.png"
     diagram.render(path, height=700)

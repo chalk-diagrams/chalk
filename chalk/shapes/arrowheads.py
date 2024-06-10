@@ -5,7 +5,7 @@ from colour import Color
 
 from chalk.shapes.path import Path
 from chalk.shapes.shape import Shape
-from chalk.transform import P2, BoundingBox, origin
+from chalk.transform import P2, BoundingBox
 from chalk.types import Diagram
 from chalk.visitor import A, ShapeVisitor
 
