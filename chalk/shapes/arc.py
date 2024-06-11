@@ -113,7 +113,7 @@ def arc_between(p: P2_t, q: P2_t, height: tx.Scalars) -> Segment:
     flip = tx.X.np.where(bl, 1, -1)
 
     diff = q - p
-    angles = tx.X.np.array(
+    angles = tx.X.array(
         [flip * -tx.from_radians(θ), flip * 2 * tx.from_radians(θ)], float
     ).reshape(1, 2)
     ret = (
@@ -180,7 +180,7 @@ def arc_seg(q: V2_t, height: tx.Floating) -> Trail:
 def arc_seg_angle(angle: tx.Floating, dangle: tx.Floating) -> Trail:
     arc_p = tx.to_point(tx.polar(angle))
     return Segment(
-        tx.translation(-arc_p), tx.X.np.array([angle, dangle], float)
+        tx.translation(-arc_p), tx.X.array([angle, dangle], float)
     ).to_trail()
 
 

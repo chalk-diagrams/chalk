@@ -7,17 +7,23 @@ os.environ["CHALK_JAX"] = "1"
 #     import chalk 
 from chalk import *
 from colour import Color
+import numpy as onp
+import optax
+
+
 
 def x(i):
-    return circle(0.1 * (i+1)).translate(i, 0).fill_color(np.ones(3) * i / 6).flatten()
+    return circle(0.1 * (i+1)).translate(i, 0).fill_color(np.ones(3) * i / 6)
 
 out = jax.vmap(x)(np.arange(1, 6))
-d = (rectangle(10, 2).fill_color("white") + out.diagram())
-d.render("temp.png", 64)
+print(out.get_trace()(P2(0, 0), V2(1, 0)))
+exit()
+# d = (rectangle(10, 2).fill_color("white") + out)
+# d.render("temp.png", 64)
 
 
 seed = 1701
-size = 40
+size = 50
 connects = 1
 around = 5
 color = np.stack([chalk.style.to_color(c) for c in  Color("red").range_to("blue", size // around)],
@@ -36,39 +42,35 @@ def graph(x):
 
     def dots(p, i):
         d = circle(0.1).translate(p[0], p[1]).fill_color(color[i // around] * np.maximum((i % around) / (around - 1), 0.5))
-        return d.flatten()
+        return d
 
-    out = jax.vmap(dots)(x, np.arange(size)).diagram().line_width(1)
     def connect(p):
         eps = 1e-4
         d = make_path([(p[0, 0], p[0, 1]), 
                         (p[1, 0]+ eps, p[1, 1] + eps)])
-        return d.flatten(), np.pow(np.pow(p[1] - p[0], 2) - 0.02, 2)
-    
+        return d
+
+    out = jax.vmap(dots)(x, np.arange(size)).with_envelope(empty()).line_width(1)    
     a, b = x[:, None, :].repeat(connects, axis=1), x[all]
     v = np.stack([a, b], axis=-2).reshape((-1, 2, 2))
-    lines, score = jax.vmap(connect)(v)
+    spring = size * np.pow(np.pow(v[:, 1] - v[:, 0], 2).sum(-1) - 0.04, 2).sum()
+    lines = jax.vmap(connect)(v).with_envelope(empty())
     
-    
-    
-    out = lines.diagram().line_width(1) + out
+    out = lines.line_width(1) + out
     out = rectangle(4, 4).fill_color("white")  + out
     out, h, w = chalk.core.layout_primitives(out, 500)
-    return size * score.sum() + center + repulse, (out, h, w)
+    score = spring + center + repulse
+    return score, (out, h, w)
 
-import numpy as onp
-import optax
 def opt(x, fn):
     res = []
     fn = jax.jit(jax.value_and_grad(fn, has_aux=True))
-    solver = optax.adam(learning_rate=0.1)
+    solver = optax.adam(learning_rate=0.3)
     opt_state = solver.init(x)
-    for j in range(250):
+    for j in range(500):
         print(j)
         value, grad = fn(x)
         score, out = value
-
-
         updates, opt_state = solver.update(grad, opt_state, x)
         x = optax.apply_updates(x, updates)
 
@@ -78,7 +80,8 @@ def opt(x, fn):
             import chalk.transform
             chalk.transform.set_jax_mode(False)
             print("RENDER")
-            chalk.backend.cairo.prims_to_file(out, f"test.{j:03d}.png", h, w)
+            chalk.backend.svg.prims_to_file(out, f"test.{j:03d}.svg", h, w)
+            #chalk.backend.cairo.prims_to_file(out, f"test.{j:03d}.png", h, w)
             chalk.transform.set_jax_mode(True)
         print(score)
 opt(matrix, graph)

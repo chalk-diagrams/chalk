@@ -7,9 +7,8 @@ from typing import Any, List, Optional, Union
 from colour import Color
 from typing_extensions import Self
 
-from chalk.transform import tx
 from chalk.transform import ColorVec, Mask, Property, Scalars
-
+import chalk.transform as tx
 PyCairoContext = Any
 PyLatex = Any
 
@@ -19,9 +18,9 @@ ColorLike = Union[str, Color, ColorVec]
 
 def to_color(c: ColorLike) -> ColorVec:
     if isinstance(c, str):
-        return tx.np.array(Color(c).rgb)
+        return tx.X.array(Color(c).rgb)
     elif isinstance(c, Color):
-        return tx.np.array(c.rgb)
+        return tx.X.array(c.rgb)
     return c
 
 
@@ -41,12 +40,12 @@ STYLE_LOCATIONS = {
 
 DEFAULTS = {
     "fill_color": to_color(LC),
-    "fill_opacity": tx.np.array(1.0),
+    "fill_opacity": tx.X.array(1.0),
     "line_color": to_color(LC),
-    "line_opacity": tx.np.array(1.0),
-    "line_width": tx.np.array(LW),
-    "output_size": tx.np.array(200.0),
-    "dashing": tx.np.array(0),
+    "line_opacity": tx.X.array(1.0),
+    "line_width": tx.X.array(LW),
+    "output_size": tx.X.array(200.0),
+    "dashing": tx.X.array(0),
 }
 STYLE_SIZE = 12
 
@@ -94,16 +93,16 @@ def Style(
     output_size: Optional[PropLike] = None,
 ) -> StyleHolder:
     b = (
-        tx.np.zeros(STYLE_SIZE),
-        tx.np.zeros(STYLE_SIZE, dtype=bool),
+        tx.X.np.zeros(STYLE_SIZE),
+        tx.X.np.zeros(STYLE_SIZE, dtype=bool),
     )
 
     def update(b, key: str, value):  # type: ignore
         base, mask = b
         index = (Ellipsis, slice(*STYLE_LOCATIONS[key]))
         if value is not None:
-            base = tx.index_update(base, index, value)  # type: ignore
-            mask = tx.index_update(mask, index, True)  # type: ignore
+            base = tx.X.index_update(base, index, value)  # type: ignore
+            mask = tx.X.index_update(mask, index, True)  # type: ignore
         return base, mask
 
     b = update(b, "line_width", line_width_)
@@ -130,7 +129,7 @@ class StyleHolder(Stylable):
     def get(self, key: str) -> tx.Scalars:
         self.base = self.base
         v = self.base[slice(*STYLE_LOCATIONS[key])]
-        return tx.np.where(
+        return tx.X.np.where(
             self.mask[slice(*STYLE_LOCATIONS[key])], v, DEFAULTS[key]
         )
 
@@ -165,8 +164,8 @@ class StyleHolder(Stylable):
     @classmethod
     def empty(cls) -> StyleHolder:
         return cls(
-            tx.np.zeros((STYLE_SIZE)),
-            tx.np.zeros((STYLE_SIZE), dtype=bool),
+            tx.X.np.zeros((STYLE_SIZE)),
+            tx.X.np.zeros((STYLE_SIZE), dtype=bool),
         )
 
     @classmethod
@@ -178,7 +177,7 @@ class StyleHolder(Stylable):
 
     def merge(self, other: StyleHolder) -> StyleHolder:
         mask = self.mask | other.mask
-        base = tx.np.where(other.mask, other.base, self.base)
+        base = tx.X.np.where(other.mask, other.base, self.base)
         return StyleHolder(base, mask)
 
     def render(self, ctx: PyCairoContext) -> None:

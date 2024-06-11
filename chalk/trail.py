@@ -47,7 +47,8 @@ class Located(Enveloped, Traceable, Transformable):
         return self.to_path().stroke()
 
     def apply_transform(self, t: Affine) -> Located:
-        return Located(self.trail.apply_transform(t), t @ self.location)
+        return Located(self.trail.apply_transform(tx.remove_translation(t)), 
+                       t @ self.location)
 
     def to_path(self) -> Path:
         from chalk.shapes.path import Path
@@ -68,7 +69,8 @@ class Trail(Monoid, Transformable, TrailLike):
     @staticmethod
     def empty() -> Trail:
         return Trail(
-            Segment(tx.X.np.zeros((0, 3, 3)), tx.X.np.zeros((0, 2))), tx.X.np.array(False)
+            Segment(tx.X.np.zeros((0, 3, 3)), tx.X.np.zeros((0, 2))),
+            tx.X.np.array(False),
         )
 
     def __add__(self, other: Trail) -> Trail:

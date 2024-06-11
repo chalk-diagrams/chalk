@@ -26,18 +26,18 @@ class Trace(Monoid, Transformable):
 
     def __call__(self, point: P2_t, direction: V2_t) -> TraceDistances:
         d, m = self.f(Ray(point, direction))
-        ad = tx.np.argsort(d + (1 - m) * 1e10, axis=1)
-        d = tx.np.take_along_axis(d, ad, axis=1)
-        m = tx.np.take_along_axis(m, ad, axis=1)
+        ad = tx.X.np.argsort(d + (1 - m) * 1e10, axis=1)
+        d = tx.X.np.take_along_axis(d, ad, axis=1)
+        m = tx.X.np.take_along_axis(m, ad, axis=1)
         return d, m
 
     # Monoid
     @classmethod
     def empty(cls) -> Trace:
-        return cls(lambda _: (tx.np.array([]), tx.np.array([])))
+        return cls(lambda _: (tx.X.np.array([]), tx.X.np.array([])))
 
     def __add__(self, other: Trace) -> Trace:
-        return Trace(lambda ray: tx.union(self.f(ray), other.f(ray)))
+        return Trace(lambda ray: tx.X.union(self.f(ray), other.f(ray)))
 
     @staticmethod
     def general_transform(t: Affine, fn) -> Trace:  # type: ignore
@@ -52,13 +52,13 @@ class Trace(Monoid, Transformable):
                     t1 @ ray.v[:, None, :, :],
                 )
             )
-            return tx.union_axis((trac, mask), axis=-1)
+            return tx.X.union_axis((trac, mask), axis=-1)
 
         return Trace(wrapped)
 
     # Transformable
     def apply_transform(self, t: Affine) -> Trace:
-        def apply(ray: Ray): # type: ignore
+        def apply(ray: Ray):  # type: ignore
             t, m = self.f(Ray(ray.pt[..., 0, :, :], ray.v[..., 0, :, :]))
             return t[..., None], m[..., None]
 
@@ -68,9 +68,9 @@ class Trace(Monoid, Transformable):
         v = tx.norm(v)
         dists, m = self(p, v)
 
-        d = tx.np.sort(dists + (1 - m) * 1e10, axis=1)
-        ad = tx.np.argsort(dists + (1 - m) * 1e10, axis=1)
-        m = tx.np.take_along_axis(m, ad, axis=1)
+        d = tx.X.np.sort(dists + (1 - m) * 1e10, axis=1)
+        ad = tx.X.np.argsort(dists + (1 - m) * 1e10, axis=1)
+        m = tx.X.np.take_along_axis(m, ad, axis=1)
         s = d[:, 0:1]
         return s[..., None] * v, m[:, 0]
 
@@ -89,22 +89,33 @@ class Trace(Monoid, Transformable):
     def combine(p1: TraceDistances, p2: TraceDistances) -> TraceDistances:
         ps, m = p1
         ps2, m2 = p2
-        ps = tx.np.concatenate([ps, ps2], axis=1)
-        m = tx.np.concatenate([m, m2], axis=1)
-        ad = tx.np.argsort(ps + (1 - m) * 1e10, axis=1)
-        ps = tx.np.take_along_axis(ps, ad, axis=1)
-        m = tx.np.take_along_axis(m, ad, axis=1)
+        ps = tx.X.np.concatenate([ps, ps2], axis=1)
+        m = tx.X.np.concatenate([m, m2], axis=1)
+        ad = tx.X.np.argsort(ps + (1 - m) * 1e10, axis=1)
+        ps = tx.X.np.take_along_axis(ps, ad, axis=1)
+        m = tx.X.np.take_along_axis(m, ad, axis=1)
         return ps, m
 
 
 class GetTrace(DiagramVisitor[Trace, Affine]):
     A_type = Trace
 
-    def visit_primitive(
-        self, diagram: Primitive, t: Affine
-    ) -> Trace:
+    def visit_primitive(self, diagram: Primitive, t: Affine) -> Trace:
         new_transform = t @ diagram.transform
-        return diagram.shape.get_trace().apply_transform(new_transform)
+
+        if diagram.is_multi():
+            # MultiPrimitive only work in jax mode.
+            import jax
+            def trace(ray):
+                def inner(shape, transform):
+                    trace = shape.get_trace().apply_transform(transform)
+                    return trace(ray.pt, ray.v)
+                
+                r = jax.vmap(inner)(diagram.shape, diagram.transform)
+                return tx.X.union_axis(r, axis=0)
+            return Trace(trace)
+        else:
+            return diagram.shape.get_trace().apply_transform(new_transform)
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine
@@ -112,5 +123,5 @@ class GetTrace(DiagramVisitor[Trace, Affine]):
         return diagram.diagram.accept(self, t @ diagram.transform)
 
 
-def get_trace(self: Diagram, t: Affine) -> Trace:
-    return self.accept(GetTrace(), t)
+def get_trace(self: Diagram) -> Trace:
+    return self.accept(GetTrace(), tx.X.ident)

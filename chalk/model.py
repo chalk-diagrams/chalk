@@ -70,7 +70,7 @@ def show_beside(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     envelope2 = other.get_envelope()
     v1 = envelope1.envelope_v(direction)
     one: Diagram = (
-        Path.from_points([origin, v1])
+        Path.from_points([tx.X.origin, v1])
         .stroke()
         .line_color(RED)
         .dashing([0.01, 0.01], 0)
@@ -78,7 +78,7 @@ def show_beside(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
     )
     v2 = envelope2.envelope_v(-direction)
     two: Diagram = (
-        Path.from_points([origin, v2])
+        Path.from_points([tx.X.origin, v2])
         .stroke()
         .line_color(RED)
         .dashing([0.01, 0.01], 0)
@@ -103,7 +103,7 @@ def show_beside(self: Diagram, other: Diagram, direction: V2_t) -> Diagram:
 def show_labels(self: Diagram, font_size: int = 1) -> Diagram:
     """Shows the labels of all named subdiagrams of a diagram at their
     corresponding origin."""
-    for name, subs in self.get_sub_map().items():
+    for name, subs in self.get_sub_map(tx.X.ident).items():
         for sub in subs:
             n = str(name)
             p = sub.get_location()

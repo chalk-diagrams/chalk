@@ -52,7 +52,9 @@ class Envelope(Transformable, Monoid):
         if other.is_empty:
             return self
         return Envelope(
-            lambda direction: tx.X.np.maximum(self(direction), other(direction))
+            lambda direction: tx.X.np.maximum(
+                self(direction), other(direction)
+            )
         )
 
     all_dir = tx.X.np.concatenate(
@@ -83,7 +85,7 @@ class Envelope(Transformable, Monoid):
         return d.sum()
 
     @staticmethod
-    def general_transform(t: Affine, fn) -> Envelope: # type: ignore
+    def general_transform(t: Affine, fn) -> Envelope:  # type: ignore
         rt = tx.remove_translation(t)
         inv_t = tx.inv(rt)
         trans_t = tx.transpose_translation(rt)
@@ -111,7 +113,7 @@ class Envelope(Transformable, Monoid):
         if self.is_empty:
             return self
 
-        def apply(x): # type: ignore
+        def apply(x):  # type: ignore
             return self.f(x[..., 0, :, :])[..., None]
 
         return Envelope.general_transform(t, apply)
@@ -145,22 +147,31 @@ class Envelope(Transformable, Monoid):
 
     def to_segments(self, angle: int = 45) -> V2_t:
         "Draws an envelope by sampling every 10 degrees."
-        v = tx.polar(tx.np.arange(0, 361, angle) * 1.0)
+        v = tx.polar(tx.X.np.arange(0, 361, angle) * 1.0)
         return v * self(v)[:, None, None]
 
 
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):
     A_type = Envelope
 
-    def visit_primitive(
-        self, diagram: Primitive, t: Affine
-    ) -> Envelope:
+    def visit_primitive(self, diagram: Primitive, t: Affine) -> Envelope:
+        
         new_transform = t @ diagram.transform
-        return diagram.shape.get_envelope().apply_transform(new_transform)
+        if diagram.is_multi():
+            # MultiPrimitive only work in jax mode.
+            import jax
+            def env(v):
+                def inner(shape, transform):
+                    env = shape.get_envelope().apply_transform(transform)
+                    return env(v)
+                
+                r = jax.vmap(inner)(diagram.shape, diagram.transform)
+                return r.max(0)
+            return Envelope(env)
+        else:
+            return diagram.shape.get_envelope().apply_transform(new_transform)
 
-    def visit_compose(
-        self, diagram: Compose, t: Affine
-    ) -> Envelope:
+    def visit_compose(self, diagram: Compose, t: Affine) -> Envelope:
         return diagram.envelope.apply_transform(t)
 
     def visit_apply_transform(

@@ -57,12 +57,12 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         # https://www.w3.org/TR/SVG/implnote.html#ArcConversionCenterToEndpoint
         dangle = seg.dangle
         f_A = abs(dangle) > 180
-        det: float = tx.np.linalg.det(seg.t)  # type: ignore
+        det: float = tx.X.np.linalg.det(seg.t)  # type: ignore
         f_S = det * dangle > 0
         r_x, r_y, rot, q = seg.r_x, seg.r_y, seg.rot, seg.q
 
         for i in range(q.shape[0]):
-            if tx.np.abs(dangle[i]) > 1:
+            if tx.X.np.abs(dangle[i]) > 1:
                 yield f"""
                 A {r_x[i]} {r_y[i]} {rot[i]} {int(f_A[i])} {int(f_S[i])}
                   {q[i, 0, 0]} {q[i, 1, 0]}"""
@@ -150,21 +150,22 @@ def render_svg_prims(
 
     dwg.add(outer)
     shape_renderer = ToSVGShape(dwg)
-    for diagram in prims:
-        # apply transformation
-        for i in range(diagram.transform.shape[0]):
-            style_new = diagram.style.merge(style)
-            style_svg = style_new.to_svg()
-            transform = tx_to_svg(diagram.transform)
-            inner = diagram.shape.accept(shape_renderer, style=style_new)
-            if not style_svg and not transform:
-                dwg.add(inner)
-            else:
-                if not style_svg:
-                    style_svg = ";"
-                g = dwg.g(transform=transform, style=style_svg)
-                g.add(inner)
-                dwg.add(g)
+    for p in prims:
+        for diagram in p:
+            # apply transformation
+            for i in range(diagram.transform.shape[0]):
+                style_new = diagram.style.merge(style) if diagram.style else style
+                style_svg = style_new.to_svg()
+                transform = tx_to_svg(diagram.transform)
+                inner = diagram.shape.accept(shape_renderer, style=style_new)
+                if not style_svg and not transform:
+                    dwg.add(inner)
+                else:
+                    if not style_svg:
+                        style_svg = ";"
+                    g = dwg.g(transform=transform, style=style_svg)
+                    g.add(inner)
+                    dwg.add(g)
 
 
 def prims_to_file(
@@ -202,7 +203,7 @@ def render(
     from chalk.core import layout_primitives
 
     prims, h, w = layout_primitives(self, height, width)
-    prims_to_file(prims, path, h, w) # type: ignore
+    prims_to_file(prims, path, h, w)  # type: ignore
 
     # pad = 0.05
     # envelope = self.get_envelope()

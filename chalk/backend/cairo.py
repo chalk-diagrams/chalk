@@ -61,8 +61,10 @@ class ToCairoShape(ShapeVisitor[None]):
     def visit_path(
         self,
         path: Path,
+        t: Affine,
         ctx: PyCairoContext = None,
         style: StyleHolder = EMPTY_STYLE,
+        
     ) -> None:
         if not path.loc_trails[0].trail.closed:
             style = style.merge(Style(fill_opacity_=0))
@@ -130,18 +132,20 @@ class ToCairoShape(ShapeVisitor[None]):
 
 
 def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
-    import cairo
+
     import chalk.core
 
-    #ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    # ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
     for p in prims:
-        for prim in (p if isinstance(p, chalk.core.FlatPrimitive) else [p]):
+        for prim in p:
             for i in range(prim.transform.shape[0]):
                 # apply transformation
                 matrix = tx_to_cairo(prim.transform[i : i + 1])
                 ctx.transform(matrix)
-                prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style)
+                assert prim.style is not None
+                prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style, 
+                                  t=prim.transform[i])
 
                 # undo transformation
                 matrix.invert()
@@ -179,4 +183,4 @@ def render(
     from chalk.core import layout_primitives
 
     prims, h, w = layout_primitives(self, height, width)
-    prims_to_file(prims, path, h, w) # type: ignore
+    prims_to_file(prims, path, h, w)  # type: ignore

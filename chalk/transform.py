@@ -5,39 +5,61 @@ import math
 # how to make things work with both numpy and jax
 import os
 from dataclasses import dataclass
+from types import ModuleType
 from typing import TYPE_CHECKING, Tuple, Union
 
+import numpy as onp
 from jaxtyping import Bool, Float, Int
 from typing_extensions import Self
-import numpy as onp
 
 JAX_MODE = False
-if not TYPE_CHECKING and not eval(os.environ.get("CHALK_JAX", '0')):
+import numpy as onp
+
+if not TYPE_CHECKING and not eval(os.environ.get("CHALK_JAX", "0")):
     ops = None
     import numpy as np
+
     Array = np.ndarray
     jnp = None
 else:
-    from jaxtyping import Array
     import jax.numpy as jnp
-    from jax import config, ops
+    from jax import config
+    from jaxtyping import Array
+
     JAX_MODE = True
     config.update("jax_enable_x64", True)  # type: ignore
     config.update("jax_debug_nans", True)  # type: ignore
 
 
-def set_jax_mode(v):
+def set_jax_mode(v: bool) -> None:
     global JAX_MODE
     JAX_MODE = v
 
+Affine = Float[Array, "*#B 3 3"]
+Angles = Float[Array, "*#B 2"]
+V2_t = Float[Array, "*#B 3 1"]
+P2_t = Float[Array, "*#B 3 1"]
+Scalars = Float[Array, "*#B"]
+IntLike = Union[Int[Array, "*#B"], int]
+Floating = Union[Scalars, float, int]
+Mask = Bool[Array, "*#B"]
+ColorVec = Float[Array, "#*B 3"]
+Property = Float[Array, "#*B"]
+
+TraceDistances = Tuple[Float[Array, "#B S"], Bool[Array, "#B S"]]
+
+
 class _tx:
-    np = property(lambda x: jnp if JAX_MODE else onp)
+    
+    @property
+    def np(self) -> ModuleType:
+        return jnp if JAX_MODE else onp
 
     @staticmethod
     def union(
         x: Tuple[Array, Array], y: Tuple[Array, Array]
     ) -> Tuple[Array, Array]:
-        if isinstance(x, otx.np.ndarray):
+        if isinstance(x, onp.ndarray):
             n1 = tx.np.concatenate([x[0], y[0]], axis=1)
             m = tx.np.concatenate([x[1], y[1]], axis=1)
             return n1, m
@@ -75,29 +97,41 @@ class _tx:
             # If the array is a JAX array
             return arr.at[index].set(values)
 
-    origin = property(lambda _: (onp.array if not JAX_MODE else jnp.array)([0.0, 0.0, 1.0]).reshape((1, 3, 1)))
-    unit_x = property(lambda _: (onp.array if not JAX_MODE else jnp.array)([1.0, 0.0, 0.0]).reshape((1, 3, 1)))
-    unit_y = property(lambda _: (onp.array if not JAX_MODE else jnp.array)([0.0, 1.0, 0.0]).reshape((1, 3, 1)))
-    ident = property(lambda _: (onp.array if not JAX_MODE else jnp.array)([[[1.0, 0.0, 0.0], [0., 1., 0.], [0, 0, 1]]]).reshape((1, 3, 3)))
+    def array(self, *args, **kwargs) -> Array: # type: ignore
+        return self.np.array(*args, **kwargs)
+
+    @property
+    def unit_x(self) ->  V2_t:
+        return self.array(
+            [1.0, 0.0, 0.0]
+        ).reshape((1, 3, 1))
+    
+    @property
+    def unit_y(self) ->  V2_t:
+        return self.array(
+            [0.0, 1.0, 0.0]
+        ).reshape((1, 3, 1))
+
+    @property
+    def origin(self) ->  V2_t:
+        return self.array(
+            [0.0, 0.0, 1.0]
+        ).reshape((1, 3, 1))
+
+    
+    @property
+    def ident(self) ->  V2_t:
+        return self.array(
+            [[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0, 0, 1]]]
+        ).reshape((1, 3, 3))
+
 
 tx = _tx()
 
-Affine = Float[Array, "*#B 3 3"]
-Angles = Float[Array, "*#B 2"]
-V2_t = Float[Array, "*#B 3 1"]
-P2_t = Float[Array, "*#B 3 1"]
-Scalars = Float[Array, "*#B"]
-IntLike = Union[Int[Array, "*#B"], int]
-Floating = Union[Scalars, float, int]
-Mask = Bool[Array, "*#B"]
-ColorVec = Float[Array, "#*B 3"]
-Property = Float[Array, "#*B"]
-
-TraceDistances = Tuple[Float[Array, "#B S"], Bool[Array, "#B S"]]
 
 
 def ftos(f: Floating) -> Scalars:
-    return tx.np.array(f, dtype=tx.np.double).reshape(-1)
+    return tx.array(f, dtype=tx.np.double).reshape(-1)
 
 
 def V2(x: Floating, y: Floating) -> V2_t:
@@ -147,9 +181,6 @@ def make_affine(
     x = tx.np.stack(vals, axis=-1)
     x = x.reshape(vals[0].shape + (3, 3))
     return x
-
-
-
 
 
 def dot(v1: V2_t, v2: V2_t) -> Scalars:
@@ -223,13 +254,11 @@ def to_radians(θ: Floating) -> Scalars:
 
 
 def remove_translation(aff: Affine) -> Affine:
-    # aff.at[..., :1, 2].set(0)
     index = (Ellipsis, slice(0, 1), 2)
     return tx.index_update(aff, index, 0)  # type: ignore
 
 
 def remove_linear(aff: Affine) -> Affine:
-    # aff.at[..., :2, :2].set(tx.np.eye(2))
     index = (Ellipsis, slice(0, 2), slice(0, 2))
     return tx.index_update(aff, index, tx.np.eye(2))  # type: ignore
 
@@ -303,6 +332,7 @@ class Ray:
     def point(self, len: Scalars) -> P2_t:
         return self.pt + len[..., None, None] * self.v
 
+
 @dataclass
 class BoundingBox(Transformable):
     tl: P2_t
@@ -322,8 +352,6 @@ class BoundingBox(Transformable):
     @property
     def height(self) -> Scalars:
         return (self.br - self.tl)[..., 1, 0]
-
-
 
 
 def ray_circle_intersection(
@@ -357,7 +385,7 @@ def ray_circle_intersection(
     eps = 1e-12  # rounding error tolerance
 
     mid = (((-eps <= Δ) & (Δ < eps)))[..., None]
-    mask = (Δ < -eps)[..., None] | (mid * tx.np.array([1, 0]))
+    mask = (Δ < -eps)[..., None] | (mid * tx.array([1, 0]))
 
     # Bump NaNs since they are going to me masked out.
     ret = tx.np.stack(

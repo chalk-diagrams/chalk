@@ -126,8 +126,8 @@ def arrow(length: tx.Floating, style: ArrowOpts = ArrowOpts()) -> Diagram:
             arrow = arrow.rotate(-style.trail.segments[-1].angle)
 
     return shaft._style(style.shaft_style).translate_by(
-        t * tx.unit_x
-    ) + arrow.translate_by((l_adj + t) * tx.unit_x)
+        t * tx.X.unit_x
+    ) + arrow.translate_by((l_adj + t) * tx.X.unit_x)
 
 
 def arrow_v(vec: V2_t, style: ArrowOpts = ArrowOpts()) -> Diagram:

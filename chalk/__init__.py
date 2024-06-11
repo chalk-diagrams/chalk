@@ -25,17 +25,28 @@ from chalk.transform import (
     V2,
     Affine,
     BoundingBox,
+    X,
     from_radians,
     to_radians,
-    X
 )
 from chalk.types import Diagram
+
 unit_x = X.unit_x
 unit_y = X.unit_y
 
-if eval(os.environ.get("CHALK_JAX", '0')):
+if eval(os.environ.get("CHALK_JAX", "0")):
     import chex
-    jax_type = [chalk.core.MultiPrimitive, chalk.core.FlatPrimitive, chalk.core.Primitive, chalk.style.StyleHolder, Trail, Path, Segment, chalk.trail.Located]
+
+    jax_type = [
+        #chalk.core.MultiPrimitive,
+        chalk.core.FlattenedDiagram,
+        chalk.core.Primitive,
+        chalk.style.StyleHolder,
+        Trail,
+        Path,
+        Segment,
+        chalk.trail.Located,
+    ]
     for t in jax_type:
         chex.register_dataclass_type_with_jax_tree_util(t)
 

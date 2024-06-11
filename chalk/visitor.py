@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         ApplyTransform,
         Compose,
         Empty,
+        FlatPrimitive,
         Primitive,
     )
     from chalk.monoid import Monoid
@@ -30,8 +31,8 @@ class DiagramVisitor(Generic[A, B]):
         "Primitive defaults to empty"
         return self.A_type.empty()
 
-    def visit_flat_primitive(self, diagram: FlatPrimitive, arg: B) -> A:
-        "Flab Primitive is like a primitive"
+    def visit_multi_primitive(self, diagram: MultiPrimitive, arg: B) -> A:
+        "Multi Primitive is like a primitive"
         return self.visit_primitive(diagram, arg)
 
     def visit_empty(self, diagram: Empty, arg: B) -> A:

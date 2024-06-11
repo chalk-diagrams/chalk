@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple, TypeVar
+from typing import Any, Iterator, List, Optional, Tuple, TypeVar
 
 import chalk.align
 import chalk.arrow
@@ -44,17 +44,16 @@ def set_svg_draw_height(height: int) -> None:
     global SVG_DRAW_HEIGHT
     SVG_DRAW_HEIGHT = height
 @dataclass
-class MultiPrimitive:
-    data: List[FlatPrimitive]
+class FlattenedDiagram:
+    data: List[Primitive]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Diagram]:
         return iter(self.unflatten())
 
-    def diagram(self):
-        return Compose(Envelope.empty(), 
-                       self.data)
+    def diagram(self) -> Diagram:
+        return Compose(Envelope.empty(), self.data)
 
-    def unflatten(self, no_map=False) -> List[Diagram]:
+    def unflatten(self, no_map:bool=False) -> List[Diagram]:
         from chalk.combinators import concat
 
         return [
@@ -150,12 +149,12 @@ class BaseDiagram(chalk.types.Diagram):
     scale_uniform_to_y = chalk.align.scale_uniform_to_y
     scale_uniform_to_x = chalk.align.scale_uniform_to_x
 
-    # Flatter
-    def flatten(self) -> MultiPrimitive:
+    # Flatten
+    def flatten(self) -> FlattenedDiagram:
         children = [
-            FlatPrimitive.from_primitive(d) for d in get_primitives(self)
+            d for d in get_primitives(self)
         ]
-        return MultiPrimitive(children)
+        return FlattenedDiagram(children)
 
 
     # Arrows
@@ -199,7 +198,7 @@ class BaseDiagram(chalk.types.Diagram):
     render = chalk.backend.cairo.render
     render_png = chalk.backend.cairo.render
     render_svg = chalk.backend.svg.render
-    def render_pdf(self, *args, **kwargs):
+    def render_pdf(self, *args, **kwargs) -> None:
         print("Currently PDF rendering is disabled")
         
 
@@ -244,6 +243,23 @@ class Primitive(BaseDiagram):
     shape: Shape
     style: Optional[StyleHolder]
     transform: Affine
+
+    def is_multi(self):
+        return len(self.transform.shape) > 3
+
+
+    def __iter__(self) -> Iterator[Primitive]:
+        if not self.is_multi():
+            yield self
+        else:
+            d = self
+            for i in range(self.transform.shape[0]):
+                yield Primitive(d.shape.split(i), 
+                              d.style.split(i) if d.style is not None else None, 
+                                d.transform[i])
+
+            
+
 
     @classmethod
     def from_shape(cls, shape: Shape) -> Primitive:
@@ -388,60 +404,51 @@ class Qualify(DiagramVisitor[Diagram, None]):
         )
 
 
-@dataclass
-class FlatPrimitive:
-    "A version of primitive that may be batched"
-    shape: Path
-    style: StyleHolder
-    transform: Affine
+# @dataclass
+# class MultiPrimitive:
+#     "A version of primitive that may be batched"
+#     shape: Path
+#     style: Optional[StyleHolder]
+#     transform: Affine
 
-    def __iter__(self):
-        d = self
-        return (
-            Primitive(d.shape.split(i), 
-                        d.style.split(i) if d.style is not None else None, 
-                        d.transform[i])
-            for i in range(self.transform.shape[0])
-        )
+#     def __iter__(self) -> Iterator[Primitive]:
+#         d = self
+#         return (
+#             Primitive(d.shape.split(i), 
+#                         d.style.split(i) if d.style is not None else None, 
+#                         d.transform[i])
+#             for i in range(self.transform.shape[0])
+#         )
 
-    def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
-        return visitor.visit_flat_primitive(self, args)
+#     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
+#         return visitor.visit_multi_primitive(self, args)
 
-    @staticmethod
-    def from_primitive(prim: Primitive) -> FlatPrimitive:
-        return FlatPrimitive(prim.shape, prim.style, prim.transform)
+#     @staticmethod
+#     def from_primitive(prim: Primitive) -> MultiPrimitive:
+#         assert isinstance(prim.shape, Path)
+#         return MultiPrimitive(prim.shape, prim.style, prim.transform)
 
-    def apply_transform(self, t: Affine) -> FlatPrimitive:
-        if t.shape[0] != 1:
-            return super().apply_transform(t)  # type: ignore
+#     def apply_transform(self, t: Affine) -> MultiPrimitive:
+#         if t.shape[0] != 1:
+#             return super().apply_transform(t)  # type: ignore
 
-        if hasattr(self.transform, "shape"):
-            new_transform = t @ self.transform
-        else:
-            new_transform = t
-        return FlatPrimitive(self.shape, self.style, new_transform)
+#         if hasattr(self.transform, "shape"):
+#             new_transform = t @ self.transform
+#         else:
+#             new_transform = t
+#         return MultiPrimitive(self.shape, self.style, new_transform)
 
-    def apply_style(self, other_style: StyleHolder) -> Primitive:
-        """Applies a style and returns a primitive.
-
-        Args:
-            other_style (Style): A style object.
-
-        Returns:
-            Primitive
-        """
-        return FlatPrimitive(
-            self.shape, self.style.merge(other_style) if self.style is not None else other_style, self.transform
-        )
+#     def apply_style(self, other_style: StyleHolder) -> MultiPrimitive:
+#         return MultiPrimitive(
+#             self.shape, 
+#             self.style.merge(other_style) if self.style is not None else other_style, 
+#             self.transform
+#         )
 
 
 
 def get_primitives(diagram: Diagram) -> List[Primitive]:
     return diagram.accept(ToList(), tx.X.ident).data
-
-
-
-
 
 
 def layout_primitives(

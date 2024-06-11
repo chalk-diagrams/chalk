@@ -47,7 +47,7 @@ class Subdiagram(Monoid):
     # style: Style
 
     def get_location(self) -> P2_t:
-        return self.transform @ tx.origin
+        return self.transform @ tx.X.origin
 
     def get_envelope(self) -> Envelope:
         return self.diagram.get_envelope().apply_transform(self.transform)
@@ -62,20 +62,16 @@ class Subdiagram(Monoid):
         """
         o = self.get_location()
         p, m = self.get_trace().trace_p(o, -v)
-        return tx.np.where(m, p, tx.origin)
+        return tx.X.np.where(m, p, tx.X.origin)
 
 
 class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
     A_type = Maybe[Subdiagram]
 
-    def __init__(self, name: Name, t: Affine):
+    def __init__(self, name: Name):
         self.name = name
 
-    def visit_compose(
-        self,
-        diagram: Compose,
-        t: Affine
-    ) -> Maybe[Subdiagram]:
+    def visit_compose(self, diagram: Compose, t: Affine) -> Maybe[Subdiagram]:
         for d in diagram.diagrams:
             bb = d.accept(self, t)
             if bb.data is not None:
@@ -83,16 +79,12 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
         return Maybe.empty()
 
     def visit_apply_transform(
-        self,
-        diagram: ApplyTransform,
-        t: Affine
+        self, diagram: ApplyTransform, t: Affine
     ) -> Maybe[Subdiagram]:
         return diagram.diagram.accept(self, t @ diagram.transform)
 
     def visit_apply_name(
-        self,
-        diagram: ApplyName,
-        t: Affine
+        self, diagram: ApplyName, t: Affine
     ) -> Maybe[Subdiagram]:
         if self.name == diagram.dname:
             return Maybe(Subdiagram(diagram.diagram, t))
@@ -101,7 +93,7 @@ class GetSubdiagram(DiagramVisitor[Maybe[Subdiagram], Affine]):
 
 
 def get_subdiagram(self: Diagram, name: Name) -> Optional[Subdiagram]:
-    return self.accept(GetSubdiagram(name), tx.ident).data
+    return self.accept(GetSubdiagram(name), tx.X.ident).data
 
 
 def with_names(
@@ -145,25 +137,17 @@ class GetSubMap(DiagramVisitor[SubMap, Affine]):
     A_type = SubMap
 
     def visit_apply_transform(
-        self,
-        diagram: ApplyTransform,
-        t: Affine
+        self, diagram: ApplyTransform, t: Affine
     ) -> SubMap:
         return diagram.diagram.accept(self, t * diagram.transform)
 
-    def visit_apply_name(
-        self,
-        diagram: ApplyName,
-        t: Affine
-    ) -> SubMap:
+    def visit_apply_name(self, diagram: ApplyName, t: Affine) -> SubMap:
         d1 = SubMap({diagram.dname: [Subdiagram(diagram.diagram, t)]})
         d2 = diagram.diagram.accept(self, t)
         return d1 + d2
 
 
-def get_sub_map(
-    self: Diagram, t: Affine
-) -> Dict[Name, List[Subdiagram]]:
+def get_sub_map(self: Diagram, t: Affine) -> Dict[Name, List[Subdiagram]]:
     """Retrieves all named subdiagrams in the given diagram and accumulates
     them in a dictionary (map) indexed by their name.
     """
