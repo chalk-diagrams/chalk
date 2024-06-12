@@ -275,14 +275,15 @@ class Primitive(BaseDiagram):
         return cls(shape, None, tx.X.ident)
 
     def apply_transform(self, t: Affine) -> Primitive:
-        if t.shape[0] != 1:
-            return super().apply_transform(t)  # type: ignore
 
         if hasattr(self.transform, "shape"):
             new_transform = t @ self.transform
         else:
             new_transform = t
-        return Primitive(self.shape, self.style, new_transform)
+        if t.shape[0] != 1:
+            return super().apply_transform(t)  # type: ignore
+        else:
+            return Primitive(self.shape, self.style, new_transform)
 
     def apply_style(self, other_style: StyleHolder) -> Primitive:
         """Applies a style and returns a primitive.

@@ -53,7 +53,12 @@ class _tx:
     
     @property
     def np(self) -> ModuleType:
-        return jnp if JAX_MODE else onp
+        if JAX_MODE:
+
+            import jax.numpy as jnp
+            return jnp 
+        else:
+            return onp
 
     @staticmethod
     def union(

@@ -43,7 +43,7 @@ class ToCairoShape(ShapeVisitor[None]):
             tx.to_radians(seg.angle),
             tx.to_radians(seg.dangle),
         )
-        end = seg.angle + seg.dangle
+        end = angle + dangle
 
         for i in range(q.shape[0]):
             if tx.X.np.abs(dangle[i]) < 1:
@@ -66,14 +66,13 @@ class ToCairoShape(ShapeVisitor[None]):
         style: StyleHolder = EMPTY_STYLE,
         
     ) -> None:
-        if not path.loc_trails[0].trail.closed:
-            style = style.merge(Style(fill_opacity_=0))
+
         for loc_trail in path.loc_trails:
             p = loc_trail.location
             ctx.move_to(p[0, 0, 0], p[0, 1, 0])
             segments = loc_trail.located_segments()
             self.render_segment(segments, ctx)
-            if loc_trail.trail.closed:
+            if loc_trail.trail.closed == 1:
                 ctx.close_path()
 
     def visit_latex(
@@ -150,8 +149,12 @@ def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
                 # undo transformation
                 matrix.invert()
                 ctx.transform(matrix)
+                
+                style = prim.style
+                if hasattr(prim.shape, "loc_trails") and prim.shape.loc_trails[0].trail.closed != 1:
+                    style = style.merge(Style(fill_opacity_=0))
 
-                prim.style.render(ctx)
+                style.render(ctx)
                 ctx.stroke()
 
 

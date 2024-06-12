@@ -10,16 +10,16 @@ from colour import Color
 import numpy as onp
 import optax
 
-
-
 def x(i):
     return circle(0.1 * (i+1)).translate(i, 0).fill_color(np.ones(3) * i / 6)
 
+arc_seg(V2(0, 1), 1).stroke().render("/tmp/t.png", 64)
+exit()
+
 out = jax.vmap(x)(np.arange(1, 6))
 print(out.get_trace()(P2(0, 0), V2(1, 0)))
-exit()
-# d = (rectangle(10, 2).fill_color("white") + out)
-# d.render("temp.png", 64)
+d = (rectangle(10, 2).fill_color("white") + out)
+d.render("temp.png", 64)
 
 
 seed = 1701

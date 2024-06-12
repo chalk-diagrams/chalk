@@ -165,6 +165,7 @@ class GetEnvelope(DiagramVisitor[Envelope, Affine]):
                     env = shape.get_envelope().apply_transform(transform)
                     return env(v)
                 
+
                 r = jax.vmap(inner)(diagram.shape, diagram.transform)
                 return r.max(0)
             return Envelope(env)
