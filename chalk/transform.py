@@ -387,16 +387,16 @@ def ray_circle_intersection(
     b = 2 * dot(anchor, direction)
     c = length2(anchor) - circle_radius**2
     Δ = b**2 - 4 * a * c
-    eps = 1e-12  # rounding error tolerance
+    eps = 1e-10  # rounding error tolerance
 
-    mid = (((-eps <= Δ) & (Δ < eps)))[..., None]
+    mid = (((-eps <= Δ) & (Δ < 0)))[..., None]
     mask = (Δ < -eps)[..., None] | (mid * tx.array([1, 0]))
 
     # Bump NaNs since they are going to me masked out.
     ret = tx.np.stack(
         [
-            (-b - tx.np.sqrt(Δ + 1e5 * mask[..., 0])) / (2 * a),
-            (-b + tx.np.sqrt(Δ + 1e5 * mask[..., 1])) / (2 * a),
+            (-b - tx.np.sqrt(Δ + 1e9 * mask[..., 0])) / (2 * a),
+            (-b + tx.np.sqrt(tx.np.where(mid[...,0], 0, Δ)  + 1e9 * mask[..., 1])) / (2 * a),
         ],
         -1,
     )
