@@ -35,7 +35,7 @@ setup(
         "svgwrite",
         "Pillow",
         "loguru",
-        "planar @ git+https://github.com/chalk-diagrams/planar",
+        "chalk-planar",
         "typing-extensions",
         "importlib-metadata",
     ],
