@@ -89,7 +89,7 @@ circle(0.5).fill_color(papaya) | square(1).fill_color(blue)
 which is equivalent to
 
 ```python
-circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue))
+circle(0.5).fill_color(papaya).beside(square(1).fill_color(blue), unit_x)
 ```
 
 This code produces the following image:
@@ -113,7 +113,7 @@ def sierpinski(n: int, size: int) -> Diagram:
         return triangle(size)
     else:
         smaller = sierpinski(n - 1, size / 2)
-        return smaller.above(smaller.beside(smaller).center_xy())
+        return smaller.above((smaller | smaller).center_xy())
 
 d = sierpinski(5, 4).fill_color(papaya)
 ```
