@@ -61,8 +61,8 @@ def align_bl(self: Diagram) -> Diagram:
 
 def center_xy(self: Diagram) -> Diagram:
     envelope = self.get_envelope()
-    if envelope.is_empty:
-        return self
+    # if envelope.is_empty:
+    #     return self
     t = tx.translation(-envelope.center)
     return self.apply_transform(t)
 

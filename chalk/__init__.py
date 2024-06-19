@@ -10,6 +10,7 @@ import os
 
 import chalk.align as align
 import chalk.core
+import chalk.namespace
 from chalk.align import *  # noqa: F403
 from chalk.arrow import ArrowOpts, arrow_at, arrow_between, arrow_v
 from chalk.combinators import *  # noqa: F403
@@ -17,7 +18,7 @@ from chalk.core import set_svg_draw_height, set_svg_height
 from chalk.envelope import Envelope
 from chalk.monoid import Maybe, MList, Monoid
 from chalk.shapes import *  # noqa: F403
-from chalk.style import Style
+from chalk.style import Style, to_color
 from chalk.subdiagram import Name
 from chalk.trail import Trail
 from chalk.transform import (
@@ -38,14 +39,16 @@ if eval(os.environ.get("CHALK_JAX", "0")):
     import chex
 
     jax_type = [
-        #chalk.core.MultiPrimitive,
         chalk.core.FlattenedDiagram,
         chalk.core.Primitive,
+        chalk.core.Compose,
+        chalk.core.Envelope,
         chalk.style.StyleHolder,
-        Trail,
-        Path,
-        Segment,
+        chalk.shapes.Trail,
+        chalk.shapes.Path,
+        chalk.shapes.Segment,
         chalk.trail.Located,
+        chalk.shapes.Spacer,
     ]
     for t in jax_type:
         chex.register_dataclass_type_with_jax_tree_util(t)

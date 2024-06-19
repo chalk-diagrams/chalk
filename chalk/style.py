@@ -7,8 +7,9 @@ from typing import Any, List, Optional, Union
 from colour import Color
 from typing_extensions import Self
 
-from chalk.transform import ColorVec, Mask, Property, Scalars
 import chalk.transform as tx
+from chalk.transform import ColorVec, Mask, Property, Scalars
+
 PyCairoContext = Any
 PyLatex = Any
 
@@ -18,9 +19,9 @@ ColorLike = Union[str, Color, ColorVec]
 
 def to_color(c: ColorLike) -> ColorVec:
     if isinstance(c, str):
-        return tx.X.array(Color(c).rgb)
+        return tx.X.np.asarray(Color(c).rgb)
     elif isinstance(c, Color):
-        return tx.X.array(c.rgb)
+        return tx.X.np.asarray(c.rgb)
     return c
 
 
@@ -40,12 +41,12 @@ STYLE_LOCATIONS = {
 
 DEFAULTS = {
     "fill_color": to_color(LC),
-    "fill_opacity": tx.X.array(1.0),
+    "fill_opacity": tx.X.np.asarray(1.0),
     "line_color": to_color(LC),
-    "line_opacity": tx.X.array(1.0),
-    "line_width": tx.X.array(LW),
-    "output_size": tx.X.array(200.0),
-    "dashing": tx.X.array(0),
+    "line_opacity": tx.X.np.asarray(1.0),
+    "line_width": tx.X.np.asarray(LW),
+    "output_size": tx.X.np.asarray(200.0),
+    "dashing": tx.X.np.asarray(0),
 }
 STYLE_SIZE = 12
 

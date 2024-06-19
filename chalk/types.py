@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Protocol, Tuple
 
 import chalk.transform as tx
-from chalk.envelope import Envelope
+
 from chalk.monoid import Monoid
 from chalk.style import Stylable, StyleHolder
-from chalk.trace import Trace
+
 from chalk.transform import P2_t, V2_t
 
 if TYPE_CHECKING:
+    from chalk.core import Primitive
     from chalk.path import Path
+    from chalk.envelope import Envelope
+    from chalk.trace import Trace
     from chalk.subdiagram import Name, Subdiagram
     from chalk.trail import Located, Trail
-    from chalk.visitor import A, DiagramVisitor, ShapeVisitor
+    from chalk.visitor import A, C, DiagramVisitor, ShapeVisitor
 
 
 class Enveloped(Protocol):
@@ -25,7 +28,7 @@ class Traceable(Protocol):
 
 
 class Shape(Enveloped, Traceable, Protocol):
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A: ...
+    def accept(self, visitor: ShapeVisitor[C], **kwargs: Any) -> C: ...
 
 
 class TrailLike(Protocol):
@@ -160,3 +163,10 @@ class Diagram(Enveloped, Traceable, Stylable, tx.Transformable, Monoid):
     def accept(  # type: ignore[empty-body]
         self, visitor: DiagramVisitor[A, Any], args: Any
     ) -> A: ...
+
+    def get_primitives(self # type: ignore[empty-body]
+                       ) -> List[Primitive]: ... 
+
+    def layout( # type: ignore[empty-body]
+        self, height: tx.IntLike, width: Optional[tx.IntLike] = None
+    ) -> Tuple[List[Primitive], tx.IntLike, tx.IntLike]: ...

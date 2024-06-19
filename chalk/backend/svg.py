@@ -120,11 +120,11 @@ class ToSVGShape(ShapeVisitor[BaseElement]):
         self, shape: ArrowHead, style: StyleHolder = EMPTY_STYLE
     ) -> BaseElement:
         assert style.output_size
-        from chalk.core import get_primitives
+
 
         scale = 0.01 * (15 / 500) * style.output_size
         return render_svg_prims(
-            get_primitives(shape.arrow_shape.scale(scale)), self.dwg, style
+            shape.arrow_shape.scale(scale).get_primitives(), self.dwg, style
         )
 
     def visit_image(
@@ -154,7 +154,9 @@ def render_svg_prims(
         for diagram in p:
             # apply transformation
             for i in range(diagram.transform.shape[0]):
-                style_new = diagram.style.merge(style) if diagram.style else style
+                style_new = (
+                    diagram.style.merge(style) if diagram.style else style
+                )
                 style_svg = style_new.to_svg()
                 transform = tx_to_svg(diagram.transform)
                 inner = diagram.shape.accept(shape_renderer, style=style_new)
@@ -200,9 +202,8 @@ def render(
                                                line width.
 
     """
-    from chalk.core import layout_primitives
 
-    prims, h, w = layout_primitives(self, height, width)
+    prims, h, w = self.layout(height, width)
     prims_to_file(prims, path, h, w)  # type: ignore
 
     # pad = 0.05

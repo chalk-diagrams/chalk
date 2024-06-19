@@ -12,13 +12,13 @@ import chalk.backend.svg
 import chalk.backend.tikz
 import chalk.combinators
 import chalk.model
+from chalk.shapes.path import Path
 import chalk.subdiagram
 import chalk.trace
 import chalk.transform as tx
 import chalk.types
 from chalk.envelope import Envelope
 from chalk.monoid import MList
-from chalk.shapes.path import Path
 from chalk.style import StyleHolder
 from chalk.subdiagram import Name
 from chalk.transform import Affine
@@ -43,6 +43,8 @@ def set_svg_draw_height(height: int) -> None:
     "Globally set the svg preview height for notebooks."
     global SVG_DRAW_HEIGHT
     SVG_DRAW_HEIGHT = height
+
+
 @dataclass
 class FlattenedDiagram:
     data: List[Primitive]
@@ -51,22 +53,29 @@ class FlattenedDiagram:
         return iter(self.unflatten())
 
     def diagram(self) -> Diagram:
-        return Compose(Envelope.empty(), self.data)
+        return Compose(Envelope.empty(), [d for d in self.data])
 
-    def unflatten(self, no_map:bool=False) -> List[Diagram]:
+    def unflatten(self, no_map: bool = False) -> List[Diagram]:
         from chalk.combinators import concat
 
         return [
             concat(
                 [
-                    Primitive(d.shape.split(i) if not no_map else d.shape, 
-                              (d.style.split(i) if not no_map else d.style) if d.style is not None else None, 
-                              d.transform[i] if not no_map else d.transform)
+                    Primitive(
+                        d.shape.split(i) if isinstance(d.shape, Path) and not no_map else d.shape,
+                        (
+                            (d.style.split(i) if not no_map else d.style)
+                            if d.style is not None
+                            else None
+                        ),
+                        d.transform[i] if not no_map else d.transform,
+                    )
                     for d in self.data
                 ]
             )
             for i in range(self.data[0].transform.shape[0])
         ]
+
 
 @dataclass
 class BaseDiagram(chalk.types.Diagram):
@@ -99,7 +108,7 @@ class BaseDiagram(chalk.types.Diagram):
         return self.apply_style(style)
 
     def compose(
-        self, envelope: Envelope, other: Optional[Diagram] = None
+        self, envelope: Optional[Envelope]=None, other: Optional[Diagram] = None
     ) -> Diagram:
         if other is None and isinstance(self, Compose):
             return Compose(envelope, self.diagrams)
@@ -151,11 +160,8 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Flatten
     def flatten(self) -> FlattenedDiagram:
-        children = [
-            d for d in get_primitives(self)
-        ]
+        children = [d for d in self.get_primitives()]
         return FlattenedDiagram(children)
-
 
     # Arrows
     connect = chalk.arrow.connect
@@ -171,6 +177,10 @@ class BaseDiagram(chalk.types.Diagram):
     # Combinators
     frame = chalk.combinators.frame
     pad = chalk.combinators.pad
+
+    def __getitem__(self, key):
+        import jax
+        return jax.tree.map(lambda x: x[key], self)
 
     # Infix
     def __or__(self, d: Diagram) -> Diagram:
@@ -198,9 +208,9 @@ class BaseDiagram(chalk.types.Diagram):
     render = chalk.backend.cairo.render
     render_png = chalk.backend.cairo.render
     render_svg = chalk.backend.svg.render
-    def render_pdf(self, *args, **kwargs) -> None:
+
+    def render_pdf(self, *args, **kwargs) -> None: # type: ignore
         print("Currently PDF rendering is disabled")
-        
 
     def _repr_svg_(self) -> str:
         global SVG_HEIGHT
@@ -230,6 +240,40 @@ class BaseDiagram(chalk.types.Diagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         raise NotImplementedError
 
+    def get_primitives(self) -> List[Primitive]:
+        return self.accept(ToList(), tx.X.ident).data
+
+    def layout(
+        self, height: tx.IntLike = 128, width: Optional[tx.IntLike] = None
+    ) -> Tuple[List[Primitive], tx.IntLike, tx.IntLike]:
+        envelope = self.get_envelope()
+        assert envelope is not None
+
+        pad = 0.05
+
+        # infer width to preserve aspect ratio
+        if width is None:
+            width = tx.X.np.round(
+                height * envelope.width / envelope.height
+            ).astype(int)
+        else:
+            width = width
+        assert width is not None
+        # determine scale to fit the largest axis in the target frame size
+        α = tx.X.np.where(
+            envelope.width - width <= envelope.height - height,
+            height / ((1 + pad) * envelope.height),
+            width / ((1 + pad) * envelope.width),
+        )
+
+        s = self.scale(α).center_xy().pad(1 + pad)
+        e = s.get_envelope()
+        assert e is not None
+        s = s.translate(e(-tx.X.unit_x), e(-tx.X.unit_y))
+        style = StyleHolder.root(tx.X.np.maximum(width, height))
+        s = s._style(style)
+        return s.get_primitives(), height, width
+
 
 @dataclass
 class Primitive(BaseDiagram):
@@ -244,9 +288,12 @@ class Primitive(BaseDiagram):
     style: Optional[StyleHolder]
     transform: Affine
 
-    def is_multi(self):
-        return len(self.transform.shape) > 3
+    @property
+    def size(self) -> Tuple[int]:
+        return self.transform.shape[:-3]
 
+    def is_multi(self) -> bool:
+        return len(self.size) > 0
 
     def __iter__(self) -> Iterator[Primitive]:
         if not self.is_multi():
@@ -254,12 +301,12 @@ class Primitive(BaseDiagram):
         else:
             d = self
             for i in range(self.transform.shape[0]):
-                yield Primitive(d.shape.split(i), 
-                              d.style.split(i) if d.style is not None else None, 
-                                d.transform[i])
-
-            
-
+                assert isinstance(d.shape, Path)
+                yield Primitive(
+                    d.shape.split(i),
+                    d.style.split(i) if d.style is not None else None,
+                    d.transform[i],
+                )
 
     @classmethod
     def from_shape(cls, shape: Shape) -> Primitive:
@@ -295,7 +342,13 @@ class Primitive(BaseDiagram):
             Primitive
         """
         return Primitive(
-            self.shape, self.style.merge(other_style) if self.style is not None else other_style, self.transform
+            self.shape,
+            (
+                self.style.merge(other_style)
+                if self.style is not None
+                else other_style
+            ),
+            self.transform,
         )
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
@@ -320,7 +373,7 @@ class Empty(BaseDiagram):
 class Compose(BaseDiagram):
     """Compose class."""
 
-    envelope: Envelope
+    envelope: Optional[Envelope]
     diagrams: List[Diagram]
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
@@ -415,8 +468,8 @@ class Qualify(DiagramVisitor[Diagram, None]):
 #     def __iter__(self) -> Iterator[Primitive]:
 #         d = self
 #         return (
-#             Primitive(d.shape.split(i), 
-#                         d.style.split(i) if d.style is not None else None, 
+#             Primitive(d.shape.split(i),
+#                         d.style.split(i) if d.style is not None else None,
 #                         d.transform[i])
 #             for i in range(self.transform.shape[0])
 #         )
@@ -441,47 +494,10 @@ class Qualify(DiagramVisitor[Diagram, None]):
 
 #     def apply_style(self, other_style: StyleHolder) -> MultiPrimitive:
 #         return MultiPrimitive(
-#             self.shape, 
-#             self.style.merge(other_style) if self.style is not None else other_style, 
+#             self.shape,
+#             self.style.merge(other_style) if self.style is not None else other_style,
 #             self.transform
 #         )
-
-
-
-def get_primitives(diagram: Diagram) -> List[Primitive]:
-    return diagram.accept(ToList(), tx.X.ident).data
-
-
-def layout_primitives(
-    self: Diagram, height: tx.IntLike = 128, width: Optional[tx.IntLike] = None
-) -> Tuple[List[Primitive], tx.IntLike, tx.IntLike]:
-    envelope = self.get_envelope()
-    assert envelope is not None
-
-    pad = 0.05
-
-    # infer width to preserve aspect ratio
-    if width is None:
-        width = tx.X.np.round(height * envelope.width / envelope.height).astype(
-            int
-        )
-    else:
-        width = width
-    assert width is not None
-    # determine scale to fit the largest axis in the target frame size
-    α = tx.X.np.where(
-        envelope.width - width <= envelope.height - height,
-        height / ((1 + pad) * envelope.height),
-        width / ((1 + pad) * envelope.width),
-    )
-
-    s = self.scale(α).center_xy().pad(1 + pad)
-    e = s.get_envelope()
-    assert e is not None
-    s = s.translate(e(-tx.X.unit_x), e(-tx.X.unit_y))
-    style = StyleHolder.root(tx.X.np.maximum(width, height))
-    s = s._style(style)
-    return get_primitives(s), height, width
 
 
 class ToList(DiagramVisitor[MList[Primitive], Affine]):

@@ -8,17 +8,20 @@ from dataclasses import dataclass
 from types import ModuleType
 from typing import TYPE_CHECKING, Tuple, Union
 
-import numpy as onp
 from jaxtyping import Bool, Float, Int
 from typing_extensions import Self
+import array_api_compat.numpy as onp
+if TYPE_CHECKING:
+    from chalk.namespace import _ArrayAPINameSpace
+else:
+    import numpy.array_api as _ArrayAPINameSpace
+
 
 JAX_MODE = False
-import numpy as onp
 
 if not TYPE_CHECKING and not eval(os.environ.get("CHALK_JAX", "0")):
     ops = None
     import numpy as np
-
     Array = np.ndarray
     jnp = None
 else:
@@ -35,6 +38,7 @@ def set_jax_mode(v: bool) -> None:
     global JAX_MODE
     JAX_MODE = v
 
+
 Affine = Float[Array, "*#B 3 3"]
 Angles = Float[Array, "*#B 2"]
 V2_t = Float[Array, "*#B 3 1"]
@@ -49,16 +53,19 @@ Property = Float[Array, "#*B"]
 TraceDistances = Tuple[Float[Array, "#B S"], Bool[Array, "#B S"]]
 
 
+
+
 class _tx:
-    
+
     @property
-    def np(self) -> ModuleType:
+    def np(self) -> type[_ArrayAPINameSpace]:
         if JAX_MODE:
 
             import jax.numpy as jnp
-            return jnp 
+
+            return jnp # type: ignore
         else:
-            return onp
+            return onp # type: ignore
 
     @staticmethod
     def union(
@@ -102,31 +109,21 @@ class _tx:
             # If the array is a JAX array
             return arr.at[index].set(values)
 
-    def array(self, *args, **kwargs) -> Array: # type: ignore
-        return self.np.array(*args, **kwargs)
+    @property
+    def unit_x(self) -> V2_t:
+        return self.np.asarray([1.0, 0.0, 0.0]).reshape((1, 3, 1))
 
     @property
-    def unit_x(self) ->  V2_t:
-        return self.array(
-            [1.0, 0.0, 0.0]
-        ).reshape((1, 3, 1))
-    
-    @property
-    def unit_y(self) ->  V2_t:
-        return self.array(
-            [0.0, 1.0, 0.0]
-        ).reshape((1, 3, 1))
+    def unit_y(self) -> V2_t:
+        return self.np.asarray([0.0, 1.0, 0.0]).reshape((1, 3, 1))
 
     @property
-    def origin(self) ->  V2_t:
-        return self.array(
-            [0.0, 0.0, 1.0]
-        ).reshape((1, 3, 1))
+    def origin(self) -> V2_t:
+        return self.np.asarray([0.0, 0.0, 1.0]).reshape((1, 3, 1))
 
-    
     @property
-    def ident(self) ->  V2_t:
-        return self.array(
+    def ident(self) -> V2_t:
+        return self.np.asarray(
             [[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0, 0, 1]]]
         ).reshape((1, 3, 3))
 
@@ -134,9 +131,8 @@ class _tx:
 tx = _tx()
 
 
-
 def ftos(f: Floating) -> Scalars:
-    return tx.array(f, dtype=tx.np.double).reshape(-1)
+    return tx.np.asarray(f, dtype=tx.np.double).reshape(-1)
 
 
 def V2(x: Floating, y: Floating) -> V2_t:
@@ -166,7 +162,7 @@ def angle(v: P2_t) -> Scalars:
 
 
 def rad(v: P2_t) -> Scalars:
-    return tx.np.arctan2(v[..., 1, 0], v[..., 0, 0])
+    return tx.np.atan2(v[..., 1, 0], v[..., 0, 0])
 
 
 def perpendicular(v: V2_t) -> V2_t:
@@ -270,7 +266,8 @@ def remove_linear(aff: Affine) -> Affine:
 
 def transpose_translation(aff: Affine) -> Affine:
     index = (Ellipsis, slice(0, 2), slice(0, 2))
-    return tx.index_update(aff, index, aff[..., :2, :2].swapaxes(-1, -2))  # type: ignore
+    swap = aff[..., :2, :2].swapaxes(-1, -2)
+    return tx.index_update(aff, index, swap)  # type: ignore
 
 
 class Transformable:
@@ -390,13 +387,19 @@ def ray_circle_intersection(
     eps = 1e-10  # rounding error tolerance
 
     mid = (((-eps <= Δ) & (Δ < 0)))[..., None]
-    mask = (Δ < -eps)[..., None] | (mid * tx.array([1, 0]))
+    mask = (Δ < -eps)[..., None] | (mid * tx.np.asarray([1, 0]))
 
     # Bump NaNs since they are going to me masked out.
     ret = tx.np.stack(
         [
             (-b - tx.np.sqrt(Δ + 1e9 * mask[..., 0])) / (2 * a),
-            (-b + tx.np.sqrt(tx.np.where(mid[...,0], 0, Δ)  + 1e9 * mask[..., 1])) / (2 * a),
+            (
+                -b
+                + tx.np.sqrt(
+                    tx.np.where(mid[..., 0], 0, Δ) + 1e9 * mask[..., 1]
+                )
+            )
+            / (2 * a),
         ],
         -1,
     )

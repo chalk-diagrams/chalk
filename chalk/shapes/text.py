@@ -5,7 +5,7 @@ import chalk.transform as tx
 from chalk.shapes.shape import Shape
 from chalk.transform import P2, BoundingBox
 from chalk.types import Diagram
-from chalk.visitor import A, ShapeVisitor
+from chalk.visitor import C, ShapeVisitor
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Text(Shape):
         self.bb = BoundingBox(tx.X.origin, tx.X.origin + P2(eps, eps))
         return self.bb
 
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+    def accept(self, visitor: ShapeVisitor[C], **kwargs: Any) -> C:
         return visitor.visit_text(self, **kwargs)
 
 

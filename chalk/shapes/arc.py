@@ -9,18 +9,18 @@ from typing import TYPE_CHECKING, Tuple
 
 import chalk.transform as tx
 from chalk.transform import Affine, Angles, P2_t, Scalars, V2_t
-from chalk.types import TrailLike
+#from chalk.types import TrailLike
 
 if TYPE_CHECKING:
 
     from jaxtyping import Array, Bool, Float
-
     from chalk.trail import Trail
+
 Degrees = tx.Scalars
 
 
 @dataclass
-class Segment(TrailLike):
+class Segment:
     "A batch of ellipse arcs with starting angle and the delta."
     transform: Affine
     angles: Angles
@@ -113,8 +113,8 @@ def arc_between(p: P2_t, q: P2_t, height: tx.Scalars) -> Segment:
     flip = tx.X.np.where(bl, 1, -1)
 
     diff = q - p
-    angles = tx.X.array(
-        [flip * -tx.from_radians(θ), flip * 2 * tx.from_radians(θ)], float
+    angles = tx.X.np.asarray(
+        [flip * -tx.from_radians(θ), flip * 2 * tx.from_radians(θ)]
     ).reshape(1, 2)
     ret = (
         tx.translation(p)
@@ -180,7 +180,7 @@ def arc_seg(q: V2_t, height: tx.Floating) -> Trail:
 def arc_seg_angle(angle: tx.Floating, dangle: tx.Floating) -> Trail:
     arc_p = tx.to_point(tx.polar(angle))
     return Segment(
-        tx.translation(-arc_p), tx.X.array([angle, dangle], float)
+        tx.translation(-arc_p), tx.X.np.asarray([angle, dangle])
     ).to_trail()
 
 

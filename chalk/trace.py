@@ -12,13 +12,14 @@ from chalk.transform import (
     Transformable,
     V2_t,
 )
+
 from chalk.visitor import DiagramVisitor
 
 if TYPE_CHECKING:
 
     from chalk.core import ApplyTransform, Primitive
     from chalk.types import Diagram
-
+    from chalk.types import Traceable
 
 class Trace(Monoid, Transformable):
     def __init__(self, f: Callable[[Ray], TraceDistances]) -> None:
@@ -34,7 +35,7 @@ class Trace(Monoid, Transformable):
     # Monoid
     @classmethod
     def empty(cls) -> Trace:
-        return cls(lambda _: (tx.X.np.array([]), tx.X.np.array([])))
+        return cls(lambda _: (tx.X.np.asarray([]), tx.X.np.asarray([])))
 
     def __add__(self, other: Trace) -> Trace:
         return Trace(lambda ray: tx.X.union(self.f(ray), other.f(ray)))
@@ -106,13 +107,15 @@ class GetTrace(DiagramVisitor[Trace, Affine]):
         if diagram.is_multi():
             # MultiPrimitive only work in jax mode.
             import jax
-            def trace(ray):
-                def inner(shape, transform):
+
+            def trace(ray: Ray) -> TraceDistances:
+                def inner(shape : Traceable, transform: Affine) -> TraceDistances: 
                     trace = shape.get_trace().apply_transform(transform)
                     return trace(ray.pt, ray.v)
-                
+
                 r = jax.vmap(inner)(diagram.shape, diagram.transform)
                 return tx.X.union_axis(r, axis=0)
+
             return Trace(trace)
         else:
             return diagram.shape.get_trace().apply_transform(new_transform)

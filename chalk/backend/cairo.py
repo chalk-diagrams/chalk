@@ -61,10 +61,8 @@ class ToCairoShape(ShapeVisitor[None]):
     def visit_path(
         self,
         path: Path,
-        t: Affine,
         ctx: PyCairoContext = None,
         style: StyleHolder = EMPTY_STYLE,
-        
     ) -> None:
 
         for loc_trail in path.loc_trails:
@@ -111,11 +109,11 @@ class ToCairoShape(ShapeVisitor[None]):
         ctx: PyCairoContext = None,
         style: StyleHolder = EMPTY_STYLE,
     ) -> None:
-        from chalk.core import get_primitives
+
 
         assert style.output_size
         scale = 0.01 * (15 / 500) * style.output_size
-        render_cairo_prims(get_primitives(shape.arrow_shape.scale(scale)), ctx)
+        render_cairo_prims(shape.arrow_shape.scale(scale).get_primitives(), ctx)
 
     def visit_image(
         self,
@@ -130,11 +128,23 @@ class ToCairoShape(ShapeVisitor[None]):
         ctx.paint()
 
 
-def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
+def render_cairo_prims(
+    prims: List[Primitive], ctx: PyCairoContext, even_odd: bool =False
+) -> None:
 
-    import chalk.core
+    undo = False
+    import cairo
 
-    # ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
+    if tx.JAX_MODE:
+        undo = True
+        import jax
+        import numpy as onp
+
+        prims = jax.tree.map(onp.asarray, prims)
+        tx.set_jax_mode(False)
+
+    if even_odd:
+        ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
     for p in prims:
         for prim in p:
@@ -143,29 +153,37 @@ def render_cairo_prims(prims: List[Primitive], ctx: PyCairoContext) -> None:
                 matrix = tx_to_cairo(prim.transform[i : i + 1])
                 ctx.transform(matrix)
                 assert prim.style is not None
-                prim.shape.accept(shape_renderer, ctx=ctx, style=prim.style, 
-                                  t=prim.transform[i])
+                ps: StyleHolder = prim.style
+                prim.shape.accept(shape_renderer, ctx=ctx, style=ps)
 
                 # undo transformation
                 matrix.invert()
                 ctx.transform(matrix)
-                
-                style = prim.style
-                if hasattr(prim.shape, "loc_trails") and prim.shape.loc_trails[0].trail.closed != 1:
-                    style = style.merge(Style(fill_opacity_=0))
 
+                style = ps
+                if (
+                    hasattr(prim.shape, "loc_trails")
+                    and prim.shape.loc_trails[0].trail.closed != 1
+                ):
+                    style = style.merge(Style(fill_opacity_=0))
                 style.render(ctx)
                 ctx.stroke()
+    if undo:
+        tx.set_jax_mode(True)
 
 
 def prims_to_file(
-    prims: List[Primitive], path: str, height: float, width: float
+    prims: List[Primitive],
+    path: str,
+    height: float,
+    width: float,
+    even_odd: bool=False,
 ) -> None:
     import cairo
 
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(width), int(height))
     ctx = cairo.Context(surface)
-    render_cairo_prims(prims, ctx)
+    render_cairo_prims(prims, ctx, even_odd)
     surface.write_to_png(path)
 
 
@@ -183,7 +201,5 @@ def render(
                                          Defaults to None.
     """
 
-    from chalk.core import layout_primitives
-
-    prims, h, w = layout_primitives(self, height, width)
+    prims, h, w = self.layout(height, width)
     prims_to_file(prims, path, h, w)  # type: ignore

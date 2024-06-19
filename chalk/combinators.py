@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple, Union
 
 import chalk.transform as tx
 from chalk.envelope import Envelope
@@ -42,12 +42,12 @@ def pad(self: Diagram, extra: Floating) -> Diagram:
     """
     envelope = self.get_envelope()
 
-    def f(d: V2_t) -> Scalars:
-        assert envelope is not None
-        return envelope(d) * extra
+    # def f(d: V2_t) -> Scalars:
+    #     assert envelope is not None
+    #     return envelope(d) * extra
 
-    new_envelope = Envelope(f, envelope.is_empty)
-    return self.compose(new_envelope)
+    # new_envelope = Envelope(f, envelope.is_empty)
+    return self#.compose(new_envelope)
 
 
 def frame(self: Diagram, extra: Floating) -> Diagram:
@@ -75,10 +75,10 @@ def frame(self: Diagram, extra: Floating) -> Diagram:
 
 
 def atop(self: Diagram, other: Diagram) -> Diagram:
-    envelope1 = self.get_envelope()
-    envelope2 = other.get_envelope()
-    new_envelope = envelope1 + envelope2
-    return self.compose(new_envelope, other)
+    # envelope1 = self.get_envelope()
+    # envelope2 = other.get_envelope()
+    # new_envelope = envelope1 + envelope2
+    return self.compose(None, other)
 
 
 # beneath
@@ -104,22 +104,35 @@ def place_at(
 def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
     return concat(d.translate_by(p) for d, p in zip(diagrams, path.points()))
 
-
-# position, atPoints
+Cat = Union[Iterable[Diagram], Diagram]
 def cat(
-    diagrams: Iterable[Diagram], v: V2_t, sep: Optional[Floating] = None
+    diagram: Cat, v: V2_t, sep: Optional[Floating] = None, axis=0
 ) -> Diagram:
+    if isinstance(diagram, Diagram):
+        assert diagram.is_multi()
+        import jax
+        from functools import partial
+        def fn(a: Diagram, b: Diagram) -> Diagram:
+            @partial(jax.vmap, in_axes=axis, out_axes=axis)
+            def merge(a, b):
+                new = a.juxtapose(b, v)
+                if sep is not None:
+                    return new.translate_by(v * sep)
+                return new
+            return merge(a, b)
+        return jax.lax.associative_scan(fn, diagram, axis=axis)
 
-    diagrams = iter(diagrams)
-    start = next(diagrams, None)
-    sep_dia = hstrut(sep).rotate(tx.angle(v))
-    if start is None:
-        return empty()
+    else:
+        diagrams = iter(diagram)
+        start = next(diagrams, None)
+        sep_dia = hstrut(sep).rotate(tx.angle(v))
+        if start is None:
+            return empty()
 
-    def fn(a: Diagram, b: Diagram) -> Diagram:
-        return a.beside(sep_dia, v).beside(b, v)
+        def fn(a: Diagram, b: Diagram) -> Diagram:
+            return a.beside(sep_dia, v).beside(b, v)
 
-    return fn(start, associative_reduce(fn, diagrams, empty()))
+        return fn(start, associative_reduce(fn, diagrams, empty()))
 
 
 def concat(diagrams: Iterable[Diagram]) -> Diagram:
@@ -167,7 +180,7 @@ def vstrut(height: Optional[Floating]) -> Diagram:
 
 
 def hcat(
-    diagrams: Iterable[Diagram], sep: Optional[Floating] = None
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None, axis=0
 ) -> Diagram:
     """
     Stack diagrams next to each other with `besides`.
@@ -180,11 +193,11 @@ def hcat(
         Diagram: New diagram
 
     """
-    return cat(diagrams, tx.X.unit_x, sep)
+    return cat(diagrams, tx.X.unit_x, sep, axis=axis)
 
 
 def vcat(
-    diagrams: Iterable[Diagram], sep: Optional[Floating] = None
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None, axis=0
 ) -> Diagram:
     """
     Stack diagrams above each other with `above`.
@@ -197,7 +210,7 @@ def vcat(
         Diagrams
 
     """
-    return cat(diagrams, tx.X.unit_y, sep)
+    return cat(diagrams, tx.X.unit_y, sep, axis=axis)
 
 
 # Extra

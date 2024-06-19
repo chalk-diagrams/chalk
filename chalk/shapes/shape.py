@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from typing import Any
 
 import chalk.transform as tx
-from chalk.envelope import Envelope
+# from chalk.envelope import Envelope
 from chalk.trace import Trace
 from chalk.trail import Trail
 from chalk.transform import BoundingBox
 from chalk.types import Diagram
-from chalk.visitor import A, ShapeVisitor
+from chalk.visitor import C, ShapeVisitor
 
 
 @dataclass
@@ -19,8 +19,8 @@ class Shape:
     def get_bounding_box(self) -> BoundingBox:
         raise NotImplementedError
 
-    def get_envelope(self) -> Envelope:
-        return Envelope.from_bounding_box(self.get_bounding_box())
+    # def get_envelope(self) -> Envelope:
+    #     return Envelope.from_bounding_box(self.get_bounding_box())
 
     def get_trace(self) -> Trace:
         box = self.get_bounding_box()
@@ -31,7 +31,7 @@ class Shape:
             .get_trace()
         )
 
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+    def accept(self, visitor: ShapeVisitor[C], **kwargs: Any) -> C:
         raise NotImplementedError
 
     def stroke(self) -> Diagram:
@@ -59,5 +59,5 @@ class Spacer(Shape):
         br = tx.P2(left + self.width, top + self.height)
         return BoundingBox(tl, br)
 
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+    def accept(self, visitor: ShapeVisitor[C], **kwargs: Any) -> C:
         return visitor.visit_spacer(self, **kwargs)

@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from typing import Any, Iterable, List, Tuple
 
 from chalk import transform as tx
-from chalk.envelope import Envelope
+# from chalk.envelope import Envelope
 from chalk.shapes.shape import Shape
 from chalk.trace import Trace
 from chalk.trail import Located, Trail
 from chalk.transform import P2_t, Transformable
 from chalk.types import Diagram, Enveloped, Traceable
-from chalk.visitor import A, ShapeVisitor
+from chalk.visitor import C, ShapeVisitor
 
 
 def make_path(
@@ -51,13 +51,13 @@ class Path(Shape, Enveloped, Traceable, Transformable):
     #             for loc in self.loc_trails
     #             for i, pt in enumerate(loc.points()) ]
 
-    def get_envelope(self) -> Envelope:
-        return Envelope.concat((loc.get_envelope() for loc in self.loc_trails))
+    def envelope(self, t) -> Scalars:
+        return max((loc.envelope(t) for loc in self.loc_trails))
 
     def get_trace(self) -> Trace:
         return Trace.concat((loc.get_trace() for loc in self.loc_trails))
 
-    def accept(self, visitor: ShapeVisitor[A], **kwargs: Any) -> A:
+    def accept(self, visitor: ShapeVisitor[C], **kwargs: Any) -> C:
         return visitor.visit_path(self, **kwargs)
 
     # Constructors

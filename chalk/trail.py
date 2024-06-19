@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List
 
 import chalk.shapes.arc as arc
 import chalk.transform as tx
-from chalk.envelope import Envelope
+# from chalk.envelope import Envelope
 from chalk.monoid import Monoid
 from chalk.shapes.arc import Segment
 from chalk.trace import Trace
@@ -33,10 +33,11 @@ class Located(Enveloped, Traceable, Transformable):
     def points(self) -> P2_t:
         return self.trail.points() + self.location
 
-    def get_envelope(self) -> Envelope:
+    def envelope(self, t):
+        import chalk.envelope
         s = self.located_segments()
-        t = s.transform
-        return Envelope.general_transform(t, lambda x: arc.arc_envelope(s, x))
+        trans = s.transform
+        return chalk.envelope.Envelope.general_transform(trans, lambda x: arc.arc_envelope(s, x))(t)
 
     def get_trace(self) -> Trace:
         s = self.located_segments()
@@ -47,8 +48,10 @@ class Located(Enveloped, Traceable, Transformable):
         return self.to_path().stroke()
 
     def apply_transform(self, t: Affine) -> Located:
-        return Located(self.trail.apply_transform(tx.remove_translation(t)), 
-                       t @ self.location)
+        return Located(
+            self.trail.apply_transform(tx.remove_translation(t)),
+            t @ self.location,
+        )
 
     def to_path(self) -> Path:
         from chalk.shapes.path import Path
@@ -60,7 +63,7 @@ class Located(Enveloped, Traceable, Transformable):
 class Trail(Monoid, Transformable, TrailLike):
     segments: Segment
 
-    closed: tx.Mask = field(default_factory=lambda: tx.X.np.array(False))
+    closed: tx.Mask = field(default_factory=lambda: tx.X.np.asarray(False))
 
     def split(self, i: int) -> Trail:
         return Trail(self.segments.split(i), self.closed[i])
@@ -70,12 +73,12 @@ class Trail(Monoid, Transformable, TrailLike):
     def empty() -> Trail:
         return Trail(
             Segment(tx.X.np.zeros((0, 3, 3)), tx.X.np.zeros((0, 2))),
-            tx.X.np.array(False),
+            tx.X.np.asarray(False),
         )
 
     def __add__(self, other: Trail) -> Trail:
         # assert not (self.closed or other.closed), "Cannot add closed trails"
-        return Trail(self.segments + other.segments, tx.X.np.array(False))
+        return Trail(self.segments + other.segments, tx.X.np.asarray(False))
 
     # Transformable
     def apply_transform(self, t: Affine) -> Trail:
@@ -87,7 +90,7 @@ class Trail(Monoid, Transformable, TrailLike):
         return self
 
     def close(self) -> Trail:
-        return Trail(self.segments, tx.X.np.array(True))
+        return Trail(self.segments, tx.X.np.asarray(True))
 
     def points(self) -> P2_t:
         q = self.segments.q
