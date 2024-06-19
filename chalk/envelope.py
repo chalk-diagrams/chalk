@@ -37,6 +37,10 @@ class EnvDistance(Monoid):
     @staticmethod
     def empty() -> EnvDistance:
         return EnvDistance(tx.X.np.asarray(-1e5))
+    
+    def reduce(self, axis=0):
+        return EnvDistance(tx.X.np.max(self.d, axis=axis))
+
 
 @dataclass
 class Envelope(Transformable, Monoid):
@@ -47,7 +51,7 @@ class Envelope(Transformable, Monoid):
         def apply(x):  # type: ignore
             return self.diagram.accept(ApplyEnvelope(), x[..., 0, :, :]).d[..., None]
 
-        return  Envelope.general_transform(self.affine, apply)(direction)
+        return Envelope.general_transform(self.affine, apply)(direction)
 
     # # Monoid
     @staticmethod
@@ -62,7 +66,9 @@ class Envelope(Transformable, Monoid):
     @property
     def center(self) -> P2_t:
         # Get all the directions
-        d = self(Envelope.all_dir)
+        d = [None] * 4
+        for i in range(4):
+            d[i] = self(Envelope.all_dir[i][None])
         return P2(
             (-d[1] + d[0]) / 2,
             (-d[3] + d[2]) / 2,
@@ -71,13 +77,13 @@ class Envelope(Transformable, Monoid):
     @property
     def width(self) -> Scalars:
         #assert not self.is_empty
-        d = self(Envelope.all_dir[:2])
+        d = self(Envelope.all_dir[0:1]) + self(Envelope.all_dir[1:2])
         return d.sum()
 
     @property
     def height(self) -> Scalars:
         #assert not self.is_empty
-        d = self(Envelope.all_dir[2:])
+        d = self(Envelope.all_dir[2:3]) + self(Envelope.all_dir[3:4])
         return d.sum()
 
     @staticmethod
@@ -149,6 +155,8 @@ class Envelope(Transformable, Monoid):
 
 class ApplyEnvelope(DiagramVisitor[EnvDistance, V2_t]):
     A_type = EnvDistance
+    def collapse_array(self):
+        return False
 
     def visit_primitive(self, diagram: Primitive, t: V2_t) -> EnvDistance:
         def apply(x):  # type: ignore
@@ -166,8 +174,11 @@ class ApplyEnvelope(DiagramVisitor[EnvDistance, V2_t]):
     def visit_empty(self, diagram: Empty, t: V2_t) -> EnvDistance:
         return EnvDistance(tx.X.np.asarray(0))
 
+
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):
     A_type = Envelope
+    def collapse_array(self):
+        return False
 
     def visit_primitive(self, diagram: Primitive, t: Affine) -> Envelope:
 
@@ -193,6 +204,9 @@ class GetEnvelope(DiagramVisitor[Envelope, Affine]):
             return Envelope(diagram.envelope.diagram, t)
         return Envelope(diagram, t)
 
+    def visit_compose_axis(self, diagram: ComposeAxis, t: Affine) -> Envelope:
+        return Envelope(diagram, t)
+
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine
     ) -> Envelope:
@@ -201,6 +215,7 @@ class GetEnvelope(DiagramVisitor[Envelope, Affine]):
 
 
 def get_envelope(self: Diagram, t: Optional[Affine] = None) -> Envelope:
+    assert self.size() == ()
     if t is None:
         t = tx.X.ident
     return self.accept(GetEnvelope(), t)

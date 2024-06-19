@@ -10,14 +10,22 @@ from colour import Color
 import numpy as onp
 import optax
 
-def x(i):
-    return circle(0.2 * (i+1)).fill_color(np.ones(3) * i / 6) + circle(0.1).fill_color("white")
+@jax.vmap
+def outer(j):
+    @jax.vmap
+    def inner(i):
+        return (circle(0.3 * i / 6).fill_color(np.ones(3) * i / 6) + 
+                square(0.1).fill_color("white")).scale(1)
+    inside = inner(np.arange(2, 5))
+    return vcat(inside).scale(1)
+out = outer(np.arange(1, 6))
+print("My Size", out.size())
+d = hcat(out)
+print("PRIMS:", len(d.accept(chalk.core.ToList(), tx.X.ident).data))
 
 #arc_seg(V2(0, 1), 1).stroke().render("/tmp/t.png", 64)
 
-out = jax.vmap(x)(np.arange(2, 5))
-d = hcat(out, 2)
-print(d)
+#jax.tree.map(lambda x: print(x.shape), d)
 d.render("/tmp/t.png")
 exit()
 # print(out.get_trace()(P2(0, 0), V2(1, 0)))

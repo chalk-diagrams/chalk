@@ -146,28 +146,32 @@ def render_cairo_prims(
     if even_odd:
         ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
-    for p in prims:
-        for prim in p:
-            for i in range(prim.transform.shape[0]):
-                # apply transformation
-                matrix = tx_to_cairo(prim.transform[i : i + 1])
-                ctx.transform(matrix)
-                assert prim.style is not None
-                ps: StyleHolder = prim.style
-                prim.shape.accept(shape_renderer, ctx=ctx, style=ps)
+    print("PRIM:", len(prims))
+    for prim in prims:
+        # print(p.transform.shape)
+        # for prim in p:
+        print(prim.transform.shape)
+        
+        for i in range(prim.transform.shape[0]):
+            # apply transformation
+            matrix = tx_to_cairo(prim.transform[i : i + 1])
+            ctx.transform(matrix)
+            assert prim.style is not None
+            ps: StyleHolder = prim.style
+            prim.shape.accept(shape_renderer, ctx=ctx, style=ps)
 
-                # undo transformation
-                matrix.invert()
-                ctx.transform(matrix)
+            # undo transformation
+            matrix.invert()
+            ctx.transform(matrix)
 
-                style = ps
-                if (
-                    hasattr(prim.shape, "loc_trails")
-                    and prim.shape.loc_trails[0].trail.closed != 1
-                ):
-                    style = style.merge(Style(fill_opacity_=0))
-                style.render(ctx)
-                ctx.stroke()
+            style = ps
+            if (
+                hasattr(prim.shape, "loc_trails")
+                and prim.shape.loc_trails[0].trail.closed != 1
+            ):
+                style = style.merge(Style(fill_opacity_=0))
+            style.render(ctx)
+            ctx.stroke()
     if undo:
         tx.set_jax_mode(True)
 

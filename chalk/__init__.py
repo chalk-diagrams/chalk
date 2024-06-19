@@ -39,10 +39,12 @@ if eval(os.environ.get("CHALK_JAX", "0")):
     import chex
 
     jax_type = [
-        chalk.core.FlattenedDiagram,
         chalk.core.Primitive,
         chalk.core.Compose,
         chalk.core.Envelope,
+        chalk.core.ApplyTransform,
+        chalk.core.ComposeAxis,
+        chalk.envelope.EnvDistance,
         chalk.style.StyleHolder,
         chalk.shapes.Trail,
         chalk.shapes.Path,

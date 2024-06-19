@@ -132,7 +132,7 @@ tx = _tx()
 
 
 def ftos(f: Floating) -> Scalars:
-    return tx.np.asarray(f, dtype=tx.np.double).reshape(-1)
+    return tx.np.asarray(f, dtype=tx.np.double)#.reshape(-1)
 
 
 def V2(x: Floating, y: Floating) -> V2_t:

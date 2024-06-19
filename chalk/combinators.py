@@ -109,7 +109,7 @@ def cat(
     diagram: Cat, v: V2_t, sep: Optional[Floating] = None, axis=0
 ) -> Diagram:
     if isinstance(diagram, Diagram):
-        assert diagram.is_multi()
+        assert diagram.size() != () 
         import jax
         from functools import partial
         def fn(a: Diagram, b: Diagram) -> Diagram:
@@ -120,7 +120,7 @@ def cat(
                     return new.translate_by(v * sep)
                 return new
             return merge(a, b)
-        return jax.lax.associative_scan(fn, diagram, axis=axis)
+        return jax.lax.associative_scan(fn, diagram, axis=axis).compose_axis()
 
     else:
         diagrams = iter(diagram)

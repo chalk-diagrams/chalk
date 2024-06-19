@@ -48,9 +48,15 @@ class Located(Enveloped, Traceable, Transformable):
         return self.to_path().stroke()
 
     def apply_transform(self, t: Affine) -> Located:
+        p =  t @ self.location
+        if len(p.shape) == 3:
+            p = p[:, None]
+        if len(p.shape) == 2:
+            p = p[None]
+
         return Located(
             self.trail.apply_transform(tx.remove_translation(t)),
-            t @ self.location,
+            p
         )
 
     def to_path(self) -> Path:
@@ -97,6 +103,11 @@ class Trail(Monoid, Transformable, TrailLike):
         return tx.to_point(tx.X.np.cumsum(q, axis=-3) - q)
 
     def at(self, p: P2_t) -> Located:
+        if len(p.shape) == 3:
+            p = p[:, None]
+        if len(p.shape) == 2:
+            p = p[None]
+
         return Located(self, p)
 
     # def reverse(self) -> Trail:
