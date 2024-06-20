@@ -171,8 +171,6 @@ class ApplyEnvelope(DiagramVisitor[EnvDistance, V2_t]):
 
         return EnvDistance(Envelope.general_transform(diagram.transform, apply)(t))
 
-    def visit_empty(self, diagram: Empty, t: V2_t) -> EnvDistance:
-        return EnvDistance(tx.X.np.asarray(0))
 
 
 class GetEnvelope(DiagramVisitor[Envelope, Affine]):
@@ -183,21 +181,21 @@ class GetEnvelope(DiagramVisitor[Envelope, Affine]):
     def visit_primitive(self, diagram: Primitive, t: Affine) -> Envelope:
 
         new_transform = t @ diagram.transform
-        if diagram.is_multi():
-            # MultiPrimitive only work in jax mode.
-            import jax
+        # if diagram.is_multi():
+        #     # MultiPrimitive only work in jax mode.
+        #     import jax
 
-            def env(v: V2_t) -> Scalars:
-                def inner(shape: Enveloped, transform: Affine) -> Scalars:
-                    env = shape.get_envelope().apply_transform(transform)
-                    return env(v)
+        #     def env(v: V2_t) -> Scalars:
+        #         def inner(shape: Enveloped, transform: Affine) -> Scalars:
+        #             env = shape.get_envelope().apply_transform(transform)
+        #             return env(v)
 
-                r = jax.vmap(inner)(diagram.shape, diagram.transform)
-                return r.max(0)
+        #         r = jax.vmap(inner)(diagram.shape, diagram.transform)
+        #         return r.max(0)
 
-            return Envelope(env)
-        else:
-            return Envelope(diagram, t) #.get_envelope().apply_transform(new_transform)
+        #     return Envelope(env)
+        # else:
+        return Envelope(diagram, t) #.get_envelope().apply_transform(new_transform)
 
     def visit_compose(self, diagram: Compose, t: Affine) -> Envelope:
         if diagram.envelope is not None:

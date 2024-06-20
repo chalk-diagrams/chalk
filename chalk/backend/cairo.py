@@ -146,12 +146,22 @@ def render_cairo_prims(
     if even_odd:
         ctx.set_fill_rule(cairo.FILL_RULE_EVEN_ODD)
     shape_renderer = ToCairoShape()
-    print("PRIM:", len(prims))
+    print("prim", len(prims))
+    d = {}
     for prim in prims:
-        # print(p.transform.shape)
-        # for prim in p:
+        print(prim.order)
+        for ind, i in tx.X.np.ndenumerate(prim.order):
+            d[i] = (prim, ind)
+    
+    print(list(d.keys()))
+    for j in sorted(d.keys()):
+        prim, ind = d[j]
+        print(ind)
+        print(prim.order.shape)
+        print(prim.size())
+        prim = prim.split(ind)
+        print(prim.size())
         print(prim.transform.shape)
-        
         for i in range(prim.transform.shape[0]):
             # apply transformation
             matrix = tx_to_cairo(prim.transform[i : i + 1])

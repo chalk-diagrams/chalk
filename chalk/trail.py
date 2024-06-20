@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from chalk.shapes.path import Path
 
 
-@dataclass
+@dataclass(frozen=True, unsafe_hash=True)
 class Located(Enveloped, Traceable, Transformable):
     trail: Trail
     location: P2_t
@@ -62,10 +62,10 @@ class Located(Enveloped, Traceable, Transformable):
     def to_path(self) -> Path:
         from chalk.shapes.path import Path
 
-        return Path([self])
+        return Path(tuple([self]))
 
 
-@dataclass
+@dataclass(frozen=True, unsafe_hash=True)
 class Trail(Monoid, Transformable, TrailLike):
     segments: Segment
 

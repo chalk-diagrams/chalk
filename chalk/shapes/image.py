@@ -26,7 +26,7 @@ def from_pil(
     return surface
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Image(Shape):
     """Image class."""
 

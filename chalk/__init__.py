@@ -45,6 +45,7 @@ if eval(os.environ.get("CHALK_JAX", "0")):
         chalk.core.ApplyTransform,
         chalk.core.ComposeAxis,
         chalk.envelope.EnvDistance,
+        chalk.trace.TraceDistances,
         chalk.style.StyleHolder,
         chalk.shapes.Trail,
         chalk.shapes.Path,

@@ -48,7 +48,7 @@ def dart(cut: float = 0.2) -> Diagram:
     )
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class ArrowHead(Shape):
     """Arrow Head."""
 

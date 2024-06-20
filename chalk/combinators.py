@@ -106,21 +106,41 @@ def place_on_path(diagrams: Iterable[Diagram], path: Path) -> Diagram:
 
 Cat = Union[Iterable[Diagram], Diagram]
 def cat(
-    diagram: Cat, v: V2_t, sep: Optional[Floating] = None, axis=0
+    diagram: Cat, v: V2_t, sep: Optional[Floating] = None
 ) -> Diagram:
     if isinstance(diagram, Diagram):
-        assert diagram.size() != () 
+        axes = diagram.size()
+        axis = len(axes) - 1
+        assert diagram.size() != ()
+        diagram = diagram._normalize()
         import jax
         from functools import partial
-        def fn(a: Diagram, b: Diagram) -> Diagram:
-            @partial(jax.vmap, in_axes=axis, out_axes=axis)
-            def merge(a, b):
-                new = a.juxtapose(b, v)
-                if sep is not None:
-                    return new.translate_by(v * sep)
-                return new
-            return merge(a, b)
-        return jax.lax.associative_scan(fn, diagram, axis=axis).compose_axis()
+        # def fn(a: Diagram, b: Diagram) -> Diagram:
+        #     @partial(jax.vmap)
+        #     def merge(a, b):
+        #         b.get_envelope()(-v)
+        #         new = a.juxtapose(b, v)
+        #         return new
+        #     return merge(a, b)
+        def call_scan(diagram):
+            @jax.vmap
+            def offset(diagram):
+                env = diagram.get_envelope()
+                right = env(v)
+                left  = env(-v)
+                return right, left
+            right, left = offset(diagram)
+            off = tx.X.np.roll(right, 1) + left
+            off = off.at[0].set(0)
+            off = tx.X.np.cumsum(off, axis=0)
+            @jax.vmap
+            def translate(off, diagram):
+                return diagram.translate_by(v * off[..., None, None])
+            return translate(off, diagram)
+            #return jax.lax.associative_scan(fn, diagram, axis=0).compose_axis()
+        for a in range(axis):
+            call_scan = jax.vmap(call_scan, in_axes=a, out_axes=a)
+        return call_scan(diagram).compose_axis()
 
     else:
         diagrams = iter(diagram)
@@ -148,7 +168,12 @@ def concat(diagrams: Iterable[Diagram]) -> Diagram:
     """
     from chalk.core import BaseDiagram
 
-    return BaseDiagram.concat(diagrams)  # type: ignore
+    if isinstance(diagram, Diagram):
+        size = diagram.size()
+        assert size != ()
+        return diagram.compose_axis()
+    else:
+        return BaseDiagram.concat(diagrams)  # type: ignore
 
 
 def empty() -> Diagram:
@@ -180,7 +205,7 @@ def vstrut(height: Optional[Floating]) -> Diagram:
 
 
 def hcat(
-    diagrams: Iterable[Diagram], sep: Optional[Floating] = None, axis=0
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None
 ) -> Diagram:
     """
     Stack diagrams next to each other with `besides`.
@@ -193,12 +218,11 @@ def hcat(
         Diagram: New diagram
 
     """
-    return cat(diagrams, tx.X.unit_x, sep, axis=axis)
+    return cat(diagrams, tx.X.unit_x, sep)
 
 
 def vcat(
-    diagrams: Iterable[Diagram], sep: Optional[Floating] = None, axis=0
-) -> Diagram:
+    diagrams: Iterable[Diagram], sep: Optional[Floating] = None) -> Diagram:
     """
     Stack diagrams above each other with `above`.
 
@@ -210,7 +234,7 @@ def vcat(
         Diagrams
 
     """
-    return cat(diagrams, tx.X.unit_y, sep, axis=axis)
+    return cat(diagrams, tx.X.unit_y, sep)
 
 
 # Extra

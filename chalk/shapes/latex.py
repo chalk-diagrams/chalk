@@ -8,7 +8,7 @@ from chalk.types import Diagram
 from chalk.visitor import C, ShapeVisitor
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Latex(Shape):
     """Latex class."""
 

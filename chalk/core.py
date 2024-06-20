@@ -45,6 +45,7 @@ def set_svg_draw_height(height: int) -> None:
     SVG_DRAW_HEIGHT = height
 
 
+sizes = {} 
 # @dataclass
 # class FlattenedDiagram:
 #     data: List[Primitive]
@@ -77,7 +78,7 @@ def set_svg_draw_height(height: int) -> None:
 #         ]
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class BaseDiagram(chalk.types.Diagram):
     """Diagram class."""
 
@@ -93,6 +94,8 @@ class BaseDiagram(chalk.types.Diagram):
 
     # Tranformable
     def apply_transform(self, t: Affine) -> Diagram:  # type: ignore
+        size = self.size()
+        t = tx.X.np.broadcast_to(t, self.size() + (1, 3, 3))
         return ApplyTransform(t, self)
 
     def compose_axis(self) -> Diagram:  # type: ignore
@@ -113,9 +116,9 @@ class BaseDiagram(chalk.types.Diagram):
         self, envelope: Optional[Envelope]=None, other: Optional[Diagram] = None
     ) -> Diagram:
         if other is None and isinstance(self, Compose):
-            return Compose(envelope, self.diagrams)
+            return Compose(envelope, tuple(self.diagrams))
         if other is None and isinstance(self, Compose):
-            return Compose(envelope, [self])
+            return Compose(envelope, (self,))
 
         other = other if other is not None else Empty()
         if isinstance(self, Empty):
@@ -123,12 +126,12 @@ class BaseDiagram(chalk.types.Diagram):
         elif isinstance(self, Compose) and isinstance(other, Compose):
             return Compose(envelope, self.diagrams + other.diagrams)
         elif isinstance(other, Empty) and not isinstance(self, Compose):
-            return Compose(envelope, [self])
+            return Compose(envelope, (self,))
 
         elif isinstance(other, Compose):
-            return Compose(envelope, [self] + other.diagrams)
+            return Compose(envelope, (self,) + other.diagrams)
         else:
-            return Compose(envelope, [self, other])
+            return Compose(envelope, (self, other))
 
     def named(self, name: Name) -> Diagram:
         """Add a name (or a sequence of names) to a diagram."""
@@ -161,9 +164,10 @@ class BaseDiagram(chalk.types.Diagram):
     scale_uniform_to_x = chalk.align.scale_uniform_to_x
 
     # Flatten
-    def flatten(self) -> FlattenedDiagram:
-        children = [d for d in self.get_primitives()]
-        return FlattenedDiagram(children)
+    def _normalize(self) -> Diagram:
+        if not isinstance(self, (Primitive, ApplyTransform)):
+            return self.scale(1.0)
+        return self
 
     # Arrows
     connect = chalk.arrow.connect
@@ -180,9 +184,9 @@ class BaseDiagram(chalk.types.Diagram):
     frame = chalk.combinators.frame
     pad = chalk.combinators.pad
 
-    def __getitem__(self, key):
-        import jax
-        return jax.tree.map(lambda x: x[key], self)
+    # def __getitem__(self, key)
+    #     import jax
+    #     return jax.tree.map(lambda x: x[key], self)
 
     # Infix
     def __or__(self, d: Diagram) -> Diagram:
@@ -243,10 +247,11 @@ class BaseDiagram(chalk.types.Diagram):
         raise NotImplementedError
 
     def get_primitives(self) -> List[Primitive]:
-        return self.accept(ToList(), tx.X.ident).data
+        return self.accept(ToListOrder(), tx.X.ident).ls
     
     def size(self) -> Tuple[int]:
         return self.accept(ToSize(), Size.empty()).d
+
 
     def layout(
         self, height: tx.IntLike = 128, width: Optional[tx.IntLike] = None
@@ -270,7 +275,7 @@ class BaseDiagram(chalk.types.Diagram):
             height / ((1 + pad) * envelope.height),
             width / ((1 + pad) * envelope.width),
         )
-        s = self.scale(α)#.center_xy() #.pad(1 + pad)
+        s = self.scale(α).center_xy().pad(1 + pad)
         import jax
         e = s.get_envelope()
         assert e is not None
@@ -278,10 +283,11 @@ class BaseDiagram(chalk.types.Diagram):
 
         style = StyleHolder.root(tx.X.np.maximum(width, height))
         s = s._style(style)
+        print(s.get_primitives())
         return s.get_primitives(), height, width
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Primitive(BaseDiagram):
     """Primitive class.
 
@@ -293,23 +299,33 @@ class Primitive(BaseDiagram):
     shape: Shape
     style: Optional[StyleHolder]
     transform: Affine
-
+    order: Optional[tx.Int]=None
 
     def is_multi(self) -> bool:
         return self.size() != ()
 
-    def __iter__(self) -> Iterator[Primitive]:
-        if not self.is_multi():
-            yield self
-        else:
-            d = self
-            for i in range(self.transform.shape[0]):
-                assert isinstance(d.shape, Path)
-                yield Primitive(
-                    d.shape.split(i),
-                    d.style.split(i) if d.style is not None else None,
-                    d.transform[i],
-                )
+    def set_order(self, order):
+        return Primitive(self.shape, self.style, self.transform, order)
+
+    def split(self, ind):
+        return Primitive(
+            self.shape.split(ind),
+            self.style.split(ind) if self.style is not None else None,
+            self.transform[ind])
+
+
+    # def __iter__(self) -> Iterator[Primitive]:
+    #     if not self.is_multi():
+    #         yield self
+    #     else:
+    #         d = self
+    #         for i in range(self.transform.shape[0]):
+    #             assert isinstance(d.shape, Path)
+    #             yield Primitive(
+    #                 d.shape.split(i),
+    #                 d.style.split(i) if d.style is not None else None,
+    #                 d.transform[i],
+    #             )
 
     @classmethod
     def from_shape(cls, shape: Shape) -> Primitive:
@@ -355,13 +371,13 @@ class Primitive(BaseDiagram):
         )
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
-        if visitor.collapse_array() and self.size() != ():
-            return visitor.visit_primitive_array(self, args)
-        else:
-            return visitor.visit_primitive(self, args)
+        # if visitor.collapse_array() and self.size() != ():
+        #     return visitor.visit_primitive_array(self, args)
+        # else:
+        return visitor.visit_primitive(self, args)
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Empty(BaseDiagram):
     """An Empty diagram class."""
 
@@ -375,20 +391,20 @@ class Empty(BaseDiagram):
         return Empty()
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Compose(BaseDiagram):
     """Compose class."""
 
     envelope: Optional[Envelope]
-    diagrams: List[Diagram]
+    diagrams: Sequence[Diagram]
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
-        if visitor.collapse_array() and self.size() != ():
-            return visitor.visit_compose_array(self, args)
-        else:
-            return visitor.visit_compose(self, args)
+        # if visitor.collapse_array() and self.size() != ():
+        #     return visitor.visit_compose_array(self, args)
+        # else:
+        return visitor.visit_compose(self, args)
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class ComposeAxis(BaseDiagram):
     """ComposeAxis class."""
 
@@ -398,7 +414,7 @@ class ComposeAxis(BaseDiagram):
         return visitor.visit_compose_axis(self, args)
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class ApplyTransform(BaseDiagram):
     """ApplyTransform class."""
 
@@ -406,10 +422,10 @@ class ApplyTransform(BaseDiagram):
     diagram: Diagram
 
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
-        if visitor.collapse_array() and self.size() != ():
-            return visitor.visit_apply_transform_array(self, args)
-        else:
-            return visitor.visit_apply_transform(self, args)
+        # if visitor.collapse_array() and self.size() != ():
+        #     return visitor.visit_apply_transform_array(self, args)
+        # else:
+        return visitor.visit_apply_transform(self, args)
         
     def apply_transform(self, t: Affine) -> ApplyTransform:
         # if t.shape[0] != 1:
@@ -418,7 +434,7 @@ class ApplyTransform(BaseDiagram):
         return ApplyTransform(new_transform, self.diagram)
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class ApplyStyle(BaseDiagram):
     """ApplyStyle class."""
 
@@ -433,7 +449,7 @@ class ApplyStyle(BaseDiagram):
         return ApplyStyle(new_style, self.diagram)
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class ApplyName(BaseDiagram):
     """ApplyName class."""
 
@@ -443,7 +459,7 @@ class ApplyName(BaseDiagram):
     def accept(self, visitor: DiagramVisitor[A, Any], args: Any) -> A:
         return visitor.visit_apply_name(self, args)
 
-
+@dataclass(unsafe_hash=True, frozen=True)
 class Qualify(DiagramVisitor[Diagram, None]):
     A_type = Diagram
 
@@ -555,39 +571,89 @@ class ToSize(DiagramVisitor[Size, Size]):
     ) -> Size:
         return diagram.diagrams.accept(self, t).remove_axis(0)
         
+@dataclass
+class OrderList(Monoid):
+    ls: List[Primitive]
+    counter: tx.Array
 
+    @staticmethod
+    def empty() -> OrderList:
+        return OrderList([], 0)
+    
+    def __add__(self, other):
+        return OrderList(self.ls + 
+                         [prim.set_order(prim.order + self.counter)
+                                        for prim in other.ls] , 
+                         (self.counter + other.counter))
+    
 
-
-class ToList(DiagramVisitor[MList[Primitive], Affine]):
-    """Compiles a `Diagram` to a list of `FlatPrimitive`s. The transformation `t`
+class ToListOrder(DiagramVisitor[OrderList, Affine]):
+    """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
     is accumulated upwards, from the tree's leaves.
     """
 
-    A_type = MList[Primitive]
+    A_type = OrderList
+
+    def collapse_array(self):
+        return False
 
     def visit_primitive(
         self, diagram: Primitive, t: Affine
-    ) -> MList[Primitive]:
-        return MList([(diagram.apply_transform(t))])
+    ) -> OrderList:
+        return OrderList([diagram.apply_transform(t).set_order(tx.X.np.zeros(diagram.size()))], 1)
 
     def visit_apply_transform(
         self, diagram: ApplyTransform, t: Affine
-    ) -> MList[Primitive]:
+    ) -> OrderList:
         t_new = t @ diagram.transform
         return diagram.diagram.accept(self, t_new)
+    
+    def visit_compose_axis(self, diagram: ComposeAxis, t: Affine):
+        import jax
+        s = diagram.diagrams.size()
+        stride = s[-1]
+        update = tx.X.np.arange(stride)
+        internal = diagram.diagrams.accept(self, t[..., None, :, :, :])
+        ls = [prim.set_order(stride * prim.order + add_dim(update, len(prim.size()) - len(s)))
+              for prim in internal.ls]
+        counter = internal.counter + update
+        return OrderList(ls, counter)
+
+def add_dim(m, size):
+    for s in range(size):
+        m = m[..., None]
+    return m
+
+# class ToList(DiagramVisitor[MList[Primitive], Affine]):
+#     """Compiles a `Diagram` to a list of `Primitive`s. The transformation `t`
+#     is accumulated upwards, from the tree's leaves.
+#     """
+
+#     A_type = MList[Primitive]
+
+#     def visit_primitive(
+#         self, diagram: Primitive, t: Affine
+#     ) -> MList[Primitive]:
+#         return MList([(diagram.apply_transform(t))])
+
+#     def visit_apply_transform(
+#         self, diagram: ApplyTransform, t: Affine
+#     ) -> MList[Primitive]:
+#         t_new = t @ diagram.transform
+#         return diagram.diagram.accept(self, t_new)
 
 
-    def visit_apply_style(
-        self, diagram: ApplyStyle, t: Affine
-    ) -> MList[Primitive]:
-        return MList(
-            [
-                prim.apply_style(diagram.style)
-                for prim in diagram.diagram.accept(self, t).data
-            ]
-        )
+#     def visit_apply_style(
+#         self, diagram: ApplyStyle, t: Affine
+#     ) -> MList[Primitive]:
+#         return MList(
+#             [
+#                 prim.apply_style(diagram.style)
+#                 for prim in diagram.diagram.accept(self, t).data
+#             ]
+#         )
 
-    def visit_apply_name(
-        self, diagram: ApplyName, t: Affine
-    ) -> MList[Primitive]:
-        return MList([prim for prim in diagram.diagram.accept(self, t).data])
+#     def visit_apply_name(
+#         self, diagram: ApplyName, t: Affine
+#     ) -> MList[Primitive]:
+#         return MList([prim for prim in diagram.diagram.accept(self, t).data])

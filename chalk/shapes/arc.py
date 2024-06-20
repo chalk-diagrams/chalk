@@ -19,18 +19,18 @@ if TYPE_CHECKING:
 Degrees = tx.Scalars
 
 
-@dataclass
+@dataclass(frozen=True, unsafe_hash=True)
 class Segment:
     "A batch of ellipse arcs with starting angle and the delta."
     transform: Affine
     angles: Angles
 
-    def __init__(self, transform: Affine, angles: Angles):
-        self.transform = transform.reshape(-1, 3, 3)
-        self.angles = angles.reshape(-1, 2)
+    @staticmethod
+    def make(transform: Affine, angles: Angles):
+        return Segment(transform.reshape(-1, 3, 3), angles.reshape(-1, 2))
 
     def split(self, i: int) -> Segment:
-        return Segment(self.transform[i], self.angles[i])
+        return Segment.make(self.transform[i], self.angles[i])
 
     def to_trail(self) -> Trail:
         from chalk.trail import Trail
@@ -38,16 +38,16 @@ class Segment:
         return Trail(self)
 
     def get(self, i: int) -> Segment:
-        return Segment(transform=self.transform[i], angles=self.angles[i])
+        return Segment.make(transform=self.transform[i], angles=self.angles[i])
 
     # Transformable
     def apply_transform(self, t: Affine) -> Segment:
-        return Segment(t @ self.transform, self.angles)
+        return Segment.make(t @ self.transform, self.angles)
 
     def __add__(self, other: Segment) -> Segment:
         trans = [self.transform, other.transform]
         angles = [self.angles, other.angles]
-        return Segment(
+        return Segment.make(
             tx.X.np.concatenate(trans, axis=-3),
             tx.X.np.concatenate(angles, axis=-2),
         )
@@ -123,7 +123,7 @@ def arc_between(p: P2_t, q: P2_t, height: tx.Scalars) -> Segment:
         @ tx.rotation(φ)
         @ tx.scale(tx.V2(r, r))
     )
-    return Segment(ret, angles)
+    return Segment.make(ret, angles)
 
 
 def arc_envelope(
@@ -179,7 +179,7 @@ def arc_seg(q: V2_t, height: tx.Floating) -> Trail:
 
 def arc_seg_angle(angle: tx.Floating, dangle: tx.Floating) -> Trail:
     arc_p = tx.to_point(tx.polar(angle))
-    return Segment(
+    return Segment.make(
         tx.translation(-arc_p), tx.X.np.asarray([angle, dangle])
     ).to_trail()
 

@@ -12,7 +12,7 @@ from chalk.types import Diagram
 from chalk.visitor import C, ShapeVisitor
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Shape:
     """Shape class."""
 
@@ -45,7 +45,7 @@ class Shape:
         return Primitive.from_shape(self)
 
 
-@dataclass
+@dataclass(unsafe_hash=True, frozen=True)
 class Spacer(Shape):
     """Spacer class."""
 

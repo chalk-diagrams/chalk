@@ -11,17 +11,30 @@ import numpy as onp
 import optax
 
 @jax.vmap
+def inner(i):
+    # return (circle(0.3).fill_color(np.ones(3) * (6 - i) / 6))
+    return (circle(0.3 * i / 6).fill_color(np.ones(3) * i / 6) + 
+            square(0.1).fill_color("white"))
+
+inside = hcat(inner(np.arange(2, 6)))
+inside.get_trace()(P2(0, 0), V2(1, 0))
+inside.render("/tmp/t.png")
+
+
+
+@jax.vmap
 def outer(j):
     @jax.vmap
     def inner(i):
+        # return (circle(0.3 * i / 6).fill_color(np.ones(3) * i / 6))
         return (circle(0.3 * i / 6).fill_color(np.ones(3) * i / 6) + 
-                square(0.1).fill_color("white")).scale(1)
-    inside = inner(np.arange(2, 5))
-    return vcat(inside).scale(1)
-out = outer(np.arange(1, 6))
-print("My Size", out.size())
-d = hcat(out)
-print("PRIMS:", len(d.accept(chalk.core.ToList(), tx.X.ident).data))
+                square(0.1).fill_color("white"))
+    inside = inner(np.arange(2, 6))
+    return inside
+out = outer(np.arange(1, 5))
+print("My Size", hcat(out).size())
+d = vcat(hcat(out))
+print("PRIMS:", [prim.order for prim in  d.accept(chalk.core.ToListOrder(), tx.X.ident).ls])
 
 #arc_seg(V2(0, 1), 1).stroke().render("/tmp/t.png", 64)
 
