@@ -35,7 +35,7 @@ setup(
         "svgwrite",
         "Pillow",
         "loguru",
-        "planar",
+        "chalk-planar",
         "typing-extensions",
     ],
     extras_require={
